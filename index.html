@@ -103,6 +103,13 @@ main{overflow:auto;padding-block:18px 40px;padding-left:max(16px,env(safe-area-i
 .lbl.New,.lbl.Noroutes{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
 .lbl.Opted{background:var(--crit-bg);color:var(--crit)}
 .lbl.Inactive{background:var(--crit-bg);color:var(--crit)}
+.lbl.Hold{background:var(--crit-bg);color:var(--crit)}
+.ci{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:4px}
+.ci.Arrived{background:var(--ok-bg);color:var(--ok)}.ci.Late{background:var(--warn-bg);color:var(--warn)}.ci.Noshow{background:var(--crit);color:#fff}.ci.Waiting{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.checkin-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.checkin-row:first-child{border-top:0}
+.checkin-btns{display:flex;gap:6px;flex-wrap:wrap}
+.health td.st{white-space:nowrap}
 
 .group-title{display:flex;align-items:center;gap:8px;margin:18px 0 8px}
 .group-title .n{font-family:var(--mono);color:var(--muted);font-size:12px}
@@ -271,11 +278,11 @@ const S = {
   screen: 'board', params: {}, role: 'dispatcher', boardTab: 1, areaFilter: 'all', phoneDriver: 'd2',
   settings: {
     expiry: 15, reconfirmHours: 26, reconfirmWindow: 60, finalHours: 2, finalWindow: 30, quietStart: '9:00 PM', quietEnd: '7:00 AM',
-    feeMin: 10, feePct: 5, support: '(512) 555-0100',
+    feeMin: 10, feePct: 5, support: '(512) 555-0100', stopRange: 4, benchPct: 20, noShowRescue: 'auto',
     laneThreshold: 60, laneWindow: 10, laneAuto: 'suggest', laneSkipWatch: true,
     weights: { completion: 50, acceptance: 20, confirm: 10, perRoute: 1, perRouteMax: 10, perRescue: 3, perRescueMax: 9, early: -5, late: -15, noshow: -25, tierA: 15, tierB: 5 },
     templates: {
-      offer: 'Gigee route offer: {date}, start {start_time} at {hub}. {stops} stops, pays ${payout}. Reply YES to accept or NO to pass. Expires in {expiry} min.',
+      offer: 'Gigee route offer: {date}, start {start_time} at {hub}. About {stop_range} stops, pays ${payout}. Reply YES to accept or NO to pass. Expires in {expiry} min.',
       accepted: "You're confirmed for {route_name} on {date}. Pickup {start_time} at {pickup_address}. {instructions}",
       declined: 'Got it, thanks for letting us know.',
       expired: "That route offer has closed. We'll text you with the next one.",
@@ -284,6 +291,7 @@ const S = {
       reconfirm: 'Reconfirm: are you still good for {route_name} on {date} at {start_time}? Reply YES within 60 min, or NO if you need to release it.',
       final: 'Final check for {route_name}: pickup {start_time} today at {pickup_address}. Reply YES within 30 min.',
       released: "You've been released from {route_name}. Thanks for letting us know.",
+      noshow: "You were marked as not arrived for {route_name} at {hub}, so the route went to another driver. Questions? Contact {support_contact}.",
     },
   },
   areas: [
@@ -301,7 +309,7 @@ const S = {
     { id: 'd8', gid: 'GG-1162', name: 'Renee Walker', phone: '+15125550162', area: 'A2', tier: '', active: true, optOut: true, rec: 'recH4w7Jd', base: { offers: 7, answered: 7, accepted: 5, committed: 5, completed: 5, late: 0, early: 0, noshow: 0, confSent: 9, confOnTime: 9, rescues: 0, resp: 5 }, last: T(12, 8, 0) },
     { id: 'd9', gid: 'GG-1170', name: 'Jordan Pike', phone: '+15125550170', area: 'A1', tier: '', active: false, optOut: false, rec: 'recJ1q5Bv', base: { offers: 6, answered: 6, accepted: 6, committed: 5, completed: 5, late: 0, early: 0, noshow: 0, confSent: 8, confOnTime: 8, rescues: 0, resp: 8 }, last: T(13, 7, 30) },
   ],
-  routes: [], offers: [], messages: [], events: [], imports: [], exports: [], adjustments: [],
+  routes: [], offers: [], messages: [], events: [], imports: [], exports: [], adjustments: [], holds: [], holdSuggestions: [], recruitRequests: [],
   importPreview: null, uploadsDone: {}, mapped: true,
 };
 
@@ -367,6 +375,7 @@ addRoute('BD-0189', 15, 'A2', 11, { lane: 'L4', skip: 2, status: 'Accepted', dri
 addRoute('RR-0411', 16, 'A1', 14, { lane: 'L2', skip: 3, status: 'Accepted', driverId: 'd4', onfleet: true });
 addRoute('BD-0195', 16, 'A2', 10, { lane: 'L3', skip: 0, status: 'Accepted', driverId: 'd5', onfleet: true });
 addRoute('BD-0196', 16, 'A2', 8, { lane: 'L4', skip: 1, status: 'Unassigned', rescue: true, start: '16:30' });
+addRoute('RR-0412', 16, 'A1', 10, { lane: 'L5', skip: 1, status: 'Accepted', driverId: 'd7', onfleet: true, start: '15:30' });
 // Tomorrow
 addRoute('RR-0417', 17, 'A1', 13, { lane: 'L1', skip: 0, fresh: 2 });
 addRoute('RR-0418', 17, 'A1', 16, { lane: 'L2', skip: 1, status: 'Offered', driverId: 'd2' });
@@ -389,18 +398,23 @@ addRoute('BD-0215', 22, 'A2', 10, { lane: 'L3', skip: 3 });
   const acc = (rid, did, sentDay, h, opts = {}) => { const r = byId(rid); const o = mkOffer(Object.assign({ routeId: rid, driverId: did, sentAt: T(sentDay, h, 2), respondedAt: T(sentDay, h, 9), reply: 'Yes', acceptedAt: T(sentDay, h, 9), reconfirmSentAt: T(sentDay + 1, 5, 30), reconfirmedAt: T(sentDay + 1, 5, 41), finalSentAt: T(sentDay + 2, r.start < '08:00' ? 5 : 6, 0), finalConfirmedAt: T(sentDay + 2, 6, 12) }, opts)); r.offerId = o.id; ev(o.id, 'Offer sent', 'Dana Ruiz', 'SMS', o.sentAt); ev(o.id, 'Reply YES', 'Driver', '', o.respondedAt); ev(o.id, 'Accepted', 'System', '', o.acceptedAt); return o; };
   acc('RR-0402', 'd1', 13, 10); acc('RR-0403', 'd2', 13, 10); acc('BD-0188', 'd5', 14, 13, { rescueCover: true, reconfirmSentAt: null, reconfirmedAt: null }); acc('BD-0189', 'd3', 13, 10);
   acc('RR-0411', 'd4', 14, 9); acc('BD-0195', 'd5', 14, 9);
+  // Site check-in: morning routes arrived; RR-0412 (3:30 PM pickup) still waiting
+  byId('RR-0411').checkin = { status: 'Arrived', at: T(16, 7, 22), by: 'Carla Gomez (Round Rock Hub)' };
+  byId('BD-0195').checkin = { status: 'Arrived', at: T(16, 7, 51), by: 'Dana Ruiz' };
+  acc('RR-0412', 'd7', 14, 11, { finalSentAt: T(16, 13, 30), finalConfirmedAt: T(16, 13, 36) });
   // BD-0196 late bail by d3 at 1:52 PM today
   const bail = mkOffer({ routeId: 'BD-0196', driverId: 'd3', sentAt: T(14, 15, 0), respondedAt: T(14, 15, 6), reply: 'Yes', acceptedAt: T(14, 15, 6), reconfirmSentAt: T(15, 14, 30), reconfirmedAt: T(15, 14, 44), releasedAt: T(16, 13, 52), releasedBy: 'Driver', hoursBefore: 2.6, outcome: 'Late bail', outcomeBy: 'System' });
   ev(bail.id, 'Offer sent', 'Dana Ruiz', 'SMS', bail.sentAt); ev(bail.id, 'Reply YES', 'Driver', '', bail.respondedAt); ev(bail.id, 'Accepted', 'System', '', bail.acceptedAt); ev(bail.id, 'Released', 'Dana Ruiz', 'Driver-initiated, 2.6 h before start', bail.releasedAt); ev(bail.id, 'Outcome set', 'System', 'Late bail', bail.releasedAt);
-  mkMsg({ dir: 'out', driverId: 'd3', routeId: 'BD-0196', offerId: bail.id, body: 'Gigee route offer: Fri Oct 16, start 4:30 PM at Buda Hub. 8 stops, pays $72.00. Reply YES to accept or NO to pass. Expires in 15 min.', time: bail.sentAt });
+  mkMsg({ dir: 'out', driverId: 'd3', routeId: 'BD-0196', offerId: bail.id, body: 'Gigee route offer: Fri Oct 16, start 4:30 PM at Buda Hub. About 8 to 12 stops, pays $72.00. Reply YES to accept or NO to pass. Expires in 15 min.', time: bail.sentAt });
   mkMsg({ dir: 'in', driverId: 'd3', routeId: 'BD-0196', offerId: bail.id, body: 'Yes', time: bail.respondedAt });
   mkMsg({ dir: 'out', driverId: 'd3', routeId: 'BD-0196', offerId: bail.id, body: "You're confirmed for BD-0196 on Fri Oct 16. Pickup 4:30 PM at 325 Old San Antonio Rd, Buda, TX 78610. Park in the east lot and ask for Marco.", time: bail.acceptedAt });
   mkMsg({ dir: 'in', driverId: 'd3', routeId: 'BD-0196', offerId: bail.id, body: 'car trouble, cant make 4:30 today sorry', time: T(16, 13, 48) });
   mkMsg({ dir: 'out', driverId: 'd3', routeId: 'BD-0196', offerId: bail.id, body: "You've been released from BD-0196. Thanks for letting us know.", time: bail.releasedAt });
+  S.holdSuggestions.push({ id: 'HS1', driverId: 'd3', routeId: 'BD-0196', reason: 'Late bail on BD-0196, 2.6 h before start', at: T(16, 13, 52) });
   // RR-0418 open offer to d2, sent 4 min ago
   const op = mkOffer({ routeId: 'RR-0418', driverId: 'd2', sentAt: now.getTime() - 4 * 60000, open: true, expiresAt: now.getTime() + 11 * 60000 });
   byId('RR-0418').offerId = op.id; ev(op.id, 'Offer sent', 'Dana Ruiz', 'SMS', op.sentAt);
-  mkMsg({ dir: 'out', driverId: 'd2', routeId: 'RR-0418', offerId: op.id, body: 'Gigee route offer: Sat Oct 17, start 7:30 AM at Round Rock Hub. 16 stops, pays $152.00. Reply YES to accept or NO to pass. Expires in 15 min.', time: op.sentAt });
+  mkMsg({ dir: 'out', driverId: 'd2', routeId: 'RR-0418', offerId: op.id, body: 'Gigee route offer: Sat Oct 17, start 7:30 AM at Round Rock Hub. About 16 to 20 stops, pays $152.00. Reply YES to accept or NO to pass. Expires in 15 min.', time: op.sentAt });
   // RR-0419 accepted by d9 (now deactivated)
   const d9o = acc('RR-0419', 'd9', 14, 11, { reconfirmSentAt: null, reconfirmedAt: null, finalSentAt: null, finalConfirmedAt: null });
   ev(d9o.id, 'Driver deactivated', 'Airtable sync', 'Logiscal Status changed to Inactive', T(16, 14, 10));
@@ -412,7 +426,7 @@ addRoute('BD-0215', 22, 'A2', 10, { lane: 'L3', skip: 3 });
   acc('BD-0206', 'd5', 15, 10, { reconfirmSentAt: null, reconfirmedAt: null, finalSentAt: null, finalConfirmedAt: null });
   // inbox seeds
   mkMsg({ dir: 'in', driverId: null, phone: '+17375550199', body: 'is this gigee? i signed up last week', time: T(16, 11, 22) });
-  mkMsg({ dir: 'out', driverId: 'd7', routeId: 'RR-0417', body: 'Gigee route offer: Sat Oct 17, start 7:30 AM at Round Rock Hub. 13 stops, pays $123.50. Reply YES to accept or NO to pass. Expires in 15 min.', status: 'failed', error: 'Twilio 30003: unreachable destination handset', time: T(16, 13, 5) });
+  mkMsg({ dir: 'out', driverId: 'd7', routeId: 'RR-0417', body: 'Gigee route offer: Sat Oct 17, start 7:30 AM at Round Rock Hub. About 12 to 16 stops, pays $123.50. Reply YES to accept or NO to pass. Expires in 15 min.', status: 'failed', error: 'Twilio 30003: unreachable destination handset', time: T(16, 13, 5) });
   mkMsg({ dir: 'in', driverId: 'd3', body: 'can I start at 5 instead of 430 on the next one', time: T(16, 14, 2) });
   mkMsg({ dir: 'out', driverId: 'd3', body: 'Reply YES or NO to your latest route offer. Questions? Contact (512) 555-0100.', time: T(16, 14, 2) });
   mkMsg({ dir: 'in', driverId: 'd8', body: 'STOP', time: T(14, 19, 40) });
@@ -439,6 +453,7 @@ function dayOffset(r) { return Math.round((routeDate(r) - new Date(now.getFullYe
 function phoneFmt(p) { return p ? `(${p.slice(2, 5)}) ${p.slice(5, 8)}-${p.slice(8)}` : ''; }
 function initials(n) { return n.split(' ').map(x => x[0]).join('').slice(0, 2); }
 function activeStops(r) { return r.orders.filter(o => o.status === 'active').length; }
+function stopRange(n) { const w = Math.max(1, S.settings.stopRange); const lo = Math.max(1, Math.floor(n / w) * w); return `${lo} to ${lo + w}`; }
 function payout(r) { return activeStops(r) * area(r.area).ppd; }
 function fee(r) { return Math.max(S.settings.feeMin, payout(r) * S.settings.feePct / 100); }
 function adjTotal(r) { return S.adjustments.filter(a => a.routeId === r.id).reduce((s, a) => s + a.amount, 0); }
@@ -446,7 +461,7 @@ function net(r) { return payout(r) - fee(r) + adjTotal(r); }
 function hoursToStart(r) { return (routeStart(r) - now.getTime()) / 3600000; }
 function dur(ms) { const m = Math.max(0, Math.round(ms / 60000)); const h = Math.floor(m / 60); return h ? `${h}h ${String(m % 60).padStart(2, '0')}m` : `${m}m`; }
 function toast(t) { const el = document.createElement('div'); el.className = 'toast'; el.textContent = t; $('#toasts').appendChild(el); setTimeout(() => el.remove(), 3200); }
-function fill(tpl, r, d) { const a = area(r.area); const ctx = { date: fmtDate(routeDate(r)), start_time: hhmm(r.start), hub: a.hub, stops: activeStops(r), payout: payout(r).toFixed(2), expiry: S.settings.expiry, route_name: r.name, pickup_address: a.address, instructions: a.instr, support_contact: S.settings.support, driver_first: d ? d.name.split(' ')[0] : '' }; return tpl.replace(/\{(\w+)\}/g, (_, k) => ctx[k] ?? ''); }
+function fill(tpl, r, d) { const a = area(r.area); const ctx = { date: fmtDate(routeDate(r)), start_time: hhmm(r.start), hub: a.hub, stops: activeStops(r), stop_range: stopRange(activeStops(r)), payout: payout(r).toFixed(2), expiry: S.settings.expiry, route_name: r.name, pickup_address: a.address, instructions: a.instr, support_contact: S.settings.support, driver_first: d ? d.name.split(' ')[0] : '' }; return tpl.replace(/\{(\w+)\}/g, (_, k) => ctx[k] ?? ''); }
 
 /* ---------------- Reliability ---------------- */
 function stats(d) {
@@ -465,17 +480,17 @@ function stats(d) {
   const score = Math.round(comp * w.completion + acc * w.acceptance + conf * w.confirm + Math.min(b.completed * w.perRoute, w.perRouteMax) + Math.min(b.rescues * w.perRescue, w.perRescueMax) + b.early * w.early + b.late * w.late + b.noshow * w.noshow + (d.tier === 'A' ? w.tierA : d.tier === 'B' ? w.tierB : 0));
   let label = b.offers < 5 ? 'New' : b.committed === 0 ? 'No routes yet' : (b.noshow >= 2 || b.late >= 3 || comp < .85) ? 'Watch' : comp < .95 ? 'Solid' : 'Reliable';
   const days = last ? Math.floor((now.getTime() - last) / DAY) : null;
-  return Object.assign(b, { resp, acc, comp, conf, score, label, days });
+  return Object.assign(b, { respMin: b.resp, resp, acc, comp, conf, score, label, days });
 }
 const lblClass = l => l.replace(/\s.*/, '');
-function lblHtml(d) { const s = stats(d); if (!d.active) return `<span class="lbl Inactive">Inactive</span>`; if (d.optOut) return `<span class="lbl Opted">Opted out</span>`; return `<span class="lbl ${lblClass(s.label)}">${s.label}</span>`; }
+function lblHtml(d) { const s = stats(d); if (!d.active) return `<span class="lbl Inactive">Inactive</span>`; if (d.optOut) return `<span class="lbl Opted">Opted out</span>`; if (onHold(d)) return `<span class="lbl Hold" title="${esc(onHold(d).reason)}">On hold</span>`; return `<span class="lbl ${lblClass(s.label)}">${s.label}</span>`; }
 
 /* ---------------- Eligibility & actions ---------------- */
 function bookedOn(d, date, exceptId) { return S.routes.some(r => r.id !== exceptId && r.driverId === d.id && r.date === date && ['Accepted', 'Needs attention', 'Offered'].includes(r.status)); }
 function hasOpenOffer(d, exceptId) { return S.offers.some(o => o.driverId === d.id && o.open && o.routeId !== exceptId); }
 function eligibility(d, r) {
   const why = [];
-  if (!d.active) why.push('Inactive in Airtable'); if (d.optOut) why.push('Texted STOP'); if (d.area !== r.area) why.push('Other area');
+  if (!d.active) why.push('Inactive in Airtable'); if (d.optOut) why.push('Texted STOP'); if (onHold(d)) why.push('On hold'); if (d.area !== r.area) why.push('Other area');
   if (bookedOn(d, r.date, r.id)) why.push('Booked ' + fmtDate(routeDate(r))); if (hasOpenOffer(d, r.id)) why.push('Has an open offer');
   const prior = S.offers.filter(o => o.routeId === r.id && o.driverId === d.id && o.outcome);
   if (prior.some(o => ['Late bail', 'Early release', 'No-show'].includes(o.outcome))) why.push('Bailed on this route');
@@ -487,14 +502,14 @@ function sendSms(d, body, r, o, opts = {}) { return mkMsg(Object.assign({ dir: '
 function offerRoute(r, d, channel, opts = {}) {
   const o = mkOffer({ routeId: r.id, driverId: d.id, sentAt: now.getTime(), live: true, channel: channel === 'phone' ? 'Phone' : 'SMS', auto: !!opts.auto });
   r.offerId = o.id; r.driverId = d.id;
-  const actor = opts.auto ? 'System (lane rule)' : actorName();
+  const actor = opts.actor || (opts.auto ? 'System (lane rule)' : actorName());
   if (channel === 'phone') {
     o.respondedAt = o.acceptedAt = now.getTime(); o.reply = 'Yes'; if (r.rescue) o.rescueCover = true;
     r.status = 'Accepted'; ev(o.id, 'Assigned by phone', actor, 'Accepted offer recorded, no offer text');
     sendSms(d, fill(S.settings.templates.accepted, r, d), r, o); if (!opts.silent) toast(`${d.name} assigned to ${r.name} by phone. Confirmation text sent.`);
   } else {
     o.open = true; o.expiresAt = now.getTime() + S.settings.expiry * 60000; r.status = 'Offered';
-    ev(o.id, 'Offer sent', actor, opts.auto ? `Auto-offer: last driver on ${lane(r.laneId).name}` : (r.laneId ? `SMS, suggested from ${lane(r.laneId).name}` : 'SMS')); sendSms(d, fill(S.settings.templates.offer, r, d), r, o); if (!opts.silent) toast(`Offer texted to ${d.name}. Expires in ${S.settings.expiry} min.`);
+    ev(o.id, 'Offer sent', actor, opts.detail ? opts.detail : opts.auto ? `Auto-offer: last driver on ${lane(r.laneId).name}` : (r.laneId ? `SMS, suggested from ${lane(r.laneId).name}` : 'SMS')); sendSms(d, fill(S.settings.templates.offer, r, d), r, o); if (!opts.silent) toast(`Offer texted to ${d.name}. Expires in ${S.settings.expiry} min.`);
   }
   if (!opts.silent) { S.phoneDriver = d.id; closeModal(); render(); }
 }
@@ -510,6 +525,7 @@ function release(r, by) {
   else { outcome = 'Client cancel'; next = 'Cancelled'; }
   o.outcome = outcome; o.outcomeBy = 'System'; ev(o.id, 'Released', actorName(), `${by}-initiated, ${o.hoursBefore} h before start`); ev(o.id, 'Outcome set', 'System', outcome);
   r.status = next; r.driverId = null; r.offerId = null; r.attention = null; r.onfleet = false;
+  if (outcome === 'Late bail') suggestHold(d, `Late bail on ${r.name}, ${o.hoursBefore} h before start`, r);
   if (next !== 'Cancelled') sendSms(d, fill(S.settings.templates.released, r, d), r, o);
   toast(`${d.name} released from ${r.name}: ${outcome}.${hb < 24 && by === 'Driver' ? ' Route flagged Rescue.' : ''}`); closeModal(); render();
 }
@@ -517,8 +533,100 @@ function confirmedByPhone(r) { const o = offer(r.offerId); if (o.pending === 're
 function sendCheck(r, kind) { const o = offer(r.offerId), d = driver(r.driverId); if (kind === 'reconfirm') o.reconfirmSentAt = now.getTime(); else o.finalSentAt = now.getTime(); o.pending = kind; ev(o.id, kind === 'reconfirm' ? 'Reconfirm sent' : 'Final confirm sent', 'System', ''); sendSms(d, fill(S.settings.templates[kind], r, d), r, o); S.phoneDriver = d.id; toast(`${kind === 'reconfirm' ? 'Reconfirm' : 'Final confirm'} texted to ${d.name}.`); render(); }
 function sendHeadsUp(r) { const o = offer(r.offerId), d = driver(r.driverId); ev(o.id, 'Heads-up sent', 'System', ''); sendSms(d, fill(S.settings.templates.headsup, r, d), r, o); S.phoneDriver = d.id; toast(`Heads-up texted to ${d.name}.`); render(); }
 function silentOnCheck(r) { const o = offer(r.offerId); ev(o.id, `No reply in ${o.pending === 'reconfirm' ? S.settings.reconfirmWindow : S.settings.finalWindow} min`, 'System', 'Route moved to Needs attention'); r.status = 'Needs attention'; r.attention = o.pending === 'reconfirm' ? 'Silent on reconfirm' : 'Silent on final confirm'; if (hoursToStart(r) < 24) r.rescue = true; toast(`${r.name}: driver silent. Moved to Needs attention.`); render(); }
-function retext(r) { const d = driver(r.driverId), o = offer(r.offerId); sendSms(d, `Update to ${r.name} on ${fmtDate(routeDate(r))}: now ${activeStops(r)} stops, pays ${money(payout(r))}. Reply YES to keep it or NO to release.`, r, o); o.pending = 'change'; S.phoneDriver = d.id; ev(o.id, 'Change notice sent', actorName(), ''); toast(`${d.name} texted about the change.`); render(); }
+function retext(r) { const d = driver(r.driverId), o = offer(r.offerId); sendSms(d, `Update to ${r.name} on ${fmtDate(routeDate(r))}: now about ${stopRange(activeStops(r))} stops, pays ${money(payout(r))}. Reply YES to keep it or NO to release.`, r, o); o.pending = 'change'; S.phoneDriver = d.id; ev(o.id, 'Change notice sent', actorName(), ''); toast(`${d.name} texted about the change.`); render(); }
 function clearAttention(r) { r.status = 'Accepted'; r.attention = null; render(); }
+
+/* ---------------- Performance holds ---------------- */
+function onHold(d) { return d && S.holds.find(h => h.driverId === d.id); }
+function suggestHold(d, reason, r) {
+  if (!d || onHold(d)) return;
+  const ex = S.holdSuggestions.find(x => x.driverId === d.id);
+  if (ex) { ex.reason += `; ${reason}`; ex.at = now.getTime(); return; }
+  S.holdSuggestions.push({ id: 'HS' + (S.holdSuggestions.length + 2), driverId: d.id, routeId: r ? r.id : null, reason, at: now.getTime() });
+}
+function putOnHold(did, reason, suggestionId) {
+  const d = driver(did); if (!d || onHold(d)) return;
+  reason = (reason || '').trim(); if (!reason) { toast('Add a reason so the team knows why.'); return; }
+  S.holds.push({ driverId: did, reason, by: actorName(), at: now.getTime() });
+  S.holdSuggestions = S.holdSuggestions.filter(x => x.driverId !== did);
+  const up = S.routes.filter(r => r.driverId === did && routeStart(r) > now.getTime() && ['Offered', 'Accepted', 'Needs attention'].includes(r.status));
+  up.forEach(r => { const o = offer(r.offerId); if (r.status === 'Offered') { o.open = false; o.outcome = 'Withdrawn'; ev(o.id, 'Withdrawn', actorName(), 'Driver put on hold'); r.status = 'Unassigned'; r.driverId = null; r.offerId = null; } else { r.status = 'Needs attention'; r.attention = 'Driver on hold'; ev(o.id, 'Driver put on hold', actorName(), reason); } });
+  toast(`${d.name} is on hold. Skipped in every offer and suggestion until removed.${up.length ? ` ${up.length} upcoming route${up.length > 1 ? 's' : ''} moved to Needs attention.` : ''}`); render();
+}
+function removeHold(did) { S.holds = S.holds.filter(h => h.driverId !== did); toast(`${driver(did).name} is off hold and can be offered routes again.`); render(); }
+function dismissSuggestion(id) { const x = S.holdSuggestions.find(h => h.id === id); S.holdSuggestions = S.holdSuggestions.filter(h => h.id !== id); if (x) toast(`Hold suggestion for ${driver(x.driverId).name} dismissed.`); render(); }
+function holdSuggestionsHtml() {
+  if (!S.holdSuggestions.length) return '';
+  return `<div class="panel"><h3>Suggested holds <span class="muted small">${S.holdSuggestions.length}</span></h3><p class="small muted" style="margin:0 0 8px">Raised automatically after a no-show or late bail. Confirm to skip the driver in every offer until someone removes the hold, or dismiss.</p>
+  ${S.holdSuggestions.map(x => { const d = driver(x.driverId); return `<div class="row" style="padding:8px 0;border-top:1px solid var(--line)"><span class="avatar">${initials(d.name)}</span><div style="flex:1;min-width:180px"><b>${d.name}</b> ${lblHtml(d)}<div class="small" style="color:var(--warn)">${esc(x.reason)}</div><div class="small muted">${fmtDT(x.at)}</div></div><button class="btn sm primary" onclick="putOnHold('${d.id}',S.holdSuggestions.find(h=>h.id==='${x.id}').reason,'${x.id}')">Confirm hold</button><button class="btn sm" onclick="dismissSuggestion('${x.id}')">Dismiss</button></div>`; }).join('')}</div>`;
+}
+function holdsPanelHtml() {
+  const opts = S.drivers.filter(d => d.active && !onHold(d)).map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+  return `<div class="panel"><h3>Performance holds <span class="muted small">${S.holds.length} on hold</span></h3><p class="small muted" style="margin:0 0 10px">A driver on hold is skipped in every offer, lane suggestion and rescue until the hold is removed. Holds live in this app; Airtable status is not changed.</p>
+  ${S.holds.length ? `<div class="tbl" style="margin-bottom:10px"><table><thead><tr><th>Driver</th><th>Reason</th><th>Set by</th><th>Since</th><th></th></tr></thead><tbody>${S.holds.map(h => { const d = driver(h.driverId); return `<tr><td>${d.name}</td><td class="small">${esc(h.reason)}</td><td class="small">${h.by}</td><td class="small mono">${fmtDT(h.at)}</td><td><button class="btn sm" onclick="removeHold('${d.id}')">Remove hold</button></td></tr>`; }).join('')}</tbody></table></div>` : ''}
+  <div class="row"><select id="holdDriver" aria-label="Driver">${opts}</select><input id="holdReason" placeholder="Reason, e.g. 2 late arrivals this week" style="flex:1;min-width:220px"><button class="btn" onclick="putOnHold($('#holdDriver').value,$('#holdReason').value)">Put on hold</button></div></div>`;
+}
+
+/* ---------------- Site check-in ---------------- */
+function checkinRoutes() { return S.routes.filter(r => dayOffset(r) === 0 && r.status !== 'Cancelled' && !r.history && (r.driverId || r.checkin || r.noShow)).sort((a, b) => routeStart(a) - routeStart(b)); }
+function ciTag(r) {
+  if (!r.driverId) return '';
+  const c = r.checkin; if (!c) return dayOffset(r) === 0 && ['Accepted', 'Needs attention'].includes(r.status) ? `<span class="ci Waiting">Not checked in</span>` : '';
+  return `<span class="ci ${c.status === 'No-show' ? 'Noshow' : c.status}">${c.status} ${fmtTime(c.at)}</span>`;
+}
+function checkIn(rid, status) {
+  const r = route(rid), d = driver(r.driverId), o = offer(r.offerId); if (!d) return;
+  if (status === 'No-show') { noShow(r); return; }
+  r.checkin = { status, at: now.getTime(), by: actorName() };
+  ev(o.id, status === 'Arrived' ? 'Checked in: arrived' : 'Checked in: running late', actorName(), 'Site check-in');
+  toast(`${r.name}: ${d.name} marked ${status === 'Arrived' ? 'arrived' : 'late'}. Dispatch sees it now.`); render();
+}
+function rescueCandidate(r) {
+  const s = r.laneId ? laneSuggestion(r) : null; if (s && s.pick) return { d: s.pick.d, why: s.pick.why };
+  const c = S.drivers.filter(d => !eligibility(d, r).length && !(S.settings.laneSkipWatch && stats(d).label === 'Watch')).sort((a, b) => stats(b).score - stats(a).score)[0];
+  return c ? { d: c, why: `highest score free in ${area(r.area).name} today` } : null;
+}
+function noShow(r) {
+  const d = driver(r.driverId), o = offer(r.offerId);
+  o.outcome = 'No-show'; o.outcomeBy = actorName(); o.live = true; o.pending = null;
+  ev(o.id, 'Marked no-show', actorName(), 'Site check-in'); ev(o.id, 'Outcome set', 'System', 'No-show');
+  r.noShow = { driverId: d.id, at: now.getTime(), by: actorName() };
+  r.status = 'Unassigned'; r.driverId = null; r.offerId = null; r.onfleet = false; r.attention = null; r.checkin = null; r.rescue = true;
+  sendSms(d, fill(S.settings.templates.noshow, r, d), r, o);
+  suggestHold(d, `No-show on ${r.name}, ${fmtDate(routeDate(r))}${stats(d).noshow > 1 ? ` (${stats(d).noshow} in 90 days)` : ''}`, r);
+  let msg = `${d.name} marked no-show on ${r.name}. Route flagged Rescue.`;
+  if (S.settings.noShowRescue === 'auto') {
+    const c = rescueCandidate(r);
+    if (c) { offerRoute(r, c.d, 'sms', { auto: true, silent: true, actor: 'System (no-show rescue)', detail: `Same-day rescue after no-show: ${c.why}` }); S.phoneDriver = c.d.id; msg += ` Rescue offer texted to ${c.d.name}.`; }
+    else msg += ' No free driver to offer, so it is pinned under Rescue for you.';
+  }
+  toast(msg); render();
+}
+
+/* ---------------- Staffing health ---------------- */
+function staffing(dayOff, areaIds) {
+  return areaIds.map(aid => {
+    const rs = S.routes.filter(r => r.area === aid && !r.history && r.status !== 'Cancelled' && dayOffset(r) === dayOff);
+    const pool = S.drivers.filter(d => d.area === aid && d.active && !d.optOut && !onHold(d));
+    const booked = new Set(rs.filter(r => r.driverId && ['Offered', 'Accepted', 'Needs attention', 'Completed'].includes(r.status) && pool.some(d => d.id === r.driverId)).map(r => r.driverId));
+    const target = Math.ceil(rs.length * (1 + S.settings.benchPct / 100));
+    const open = rs.filter(r => ['Unassigned', 'Offered', 'Needs attention'].includes(r.status)).length;
+    const bench = pool.filter(d => !booked.has(d.id)).length;
+    const date = rs[0] ? rs[0].date : null;
+    const req = date && S.recruitRequests.find(x => x.area === aid && x.date === date);
+    return { a: area(aid), routes: rs.length, target, active: pool.length, booked: booked.size, bench, open, short: Math.max(0, target - pool.length), date, req };
+  });
+}
+function requestRecruiting(aid, date, n) { S.recruitRequests.push({ area: aid, date, n, by: actorName(), at: now.getTime() }); toast(`Recruiting request sent to Gigee ops: ${n} driver${n > 1 ? 's' : ''} for ${area(aid).name}.`); render(); }
+function healthHtml() {
+  if (S.boardTab === 4) return '';
+  const ids = S.areaFilter === 'all' ? S.areas.map(a => a.id) : [S.areaFilter];
+  const rows = staffing(S.boardTab, ids).filter(x => x.routes);
+  if (!rows.length) return '';
+  return `<div class="panel health" style="margin-bottom:14px"><h3>Staffing health <span class="muted small">routes vs active drivers + ${S.settings.benchPct}% bench</span></h3><div class="tbl"><table><thead><tr><th>Area</th><th class="r">Routes</th><th class="r">Target (+${S.settings.benchPct}%)</th><th class="r">Active drivers</th><th class="r">Booked</th><th class="r">Bench free</th><th class="r">Open routes</th><th>Coverage</th></tr></thead><tbody>
+  ${rows.map(x => `<tr><td>${x.a.name}</td><td class="r num">${x.routes}</td><td class="r num">${x.target}</td><td class="r num">${x.active}</td><td class="r num">${x.booked}</td><td class="r num">${x.bench}</td><td class="r num">${x.open}</td><td class="st">${x.short ? `<span class="pill attention">Short ${x.short}</span> ${x.req ? `<span class="small muted">Recruiting asked ${fmtTime(x.req.at)}</span>` : `<button class="btn sm" onclick="requestRecruiting('${x.a.id}','${x.date}',${x.short})">Ask Gigee to recruit</button>`}` : '<span class="pill accepted">Healthy</span>'}</td></tr>`).join('')}
+  </tbody></table></div><p class="small muted" style="margin:6px 0 0">Active means active in Airtable, not opted out and not on hold. Gigee recruits only when an area drops below target.</p></div>`;
+}
 
 function actorName() { return { dispatcher: 'Dana Ruiz', admin: 'Mike Patel', ops: 'Ruston' }[S.role]; }
 
@@ -593,6 +701,7 @@ relinkAll();
 function closeoutRoutes() { return S.routes.filter(r => dayOffset(r) < 0 && r.driverId && ['Accepted', 'Needs attention', 'Completed'].includes(r.status) && !r.paid); }
 function setOutcome(r, outcome) {
   const o = offer(r.offerId); o.outcome = outcome; o.outcomeBy = actorName(); ev(o.id, 'Outcome set', actorName(), outcome); r.outcome = outcome; r.status = 'Completed';
+  if (outcome === 'No-show') suggestHold(driver(o.driverId), `No-show on ${r.name}, ${fmtDate(routeDate(r))}`, r);
   if (outcome === 'Completed' && !r.laneId) { const l = { id: 'L' + (S.lanes.length + 1), name: `${area(r.area).hub} ${r.name}`, area: r.area, preferredDriverId: null, pool: [], fromRun: r.name }; S.lanes.push(l); r.laneId = l.id; r.laneManual = true; toast(`${r.name} had no match, so it starts a new lane: ${l.name}. Rename it on the Lanes screen.`); }
 }
 function approve(r) { r.approved = { by: actorName(), at: now.getTime() }; ev(r.offerId, 'Approved for pay', actorName(), money(net(r))); }
@@ -653,7 +762,7 @@ setInterval(() => {
 
 /* ---------------- Rendering ---------------- */
 const NAV = [
-  { id: 'board', name: 'Dispatch board', group: 'Daily' }, { id: 'upload', name: 'Upload and review', group: 'Daily' }, { id: 'attention', name: 'Needs attention', group: 'Daily' }, { id: 'inbox', name: 'Messages inbox', group: 'Daily' },
+  { id: 'board', name: 'Dispatch board', group: 'Daily' }, { id: 'checkin', name: 'Site check-in', group: 'Daily' }, { id: 'upload', name: 'Upload and review', group: 'Daily' }, { id: 'attention', name: 'Needs attention', group: 'Daily' }, { id: 'inbox', name: 'Messages inbox', group: 'Daily' },
   { id: 'closeout', name: 'Closeout and pay', group: 'Weekly' }, { id: 'lanes', name: 'Lanes', group: 'Reference' }, { id: 'drivers', name: 'Drivers', group: 'Reference' }, { id: 'settings', name: 'Settings', group: 'Reference' },
 ];
 function go(screen, params = {}) { S.screen = screen; S.params = params; render(); $('#main').scrollTop = 0; }
@@ -662,9 +771,10 @@ function renderNav() {
   const att = S.routes.filter(r => r.status === 'Needs attention' || (r.attention && r.status !== 'Cancelled')).length;
   const inboxN = S.messages.filter(m => (m.dir === 'in' && (!m.driverId || m.kind)) || m.status === 'failed').length;
   const closeN = closeoutRoutes().filter(r => !r.outcome).length;
-  let g = ''; $('#nav').innerHTML = NAV.map(n => { const gh = n.group !== g ? `<div class="group">${n.group}</div>` : ''; g = n.group; const c = n.id === 'attention' ? att : n.id === 'inbox' ? inboxN : n.id === 'closeout' ? closeN : 0; return gh + `<button class="${S.screen === n.id || (S.screen === 'route' && n.id === 'board') || (S.screen === 'driver' && n.id === 'drivers') || (S.screen === 'lane' && n.id === 'lanes') ? 'active' : ''}" onclick="go('${n.id}')">${n.name}${c ? `<span class="count ${n.id === 'attention' ? 'warn' : ''}">${c}</span>` : ''}</button>`; }).join('');
+  const ciN = checkinRoutes().filter(r => r.driverId && r.status !== 'Offered' && !r.checkin).length; const attN = att + S.holdSuggestions.length;
+  let g = ''; $('#nav').innerHTML = NAV.map(n => { const gh = n.group !== g ? `<div class="group">${n.group}</div>` : ''; g = n.group; const c = n.id === 'attention' ? attN : n.id === 'inbox' ? inboxN : n.id === 'closeout' ? closeN : n.id === 'checkin' ? ciN : 0; return gh + `<button class="${S.screen === n.id || (S.screen === 'route' && n.id === 'board') || (S.screen === 'driver' && n.id === 'drivers') || (S.screen === 'lane' && n.id === 'lanes') ? 'active' : ''}" onclick="go('${n.id}')">${n.name}${c ? `<span class="count ${n.id === 'attention' ? 'warn' : ''}">${c}</span>` : ''}</button>`; }).join('');
 }
-function renderMain() { const fn = { board: vBoard, upload: vUpload, route: vRoute, attention: vAttention, inbox: vInbox, closeout: vCloseout, drivers: vDrivers, driver: vDriver, settings: vSettings, lanes: vLanes, lane: vLane }[S.screen]; $('#main').innerHTML = fn(); }
+function renderMain() { const fn = { board: vBoard, upload: vUpload, route: vRoute, attention: vAttention, inbox: vInbox, closeout: vCloseout, checkin: vCheckin, drivers: vDrivers, driver: vDriver, settings: vSettings, lanes: vLanes, lane: vLane }[S.screen]; $('#main').innerHTML = fn(); }
 function laneLine(r) {
   const l = lane(r.laneId); if (!l) return r.laneMatch && !r.history ? `<div class="lane muted"><span class="ico" style="background:var(--surface-2);color:var(--muted)">?</span>No history for these stops</div>` : '';
   const pct = laneMatchPct(r), s = laneSuggestion(r), last = s && s.runs[0];
@@ -674,11 +784,11 @@ function statusPill(r) { const cls = { 'Unassigned': 'unassigned', 'Offered': 'o
 function driverLine(r) { const d = driver(r.driverId); if (!d) return `<span class="muted small">No driver</span>`; return `<span class="avatar">${initials(d.name)}</span><span>${d.name} <span class="muted small mono">${d.gid}</span></span>${lblHtml(d)}`; }
 
 function guide() {
-  let hidden = false; try { hidden = localStorage.getItem('ld-guide2') === '1'; } catch (e) { }
+  let hidden = false; try { hidden = localStorage.getItem('ld-guide3') === '1'; } catch (e) { }
   if (hidden) return '';
   return `<div class="guide"><div><b>Clickable demo.</b> Everything is simulated in the page, and the clock runs at one minute per second so offers expire in 15 seconds.
-  <ol><li>On <b>Tomorrow</b>, RR-0417 is recognized as the Round Rock East loop that Marcus ran yesterday. Click <b>Offer to Marcus R.</b> (one click), then reply <b>YES</b> from the driver phone on the right.</li><li>Under <b>Rescue</b> on Today, open BD-0196: Luis bailed on it, so the lane falls back to the driver before him. Try <b>Assign by phone</b>.</li><li>Open an accepted route, send a <b>reconfirm</b>, then let the driver go silent.</li><li>Open <b>Lanes</b> for the history behind each suggestion. In <b>Settings › Lanes</b> switch to auto-offer, then upload the weekend CSV: RR-0420 is recognized and the offer text goes out on import.</li><li>Run <b>Closeout and pay</b> as the admin and Gigee ops.</li></ol></div>
-  <button class="btn sm ghost x" onclick="try{localStorage.setItem('ld-guide2','1')}catch(e){};render()">Hide</button></div>`;
+  <ol><li>On <b>Tomorrow</b>, RR-0417 is recognized as the Round Rock East loop that Marcus ran yesterday. Click <b>Offer to Marcus R.</b> (one click), then reply <b>YES</b> from the driver phone on the right.</li><li>Under <b>Rescue</b> on Today, open BD-0196: Luis bailed on it, so the lane falls back to the driver before him. Try <b>Assign by phone</b>.</li><li>Open <b>Site check-in</b>. Omar is due at Round Rock Hub at 3:30 PM for RR-0412: mark him <b>No-show</b>. The route goes to Rescue and the next best free driver gets the offer text; reply YES from the phone. Offer texts show a stop range, not an exact count.</li><li>Open <b>Needs attention</b>. Luis's late bail and Omar's no-show each raised a suggested hold. Confirm Luis's hold, then go back to the board's <b>Tomorrow</b> tab: Austin South drops below its 20% bench in <b>Staffing health</b>. Click <b>Ask Gigee to recruit</b>.</li><li>Open an accepted route, send a <b>reconfirm</b>, then let the driver go silent.</li><li>Open <b>Lanes</b> for the history behind each suggestion. In <b>Settings › Lanes</b> switch to auto-offer, then upload the weekend CSV: RR-0420 is recognized and the offer text goes out on import.</li><li>Run <b>Closeout and pay</b> as the admin and Gigee ops.</li></ol></div>
+  <button class="btn sm ghost x" onclick="try{localStorage.setItem('ld-guide3','1')}catch(e){};render()">Hide</button></div>`;
 }
 
 function vBoard() {
@@ -697,7 +807,8 @@ function vBoard() {
       ${laneLine(r)}
       ${r.rescue && !['Accepted', 'Completed', 'Cancelled'].includes(r.status) ? `<div class="pickup-in" data-pickup="${r.id}">Pickup in ${dur(routeStart(r) - now.getTime())}</div>` : ''}
       ${r.attention ? `<div class="small" style="color:var(--warn)">${r.attention}</div>` : ''}
-      <div class="driver">${driverLine(r)}${r.status === 'Offered' && o ? `<span class="countdown" data-countdown="${o.id}" style="margin-left:auto">${Math.ceil((o.expiresAt - now.getTime()) / 60000)} min left</span>` : ''}</div>
+      ${r.noShow && !r.driverId ? `<div class="small" style="color:var(--crit)">${driver(r.noShow.driverId).name} no-show at ${fmtTime(r.noShow.at)}</div>` : ''}
+      <div class="driver">${driverLine(r)}${r.status === 'Offered' && o ? `<span class="countdown" data-countdown="${o.id}" style="margin-left:auto">${Math.ceil((o.expiresAt - now.getTime()) / 60000)} min left</span>` : ''}${ciTag(r) ? `<span style="margin-left:auto">${ciTag(r)}</span>` : ''}</div>
       <div class="actions" onclick="event.stopPropagation()">
         ${r.status === 'Unassigned' ? (s && s.pick ? `<button class="btn sm primary" title="${esc(s.pick.why)}" onclick="offerRoute(route('${r.id}'),driver('${s.pick.d.id}'),'sms')">Offer to ${shortName(s.pick.d)}</button><button class="btn sm" onclick="openPicker('${r.id}','sms')">Other driver</button>` : `<button class="btn sm primary" onclick="openPicker('${r.id}','sms')">Offer</button>`) : ''}
         ${r.status === 'Offered' ? `<button class="btn sm" onclick="withdraw(route('${r.id}'))">Withdraw</button>` : ''}
@@ -711,6 +822,7 @@ function vBoard() {
   return guide() + `<div class="page-head"><div><h1>Dispatch board</h1><p>${fmtDate(now)}. Routes arrive from the OpenFleet upload already built in Onfleet.</p></div>
     <div class="row"><select id="areaFilter" onchange="S.areaFilter=this.value;render()"><option value="all" ${S.areaFilter === 'all' ? 'selected' : ''}>All areas</option>${S.areas.map(a => `<option value="${a.id}" ${S.areaFilter === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}</select>${autoable.length ? `<button class="btn" title="Offer each recognized route to its last driver" onclick="runAutoOffer(${JSON.stringify(autoable.map(r => r.id)).replace(/"/g, "'")})">↻ Offer ${autoable.length} to last drivers</button>` : ''}<button class="btn" onclick="go('upload')">Upload CSV</button></div></div>
     <div class="tabs">${tabs.map(([n, i]) => `<button class="${S.boardTab === i ? 'active' : ''}" onclick="S.boardTab=${i};render()">${n}<span class="n">${tabCount(i)}</span></button>`).join('')}</div>
+    ${healthHtml()}
     <div class="chips">${Object.entries(counts).filter(([k, v]) => v || k !== 'Cancelled').map(([k, v]) => `<span class="chip">${k} <b>${v}</b></span>`).join('')}${rescue.length ? `<span class="chip" style="border-color:var(--crit);color:var(--crit)">Rescue <b>${rescue.length}</b></span>` : ''}</div>
     ${rescue.length ? `<div class="group-title"><h3 style="color:var(--crit)">Rescue</h3><span class="n">pinned</span></div><div class="cards">${rescue.map(card).join('')}</div>` : ''}
     ${group('Needs attention', all.filter(r => r.status === 'Needs attention' && !rescue.includes(r)))}
@@ -734,11 +846,12 @@ function vRoute() {
   if (['Accepted', 'Needs attention'].includes(r.status)) actions.push(`<button class="btn danger" onclick="openRelease('${r.id}')">Release driver</button>`);
   if (r.status === 'Needs attention' && o && o.pending) actions.push(`<button class="btn primary" onclick="confirmedByPhone(route('${r.id}'))">Confirmed by phone</button>`);
   if (r.status === 'Needs attention' && r.attention === 'Order changed after acceptance') actions.push(`<button class="btn primary" onclick="retext(route('${r.id}'))">Re-text driver</button>`, `<button class="btn" onclick="clearAttention(route('${r.id}'))">Keep as is</button>`);
-  if (r.status === 'Needs attention' && r.attention === 'Driver deactivated in Airtable') actions.push(`<button class="btn" onclick="openRelease('${r.id}','Dispatcher')">Reassign</button>`);
+  if (r.status === 'Needs attention' && ['Driver deactivated in Airtable', 'Driver on hold'].includes(r.attention)) actions.push(`<button class="btn" onclick="openRelease('${r.id}','Dispatcher')">Reassign</button>`);
   if (r.attention === 'Order not in latest file' && r.status !== 'Needs attention') actions.push(`<button class="btn" onclick="route('${r.id}').attention=null;render()">Keep order</button>`);
   const sim = ['Accepted'].includes(r.status) && o && !o.pending ? `<div class="panel"><h3>Confirmation checks</h3><p class="small muted" style="margin:0 0 8px">Scheduled by the job runner in the hub's time zone: heads-up ${48}h before, reconfirm ${S.settings.reconfirmHours}h before, final ${S.settings.finalHours}h before. Fire one now for the demo.</p><div class="row">
     <button class="btn sm" onclick="sendHeadsUp(route('${r.id}'))">Send heads-up</button><button class="btn sm" onclick="sendCheck(route('${r.id}'),'reconfirm')">Send reconfirm</button><button class="btn sm" onclick="sendCheck(route('${r.id}'),'final')">Send final confirm</button></div></div>` : '';
   const pendingBox = o && o.pending && r.status !== 'Needs attention' ? `<div class="notice info"><div>Waiting on ${d.name}'s ${o.pending === 'reconfirm' ? 'reconfirm' : o.pending === 'final' ? 'final confirm' : 'reply to the change'}. <button class="btn sm" style="margin-left:8px" onclick="silentOnCheck(route('${r.id}'))">Simulate ${o.pending === 'reconfirm' ? S.settings.reconfirmWindow : S.settings.finalWindow} min of silence</button></div></div>` : '';
+  const ciPanel = dayOffset(r) === 0 && (d || r.noShow) ? `<div class="panel"><h3>Site check-in</h3>${r.noShow ? `<p class="small" style="margin:0 0 8px;color:var(--crit)">${driver(r.noShow.driverId).name} marked no-show at ${fmtTime(r.noShow.at)} by ${r.noShow.by}.</p>` : ''}${d ? `<div class="row">${ciTag(r)}${(!r.checkin || r.checkin.status === 'Late') ? `<button class="btn sm" onclick="checkIn('${r.id}','Arrived')">Arrived</button>${r.checkin ? '' : `<button class="btn sm" onclick="checkIn('${r.id}','Late')">Late</button>`}<button class="btn sm danger" onclick="checkIn('${r.id}','No-show')">No-show</button>` : ''}</div>` : '<p class="small muted" style="margin:0">Rescue open. No driver yet.</p>'}</div>` : '';
   return `<button class="btn ghost sm" onclick="go('board')">← Board</button>
   <div class="page-head" style="margin-top:8px"><div><h1>${r.name} ${statusPill(r)}</h1><p>${fmtDate(routeDate(r))} · ${hhmm(r.start)} · ${a.name} / ${a.hub} · ${r.vehicle}${hb > 0 && hb < 48 ? ` · starts in ${dur(routeStart(r) - now.getTime())}` : ''}${r.laneId ? ` · <a style="cursor:pointer" onclick="go('lane',{id:'${r.laneId}'})">↻ ${esc(lane(r.laneId).name)}</a>` : ''}</p></div><div class="row">${actions.join('')}</div></div>
   ${r.attention ? `<div class="notice warn" style="margin-bottom:12px"><div><b>Needs a decision:</b> ${r.attention}.${r.attention === 'Driver deactivated in Airtable' ? ' Driver stays attached until you act; the picker will not offer them new work.' : ''}</div></div>` : ''}
@@ -748,6 +861,7 @@ function vRoute() {
       <div class="panel"><h3>Driver</h3>${d ? `<div class="row" style="margin-bottom:8px">${driverLine(r)}<span class="mono small muted">${phoneFmt(d.phone)}</span></div>
         <label class="small"><input type="checkbox" id="onf" ${r.onfleet ? 'checked' : ''} ${['Accepted', 'Needs attention'].includes(r.status) ? '' : 'disabled'} onchange="route('${r.id}').onfleet=this.checked;render()"> Assigned in Onfleet (manual step in v1)</label>` : `<p class="muted small" style="margin:0">No driver. ${r.status === 'Unassigned' ? 'Offer the route or assign by phone.' : ''}</p>`}
         ${r.status === 'Offered' && o ? `<p class="small" style="margin:8px 0 0">Open offer, <span class="countdown" data-countdown="${o.id}">${Math.ceil((o.expiresAt - now.getTime()) / 60000)} min left</span>. The driver replies on the phone panel.</p>` : ''}</div>
+      ${ciPanel}
       ${sim}
       <div class="panel"><h3>Orders <span class="muted small">${activeStops(r)} active</span></h3><div class="tbl"><table><thead><tr><th>Order</th><th>Address</th><th>Customer</th><th class="r">Pkgs</th><th></th></tr></thead><tbody>
         ${r.orders.map(x => `<tr${x.status === 'cancelled' ? ' style="opacity:.5"' : ''}><td class="mono">${x.id}</td><td>${esc(x.addr)}</td><td>${x.name}</td><td class="r num">${x.pkgs}</td><td class="small">${x.status === 'cancelled' ? '<span class="pill cancelled">Cancelled</span>' : ''}${!x.inLatest && x.status === 'active' ? '<span class="pill attention">Not in latest file</span>' : ''}${x.history.length ? `<span class="muted" title="${esc(x.history.map(h => `${h.field}: ${h.old} → ${h.new} (${h.batch})`).join('\n'))}">changed ×${x.history.length}</span>` : ''}</td></tr>`).join('')}
@@ -819,10 +933,24 @@ function vUpload() {
   ${p.rejected.length ? `<div class="group-title"><h3>Rejected rows</h3><span class="n">the rest of the file still imports</span></div><div class="panel"><div class="tbl"><table><thead><tr><th>Row</th><th>Order ID</th><th>Reason</th></tr></thead><tbody>${p.rejected.map(x => `<tr><td class="num">${x.row}</td><td class="mono">${x.id}</td><td style="color:var(--crit)">${x.reason}</td></tr>`).join('')}</tbody></table></div></div>` : ''}`;
 }
 
+function vCheckin() {
+  const rs = checkinRoutes();
+  const n = k => rs.filter(r => r.checkin && r.checkin.status === k).length;
+  const due = rs.filter(r => r.driverId && r.status !== 'Offered'), waiting = due.filter(r => !r.checkin).length, noshows = rs.filter(r => r.noShow).length;
+  const m = (k, v, c) => `<div class="cnt ${c || ''}"><div class="v num">${v}</div><div class="k">${k}</div></div>`;
+  const row = r => { const d = driver(r.driverId), c = r.checkin;
+    return `<div class="checkin-row"><div><div class="row"><b class="mono" style="cursor:pointer" onclick="go('route',{id:'${r.id}'})">${r.name}</b><span class="mono small">${hhmm(r.start)}</span>${d ? `<span>${d.name}</span>` : '<span class="muted">No driver yet</span>'}${ciTag(r)}${r.rescue && !['Accepted', 'Completed'].includes(r.status) ? ' <span class="pill rescue">Rescue</span>' : ''}${r.status === 'Offered' ? ' <span class="pill offered">Rescue offer out</span>' : ''}</div>
+      ${r.noShow ? `<div class="small" style="color:var(--crit);margin-top:2px">${driver(r.noShow.driverId).name} no-show at ${fmtTime(r.noShow.at)}${r.status === 'Accepted' ? `, covered by ${d.name}` : ''}</div>` : ''}${c ? `<div class="small muted">Marked by ${c.by}</div>` : ''}</div>
+      <div class="checkin-btns">${d && r.status === 'Accepted' && (!c || c.status === 'Late') ? `<button class="btn ${c ? '' : 'primary'}" onclick="checkIn('${r.id}','Arrived')">Arrived</button>${c ? '' : `<button class="btn" onclick="checkIn('${r.id}','Late')">Late</button>`}<button class="btn danger" onclick="checkIn('${r.id}','No-show')">No-show</button>` : ''}</div></div>`; };
+  return `<div class="page-head"><div><h1>Site check-in</h1><p>${fmtDate(now)}. Hub staff or the dispatcher mark each driver at pickup. It shows on the board right away, and a no-show starts a same-day rescue${S.settings.noShowRescue === 'auto' ? ' and texts the next best driver' : ''}.</p></div></div>
+  <div class="counts" style="margin-bottom:14px">${m('Expected', due.length)}${m('Arrived', n('Arrived'), 'new')}${m('Late', n('Late'), 'missing')}${m('Waiting', waiting, 'changed')}${m('No-shows', noshows, 'rejected')}</div>
+  ${S.areas.map(a => { const ar = rs.filter(r => r.area === a.id); return ar.length ? `<div class="panel" style="margin-bottom:12px"><h3>${a.hub} <span class="muted small">${a.address}</span></h3>${ar.map(row).join('')}</div>` : ''; }).join('') || '<p class="muted">No routes with drivers today.</p>'}`;
+}
 function vAttention() {
   const rs = S.routes.filter(r => (r.status === 'Needs attention' || r.attention) && r.status !== 'Cancelled').sort((a, b) => routeStart(a) - routeStart(b));
   return `<div class="page-head"><div><h1>Needs attention</h1><p>Every route waiting on a dispatcher decision, and why. The driver stays attached until you act.</p></div></div>
-  ${rs.length ? `<div class="panel"><div class="tbl"><table><thead><tr><th>Route</th><th>Starts</th><th>Driver</th><th>Why</th><th>Status</th><th></th></tr></thead><tbody>${rs.map(r => `<tr class="clickable" onclick="go('route',{id:'${r.id}'})"><td><b class="mono">${r.name}</b><div class="small muted">${area(r.area).hub}</div></td><td class="small">${fmtDate(routeDate(r))} ${hhmm(r.start)}<div class="muted">in ${dur(routeStart(r) - now.getTime())}</div></td><td><div class="row">${driverLine(r)}</div></td><td style="color:var(--warn)">${r.attention}</td><td>${statusPill(r)}</td><td><button class="btn sm primary" onclick="event.stopPropagation();go('route',{id:'${r.id}'})">Decide</button></td></tr>`).join('')}</tbody></table></div></div>` : '<div class="notice ok"><div>Nothing waiting on you.</div></div>'}`;
+  ${holdSuggestionsHtml()}
+  ${rs.length ? `<div class="panel"><div class="tbl"><table><thead><tr><th>Route</th><th>Starts</th><th>Driver</th><th>Why</th><th>Status</th><th></th></tr></thead><tbody>${rs.map(r => `<tr class="clickable" onclick="go('route',{id:'${r.id}'})"><td><b class="mono">${r.name}</b><div class="small muted">${area(r.area).hub}</div></td><td class="small">${fmtDate(routeDate(r))} ${hhmm(r.start)}<div class="muted">in ${dur(routeStart(r) - now.getTime())}</div></td><td><div class="row">${driverLine(r)}</div></td><td style="color:var(--warn)">${r.attention}</td><td>${statusPill(r)}</td><td><button class="btn sm primary" onclick="event.stopPropagation();go('route',{id:'${r.id}'})">Decide</button></td></tr>`).join('')}</tbody></table></div></div>` : S.holdSuggestions.length ? '' : '<div class="notice ok"><div>Nothing waiting on you.</div></div>'}`;
 }
 
 function vInbox() {
@@ -864,15 +992,18 @@ function showExport(x) {
 function vDrivers() {
   const rows = S.drivers.map(d => ({ d, s: stats(d) })).sort((a, b) => b.s.score - a.s.score);
   return `<div class="page-head"><div><h1>Drivers</h1><p>Profile data is read-only from the Gigee driver table in Airtable. Stats are a rolling 90 days, computed from the offer ledger and written back after each closeout.</p></div><button class="btn" onclick="toast('Airtable sync requested. Up to date.')">Sync now</button></div>
+  ${holdSuggestionsHtml()}${holdsPanelHtml()}
   <div class="panel"><div class="tbl"><table><thead><tr><th>Driver</th><th>Area</th><th>Status</th><th class="r">Score</th><th class="r">Offers</th><th class="r">Accept</th><th class="r">Completion</th><th class="r">Late bails</th><th class="r">No-shows</th><th class="r">Confirm</th><th class="r">Rescues</th><th class="r">Avg reply</th><th class="r">Last route</th></tr></thead><tbody>
-  ${rows.map(({ d, s }) => `<tr class="clickable" onclick="go('driver',{id:'${d.id}'})"><td><div class="row"><span class="avatar">${initials(d.name)}</span><div><div>${d.name}</div><div class="mono small muted">${d.gid}${d.tier ? ' · Tier ' + d.tier : ''}</div></div></div></td><td class="small">${area(d.area).name}</td><td>${lblHtml(d)}</td><td class="r score">${s.label === 'New' ? '—' : s.score}</td><td class="r num">${s.offers}</td><td class="r num">${Math.round(s.acc * 100)}%</td><td class="r num">${s.committed ? Math.round(s.comp * 100) + '%' : '—'}</td><td class="r num">${s.late}</td><td class="r num">${s.noshow}</td><td class="r num">${s.confSent ? Math.round(s.conf * 100) + '%' : '—'}</td><td class="r num">${s.rescues}</td><td class="r num">${s.resp} min</td><td class="r num">${s.days === null ? '—' : s.days + ' d'}</td></tr>`).join('')}</tbody></table></div></div>`;
+  ${rows.map(({ d, s }) => `<tr class="clickable" onclick="go('driver',{id:'${d.id}'})"><td><div class="row"><span class="avatar">${initials(d.name)}</span><div><div>${d.name}</div><div class="mono small muted">${d.gid}${d.tier ? ' · Tier ' + d.tier : ''}</div></div></div></td><td class="small">${area(d.area).name}</td><td>${lblHtml(d)}</td><td class="r score">${s.label === 'New' ? '—' : s.score}</td><td class="r num">${s.offers}</td><td class="r num">${Math.round(s.acc * 100)}%</td><td class="r num">${s.committed ? Math.round(s.comp * 100) + '%' : '—'}</td><td class="r num">${s.late}</td><td class="r num">${s.noshow}</td><td class="r num">${s.confSent ? Math.round(s.conf * 100) + '%' : '—'}</td><td class="r num">${s.rescues}</td><td class="r num">${s.respMin} min</td><td class="r num">${s.days === null ? '—' : s.days + ' d'}</td></tr>`).join('')}</tbody></table></div></div>`;
 }
 function vDriver() {
   const d = driver(S.params.id); if (!d) return ''; const s = stats(d);
   const ofs = S.offers.filter(o => o.driverId === d.id && o.sentAt).sort((a, b) => b.sentAt - a.sentAt);
   const m = (k, v) => `<div class="cnt"><div class="v num">${v}</div><div class="k">${k}</div></div>`;
   return `<button class="btn ghost sm" onclick="go('drivers')">← Drivers</button>
-  <div class="page-head" style="margin-top:8px"><div><h1>${d.name} ${lblHtml(d)}</h1><p class="mono">${d.gid} · ${phoneFmt(d.phone)} · ${area(d.area).name}${d.tier ? ' · Manual Tier ' + d.tier : ''} · Airtable ${d.rec}</p></div><div class="row"><button class="btn" onclick="S.phoneDriver='${d.id}';document.getElementById('phone').classList.add('open');renderPhone()">Open phone</button>${d.optOut ? `<span class="notice crit small">Texted STOP. Blocked from offers until they text START.</span>` : ''}${!d.active ? `<span class="notice crit small">Inactive in Airtable. Cannot be offered work.</span>` : ''}</div></div>
+  <div class="page-head" style="margin-top:8px"><div><h1>${d.name} ${lblHtml(d)}</h1><p class="mono">${d.gid} · ${phoneFmt(d.phone)} · ${area(d.area).name}${d.tier ? ' · Manual Tier ' + d.tier : ''} · Airtable ${d.rec}</p></div><div class="row"><button class="btn" onclick="S.phoneDriver='${d.id}';document.getElementById('phone').classList.add('open');renderPhone()">Open phone</button>${d.optOut ? `<span class="notice crit small">Texted STOP. Blocked from offers until they text START.</span>` : ''}${!d.active ? `<span class="notice crit small">Inactive in Airtable. Cannot be offered work.</span>` : ''}${d.active ? (onHold(d) ? `<button class="btn" onclick="removeHold('${d.id}')">Remove hold</button>` : `<input id="dHoldReason" placeholder="Reason for a hold" style="min-width:200px"><button class="btn" onclick="putOnHold('${d.id}',$('#dHoldReason').value)">Put on hold</button>`) : ''}</div></div>
+  ${onHold(d) ? `<div class="notice crit" style="margin-bottom:12px"><div><b>On hold</b> since ${fmtDT(onHold(d).at)}, set by ${onHold(d).by}: ${esc(onHold(d).reason)}. Skipped in every offer until removed.</div></div>` : ''}
+  ${S.holdSuggestions.filter(x => x.driverId === d.id).map(x => `<div class="notice warn" style="margin-bottom:12px"><div><b>Suggested hold:</b> ${esc(x.reason)}. <button class="btn sm primary" style="margin-left:8px" onclick="putOnHold('${d.id}',S.holdSuggestions.find(h=>h.id==='${x.id}').reason,'${x.id}')">Confirm hold</button> <button class="btn sm" onclick="dismissSuggestion('${x.id}')">Dismiss</button></div></div>`).join('')}
   <div class="counts" style="margin-bottom:14px">${m('Score', s.label === 'New' ? '—' : s.score)}${m('Offers (90 d)', s.offers)}${m('Response', Math.round(s.resp * 100) + '%')}${m('Acceptance', Math.round(s.acc * 100) + '%')}${m('Completion', s.committed ? Math.round(s.comp * 100) + '%' : '—')}${m('On-time confirm', s.confSent ? Math.round(s.conf * 100) + '%' : '—')}${m('Late bails', s.late)}${m('No-shows', s.noshow)}${m('Rescues', s.rescues)}${m('Days since route', s.days ?? '—')}</div>
   <div class="two"><div class="panel"><h3>Offer history</h3>${ofs.length ? `<div class="tbl"><table><thead><tr><th>Sent</th><th>Route</th><th>Reply</th><th>Channel</th><th>Outcome</th></tr></thead><tbody>${ofs.map(o => { const r = route(o.routeId); return `<tr class="clickable" onclick="go('route',{id:'${r.id}'})"><td class="small mono">${fmtDT(o.sentAt)}</td><td class="mono">${r.name} <span class="muted small">${fmtDate(routeDate(r))}</span></td><td>${o.reply || (o.open ? '<span class="countdown">waiting</span>' : '—')}</td><td class="small">${o.channel}</td><td>${o.outcome ? `<span class="pill ${o.outcome === 'Completed' ? 'accepted' : ['Late bail', 'No-show'].includes(o.outcome) ? 'rescue' : 'unassigned'}">${o.outcome}</span>` : o.open ? '<span class="pill offered">Open</span>' : '<span class="pill accepted">Active</span>'}</td></tr>`; }).join('')}</tbody></table></div><p class="small muted" style="margin:8px 0 0">Earlier offers in the 90-day window are in the base counts above; the Airtable migration question decides whether July history comes over.</p>` : '<p class="muted small">No offers yet.</p>'}</div>
   <div class="stack">
@@ -920,10 +1051,10 @@ function vSettings() {
       <label><input type="radio" name="laneAuto" value="auto" ${t.laneAuto === 'auto' ? 'checked' : ''} onchange="S.settings.laneAuto='auto';render()"><span><b>Auto-offer the last driver on import</b><br><span class="small muted">The moment an import creates a recognized route, the offer text goes to the suggested driver. If they decline or let it expire, the route returns to Unassigned for the dispatcher (an automatic next-best queue is Phase 3). Never texts during quiet hours; waits for 7:00 AM.</span></span></label>
     </div>
     <div class="form" style="margin-top:14px"><label>Match threshold (% of a route's stops seen on the lane)<input type="number" min="1" max="100" value="${t.laneThreshold}" onchange="S.settings.laneThreshold=Number(this.value);relinkAll();render();toast('Routes re-matched.')"></label><label>History window (runs per lane)<input type="number" min="1" value="${t.laneWindow}" onchange="S.settings.laneWindow=Number(this.value);relinkAll();render()"></label><label>Drivers on Watch<select onchange="S.settings.laneSkipWatch=this.value==='1';render()"><option value="1" ${t.laneSkipWatch ? 'selected' : ''}>Skip, fall back to the next driver</option><option value="0" ${t.laneSkipWatch ? '' : 'selected'}>Suggest them anyway</option></select></label></div>
-    <p class="small muted" style="margin:12px 0 0">Suggestion order: the lane's preferred driver if one is set, then the driver of the most recent run, then the one before, and so on. A driver is skipped when inactive in Airtable, opted out, booked that day, holding an open offer, or when they bailed or passed on this same route. A route that matches nothing becomes a new lane the first time it completes; a dispatcher can also link or unlink any route by hand, and later matches learn from that.</p></div>`;
+    <p class="small muted" style="margin:12px 0 0">Suggestion order: the lane's preferred driver if one is set, then the driver of the most recent run, then the one before, and so on. A driver is skipped when inactive in Airtable, opted out, on hold, booked that day, holding an open offer, or when they bailed or passed on this same route. A route that matches nothing becomes a new lane the first time it completes; a dispatcher can also link or unlink any route by hand, and later matches learn from that.</p></div>`;
   if (S.setTab === 'areas') body = `<div class="panel"><div class="tbl"><table><thead><tr><th>Area</th><th>Hub</th><th>Price per drop</th><th>Pickup time</th><th>Pickup address</th><th>Driver instructions</th></tr></thead><tbody>${S.areas.map(a => `<tr><td><b>${a.name}</b></td><td>${a.hub}</td><td><input type="number" step="0.25" value="${a.ppd.toFixed(2)}" style="width:90px" onchange="area('${a.id}').ppd=Number(this.value);toast('Unapproved payouts in ${a.name} recalculated.');render()"></td><td><input type="time" value="${a.pickup}" onchange="area('${a.id}').pickup=this.value;render()"></td><td class="small">${a.address}</td><td class="small">${a.instr}</td></tr>`).join('')}</tbody></table></div><p class="small muted" style="margin:8px 0 0">Route fee: greater of <input type="number" value="${t.feeMin}" style="width:60px" onchange="S.settings.feeMin=Number(this.value);render()"> dollars or <input type="number" value="${t.feePct}" style="width:50px" onchange="S.settings.feePct=Number(this.value);render()">% of proposed payout. A setting, not code.</p></div>`;
-  if (S.setTab === 'templates') body = `<div class="panel"><p class="small muted" style="margin:0 0 10px">Merge fields: {date} {start_time} {hub} {stops} {payout} {expiry} {route_name} {pickup_address} {instructions} {support_contact}. Edits apply to the next text sent.</p><div class="stack">${Object.entries(t.templates).map(([k, v]) => `<label class="small muted" style="display:flex;flex-direction:column;gap:4px"><span class="eyebrow">${k}</span><textarea rows="2" class="mono" style="color:var(--fg)" onchange="S.settings.templates['${k}']=this.value;toast('Template saved.')">${esc(v)}</textarea></label>`).join('')}</div></div>`;
-  if (S.setTab === 'timing') body = `<div class="panel"><div class="form"><label>Offer expiry (min)<input type="number" value="${t.expiry}" onchange="S.settings.expiry=Number(this.value);toast('Expiry saved.')"></label><label>Reconfirm (hours before start)<input type="number" value="${t.reconfirmHours}" onchange="S.settings.reconfirmHours=Number(this.value)"></label><label>Reconfirm reply window (min)<input type="number" value="${t.reconfirmWindow}" onchange="S.settings.reconfirmWindow=Number(this.value)"></label><label>Final confirm (hours before start)<input type="number" value="${t.finalHours}" onchange="S.settings.finalHours=Number(this.value)"></label><label>Final reply window (min)<input type="number" value="${t.finalWindow}" onchange="S.settings.finalWindow=Number(this.value)"></label><label>Quiet hours<input value="${t.quietStart} to ${t.quietEnd}"></label><label>Late bail threshold (hours)<input type="number" value="24"></label><label>Support contact<input value="${t.support}" onchange="S.settings.support=this.value"></label></div><p class="small muted" style="margin:10px 0 0">Starts before 8:00 AM get their final confirm at 6:00 PM the evening before. All times in the hub's time zone (America/Chicago).</p></div>`;
+  if (S.setTab === 'templates') body = `<div class="panel"><p class="small muted" style="margin:0 0 10px">Offer texts show a stop range, never an exact count or a per-drop rate. Range width <input type="number" min="1" value="${t.stopRange}" style="width:56px" onchange="S.settings.stopRange=Number(this.value);toast('Range saved. Next offer reads About '+stopRange(13)+' stops for a 13-stop route.')"> stops. Merge fields: {date} {start_time} {hub} {stop_range} {stops} {payout} {expiry} {route_name} {pickup_address} {instructions} {support_contact}. Edits apply to the next text sent.</p><div class="stack">${Object.entries(t.templates).map(([k, v]) => `<label class="small muted" style="display:flex;flex-direction:column;gap:4px"><span class="eyebrow">${k}</span><textarea rows="2" class="mono" style="color:var(--fg)" onchange="S.settings.templates['${k}']=this.value;toast('Template saved.')">${esc(v)}</textarea></label>`).join('')}</div></div>`;
+  if (S.setTab === 'timing') body = `<div class="panel"><div class="form"><label>Offer expiry (min)<input type="number" value="${t.expiry}" onchange="S.settings.expiry=Number(this.value);toast('Expiry saved.')"></label><label>Reconfirm (hours before start)<input type="number" value="${t.reconfirmHours}" onchange="S.settings.reconfirmHours=Number(this.value)"></label><label>Reconfirm reply window (min)<input type="number" value="${t.reconfirmWindow}" onchange="S.settings.reconfirmWindow=Number(this.value)"></label><label>Final confirm (hours before start)<input type="number" value="${t.finalHours}" onchange="S.settings.finalHours=Number(this.value)"></label><label>Final reply window (min)<input type="number" value="${t.finalWindow}" onchange="S.settings.finalWindow=Number(this.value)"></label><label>Quiet hours<input value="${t.quietStart} to ${t.quietEnd}"></label><label>Late bail threshold (hours)<input type="number" value="24"></label><label>Support contact<input value="${t.support}" onchange="S.settings.support=this.value"></label><label>Staffing bench (% over routes)<input type="number" value="${t.benchPct}" onchange="S.settings.benchPct=Number(this.value);render()"></label><label>When a site marks a no-show<select onchange="S.settings.noShowRescue=this.value"><option value="auto" ${t.noShowRescue === 'auto' ? 'selected' : ''}>Flag Rescue and offer to the next best driver</option><option value="flag" ${t.noShowRescue === 'flag' ? 'selected' : ''}>Flag Rescue only, dispatcher offers</option></select></label></div><p class="small muted" style="margin:10px 0 0">Starts before 8:00 AM get their final confirm at 6:00 PM the evening before. All times in the hub's time zone (America/Chicago).</p></div>`;
   if (S.setTab === 'weights') body = `<div class="panel"><p class="small muted" style="margin:0 0 10px">Score = completion × ${w.completion} + acceptance × ${w.acceptance} + on-time confirm × ${w.confirm} + ${w.perRoute} per completed route (max ${w.perRouteMax}) + ${w.perRescue} per rescue (max ${w.perRescueMax}) ${w.early} per early release ${w.late} per late bail ${w.noshow} per no-show + tier bump (A +${w.tierA}, B +${w.tierB}). Changing a weight recomputes every driver.</p><div class="form">${Object.entries(w).map(([k, v]) => `<label>${k}<input type="number" value="${v}" onchange="S.settings.weights['${k}']=Number(this.value);render();toast('Scores recomputed.')"></label>`).join('')}</div><p class="small muted" style="margin:10px 0 0">Labels: New under 5 offers · No routes yet · Watch (2+ no-shows, 3+ late bails, or completion under 85%) · Solid 85 to 94% · Reliable 95% and up.</p></div>`;
   if (S.setTab === 'mapping') body = `<div class="panel"><p class="small muted" style="margin:0 0 10px">Saved for Logiscal from the Oct 6 upload. Mapped again only when the columns change.</p><div class="tbl"><table><thead><tr><th>App field</th><th>OpenFleet column</th><th>Required</th></tr></thead><tbody>${[['Order ID', 'order_number', 'Yes'], ['Service date', 'delivery_date', 'Yes'], ['Delivery address', 'address_line_1 + city + state + zip', 'Yes'], ['Area or hub', 'depot', 'Yes'], ['Onfleet route ID', 'onfleet_route', 'Yes'], ['Route start time', 'route_start', 'No'], ['Customer name', 'recipient_name', 'No'], ['Customer phone', 'recipient_phone', 'No'], ['Package count', 'package_qty', 'No'], ['Order status', 'status', 'No']].map(r => `<tr><td>${r[0]}</td><td class="mono">${r[1]}</td><td class="small">${r[2]}</td></tr>`).join('')}</tbody></table></div></div>`;
   if (S.setTab === 'users') body = `<div class="panel"><div class="tbl"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Client</th></tr></thead><tbody>${[['Dana Ruiz', 'dana@logiscal.com', 'Dispatcher', 'Logiscal'], ['Chris Ambrose', 'chris@logiscal.com', 'Dispatcher', 'Logiscal'], ['Mike Patel', 'mike@logiscal.com', 'Client admin', 'Logiscal'], ['Ruston', 'ruston@gigee.com', 'Gigee ops', 'All clients']].map(r => `<tr><td>${r[0]}</td><td class="mono small">${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('')}</tbody></table></div><p class="small muted" style="margin:8px 0 0">Every query is scoped to the user's client. Gigee ops sees all clients.</p></div>`;

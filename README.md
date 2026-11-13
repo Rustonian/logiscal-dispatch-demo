@@ -8,7 +8,7 @@ A clickable, single-file prototype of the Logiscal Route Dispatch app described 
 
 Logiscal uploads its OpenFleet order CSV, the app merges orders into routes (routes are built in Onfleet and arrive with a route ID), and a dispatcher offers each route to one Gigee driver at a time by text. Drivers reply YES or NO on the simulated phone panel on the right. Driver records and eligibility come from Airtable; the app only reads them.
 
-Screens: Dispatch board, Upload and review, Route detail, Driver picker, Needs attention, Messages inbox, Closeout and pay, Lanes, Drivers, Settings.
+Screens: Dispatch board (with Staffing health), Site check-in, Upload and review, Route detail, Driver picker, Needs attention, Messages inbox, Closeout and pay, Lanes, Drivers, Settings.
 
 ## Demo conventions
 
@@ -21,4 +21,4 @@ Screens: Dispatch board, Upload and review, Route detail, Driver picker, Needs a
 
 `index.html` is the whole app. The seeded scenario (drivers, lanes, three weeks of history, today's routes) is at the top of the script. Pushing to `main` redeploys the site.
 
-Rules the demo encodes, for reference: six route statuses, one open offer per driver, 15 minute expiry, release outcomes by who initiated and the 24 hour line, reconfirm and final confirm windows, pay math with the route fee, the reliability score, and lane recognition by shared stops with last-driver suggestion. See the spec for the full definitions.
+Rules the demo encodes, for reference: six route statuses, one open offer per driver, 15 minute expiry, release outcomes by who initiated and the 24 hour line, reconfirm and final confirm windows, pay math with the route fee, the reliability score, lane recognition by shared stops with last-driver suggestion, offer texts that show a stop range instead of an exact count, performance holds (suggested after a no-show or late bail), site check-in where a no-show starts a same-day rescue, and staffing health against a 20% bench. See the spec for the full definitions.
