@@ -4,7 +4,7 @@ Oct 14, 2026 · @Ruston
 
 ## Overview
 
-We are building a standalone web app where Logiscal uploads its daily OpenFleet order CSV, turns the orders into routes, and offers each route to a driver by text. Drivers accept or decline by replying to the text, and the app tracks every confirmation, release, rescue and completion through to pay. It replaces the Airtable "Logiscal Dispatcher" base, which proved the workflow but cannot be maintained or scaled as a no-code build.
+We are building a standalone web app where Logiscal uploads its daily Onfleet order CSV, turns the orders into routes, and offers each route to a driver by text. Drivers accept or decline by replying to the text, and the app tracks every confirmation, release, rescue and completion through to pay. It replaces the Airtable "Logiscal Dispatcher" base, which proved the workflow but cannot be maintained or scaled as a no-code build.
 
 Driver records stay in Airtable. The Gigee driver table remains the source of truth for who is onboarded and compliant, and the app only offers work to drivers that table says are active.
 
@@ -12,7 +12,7 @@ Driver records stay in Airtable. The Gigee driver table remains the source of tr
 
 - Dispatchers offer a route in two clicks instead of texting drivers one at a time.
 - Every route for the day is visible on one board, with its status and driver.
-- Orders flow in from OpenFleet by CSV, and re-uploads merge without losing work already done.
+- Orders flow in from Onfleet by CSV, and re-uploads merge without losing work already done.
 - Every offer, reply, confirmation and outcome is recorded, so driver reliability is measured, not remembered.
 - Pay per route is calculated, adjusted and approved in the app, then exported.
 - Compliance stays controlled in Airtable: the app reads driver eligibility from it and writes stats back.
@@ -29,9 +29,9 @@ Dispatchers only see drivers eligible for their client, and only see their own c
 
 ## System context and integrations
 
-The app owns orders, routes, offers, messages and pay. Airtable owns drivers and compliance. Twilio carries every text. OpenFleet is the source of orders, delivered as a CSV.
+The app owns orders, routes, offers, messages and pay. Airtable owns drivers and compliance. Twilio carries every text. Onfleet is the source of orders, delivered as a CSV.
 
-&#91;embedded content: system context · app, Airtable, Twilio, OpenFleet, Onfleet\]
+&#91;embedded content: system context · app, Airtable, Twilio, Onfleet\]
 
 Drivers flow in from Airtable and stats flow back out; the app never edits compliance fields.
 
@@ -49,17 +49,17 @@ Drivers flow in from Airtable and stats flow back out; the app never edits compl
 - Delivery status callbacks are stored so dispatchers can see failed sends.
 - STOP, START and HELP are honored and recorded per driver.
 
-**OpenFleet: orders by CSV upload**
+**Onfleet: orders by CSV upload**
 
-- Logiscal exports the day's orders from OpenFleet and uploads the file. No API in v1.
+- Logiscal exports the day's orders from Onfleet and uploads the file. No API in v1.
 
 **Onfleet: where routes are built**
 
 - Routes are built in Onfleet and reach the app through the CSV with their route ID. v1 keeps today's manual step: after a driver accepts, the dispatcher assigns them in Onfleet and ticks "Assigned in Onfleet" on the route. An API integration is a later phase (see Open questions).
 
-## OpenFleet CSV import and merge
+## Onfleet CSV import and merge
 
-A dispatcher can upload a new or updated OpenFleet file at any time, and the app merges it into the orders it already has. An upload never deletes an order or undoes work on a route; it adds new orders, updates changed ones, and flags anything that needs a human decision.
+A dispatcher can upload a new or updated Onfleet file at any time, and the app merges it into the orders it already has. An upload never deletes an order or undoes work on a route; it adds new orders, updates changed ones, and flags anything that needs a human decision.
 
 **Upload flow**
 
@@ -69,7 +69,7 @@ A dispatcher can upload a new or updated OpenFleet file at any time, and the app
 4. Dispatcher confirms. The import is saved as an import batch with the file, uploader, time and counts.
 5. New orders flow into routes (see Turning orders into routes). Changes to orders already on routes raise alerts on those routes.
 
-**Merge rules** (the merge key is the OpenFleet order ID, unique per client)
+**Merge rules** (the merge key is the Onfleet order ID, unique per client)
 
 | Situation | What the app does |
 | --- | --- |
@@ -78,13 +78,13 @@ A dispatcher can upload a new or updated OpenFleet file at any time, and the app
 | Order ID exists, fields changed, route not yet offered | Update the order and recalculate its route |
 | Order ID exists, fields changed, route offered or accepted | Update the order, log the change, and flag the route Needs attention so the dispatcher decides whether to re-text the driver |
 | Order in the system but missing from the new file | Keep it, mark it "Not in latest file", and show it in the preview for the dispatcher to cancel or keep. Never auto-delete |
-| Order marked cancelled in the file (if OpenFleet provides a status) | Cancel the order, remove it from its route, flag the route if it was offered or accepted |
+| Order marked cancelled in the file (if Onfleet provides a status) | Cancel the order, remove it from its route, flag the route if it was offered or accepted |
 | Same order ID twice in one file | Reject both rows and show them as errors |
 | Row missing a required field or with an unreadable date | Reject the row, show the reason, import the rest |
 
 Uploading the same file twice changes nothing. Every change to an order is kept in an order history (field, old value, new value, import batch), so a dispatcher can see what changed and when.
 
-**Required fields** (final list depends on the OpenFleet export; see Open questions)
+**Required fields** (final list depends on the Onfleet export; see Open questions)
 
 - Order ID
 - Service date
@@ -275,7 +275,7 @@ Thirteen core entities. Drivers are a synced mirror of Airtable, never edited di
 | Area / Hub | client, name, hub, time zone, price per drop, pickup time, pickup address, driver instructions | Pricing and pickup details live here |
 | Driver (mirror) | Airtable record ID, Gigee ID, name, phone (E.164), areas, eligibility per client, Manual Tier, SMS opt-out, last synced | Read-only except opt-out and computed stats |
 | Import batch | client, file, uploader, time, counts (new, changed, unchanged, missing, rejected) | Original file kept |
-| Order | client, OpenFleet order ID (unique per client), service date, address, area, route identifier, window, status, in latest file (yes/no), route | Merge key = OpenFleet order ID |
+| Order | client, Onfleet order ID (unique per client), service date, address, area, route identifier, window, status, in latest file (yes/no), route | Merge key = Onfleet order ID |
 | Order change | order, field, old value, new value, import batch, time | Full history per order |
 | Route | client, name, service date, start time, area, vehicle type, stop count, proposed payout, route fee, status, rescue flag, assigned in Onfleet, approved at/by, paid, export batch | Payout locks at approval |
 | Offer | route, driver, sent at, responded at, reply, accepted at, reconfirm sent/confirmed at, final confirm sent/confirmed at, confirm channel, released at, release initiated by, rescue cover, outcome, outcome set by | The reliability ledger; milestone fields are write-once |
@@ -343,11 +343,11 @@ Scope: heads-up, reconfirm and final confirm texts; Needs attention; release wit
 
 **Phase 3: Later**
 
-Candidates, each to be scoped separately: Onfleet API assignment, automatic offer queue (offer the next best driver when one declines or expires), client-facing reports, OpenFleet API instead of CSV.
+Candidates, each to be scoped separately: Onfleet API assignment, automatic offer queue (offer the next best driver when one declines or expires), client-facing reports, Onfleet API instead of CSV.
 
 ## Open questions
 
-- [ ] **OpenFleet export:** get a real sample file. Confirm the exact columns for order ID, Onfleet route ID, order status (for cancellations), and area or hub.
+- [ ] **Onfleet export:** get a real sample file. Confirm the exact columns for order ID, Onfleet route ID, order status (for cancellations), and area or hub.
 - [ ] **Airtable driver table:** confirm the base and table, the exact fields that mean "eligible for Logiscal," and where stats should be written back (new fields we own vs. an existing table).
 - [ ] **Onfleet:** is an API integration wanted in Phase 3, to pull routes directly and push the assigned driver back instead of the CSV and the manual tick?
 - [ ] **Pay export:** what format does the Gigee payout process take today, and who approves pay: Logiscal, Gigee ops, or both?

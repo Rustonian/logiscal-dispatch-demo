@@ -6,7 +6,7 @@ A clickable, single-file prototype of the Logiscal Route Dispatch app described 
 
 ## What it shows
 
-Logiscal uploads its OpenFleet order CSV, the app merges orders into routes (routes are built in Onfleet and arrive with a route ID), and a dispatcher offers each route to one Gigee driver at a time by text. Drivers reply YES or NO on the simulated phone panel on the right. Driver records and eligibility come from Airtable; the app only reads them.
+Logiscal uploads its Onfleet order CSV, the app merges orders into routes (routes are built in Onfleet and arrive with a route ID), and a dispatcher offers each route to one Gigee driver at a time by text. Drivers reply YES or NO on the simulated phone panel on the right. Driver records and eligibility come from Airtable; the app only reads them.
 
 Screens: Dispatch board (with Staffing health), Site check-in, Upload and review, Route detail, Driver picker, Needs attention, Messages inbox, Closeout and pay, Lanes, Drivers, Settings.
 
