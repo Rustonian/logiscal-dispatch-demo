@@ -127,6 +127,10 @@ main{overflow:auto;padding-block:18px 40px;padding-left:max(16px,env(safe-area-i
 .card .driver{display:flex;align-items:center;gap:8px;font-size:13px}
 .avatar{width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:12px;flex:none}
 .card .actions{display:flex;gap:6px;justify-content:flex-end;margin-top:2px}
+.card .onf-tick{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;padding:3px 8px;border:1px solid var(--line);border-radius:6px;user-select:none}
+.card .onf-tick:hover{border-color:var(--accent);color:var(--fg)}
+.card .onf-tick.on{color:var(--ok);border-color:var(--ok)}
+.card .onf-tick input{margin:0;cursor:pointer}
 .countdown{font-family:var(--mono);font-size:12px;color:var(--info)}
 .countdown.low{color:var(--crit)}
 .pickup-in{font-family:var(--mono);font-size:12px;color:var(--crit);font-weight:500}
@@ -1714,6 +1718,7 @@ function vBoard() {
         ${r.status === 'Unassigned' && r.onfleetDriverId && !eligibility(driver(r.onfleetDriverId), r).length ? `<button class="btn sm primary" title="Onfleet already has this driver on the route" onclick="confirmOnfleet(route('${r.id}'),driver('${r.onfleetDriverId}'),false)">Confirm with ${shortName(driver(r.onfleetDriverId))}</button><button class="btn sm" onclick="openPicker('${r.id}','sms')">Other driver</button>` : r.status === 'Unassigned' ? (s && s.pick ? `<button class="btn sm primary" title="${esc(s.pick.why)}" onclick="offerRoute(route('${r.id}'),driver('${s.pick.d.id}'),'sms')">Offer to ${shortName(s.pick.d)}</button><button class="btn sm" onclick="openPicker('${r.id}','sms')">Other driver</button>` : `<button class="btn sm primary" onclick="openPicker('${r.id}','sms')">Offer</button>`) : ''}
         ${r.status === 'Offered' ? `<button class="btn sm" onclick="withdraw(route('${r.id}'))">Withdraw</button>` : ''}
         ${r.status === 'Needs attention' ? `<button class="btn sm" onclick="go('route',{id:'${r.id}'})">Decide</button>` : ''}
+        ${r.status === 'Accepted' && d ? `<label class="onf-tick ${r.onfleet ? 'on' : ''}" title="Tick once you've assigned ${esc(d.name)} to this route in Onfleet"><input type="checkbox" ${r.onfleet ? 'checked' : ''} onchange="route('${r.id}').onfleet=this.checked;render()"> Assigned in Onfleet</label>` : ''}
       </div></div>`;
   };
   const group = (s, rs) => rs.length ? `<div class="group-title"><h3>${s}</h3><span class="n">${rs.length}</span></div><div class="cards">${rs.map(card).join('')}</div>` : '';
