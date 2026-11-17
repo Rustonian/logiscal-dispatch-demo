@@ -251,7 +251,7 @@ td.r,th.r{text-align:right}
 <body>
 <div class="app">
   <header class="top">
-    <div class="brand"><span class="name">Logiscal Dispatch</span><span class="client">Client: Logiscal · Austin, Indianapolis</span></div>
+    <div class="brand"><span class="name">Logiscal Dispatch</span><span class="client" id="clientMarkets">Client: Logiscal</span></div>
     <div class="clock"><span class="dot" title="Airtable sync healthy"></span><span id="clock"></span><span class="sync">· Airtable synced <span id="synced">4 min ago</span></span></div>
     <div class="role"><span class="muted">Signed in as</span>
       <select id="role" aria-label="Switch role">
@@ -873,15 +873,18 @@ const S = {
     },
   },
   areas: [
-    { id: 'A1', name: 'Austin North', hub: 'Round Rock Hub', ppd: 9.50, market: 'M1', code: 'RR', pickup: '07:30', address: '1200 Chisholm Trail Rd, Round Rock, TX 78681', instr: 'Check in at dock B. Bring a hand truck.' },
-    { id: 'A2', name: 'Austin South', hub: 'Buda Hub', ppd: 9.00, market: 'M1', code: 'BD', pickup: '08:00', address: '325 Old San Antonio Rd, Buda, TX 78610', instr: 'Park in the east lot and ask for Marco.' },
+    { id: 'A1', name: 'Austin North', hub: 'Round Rock Hub', ppd: 9.50, market: 'M1', code: 'RR', facility: '1', pickup: '07:30', address: '1200 Chisholm Trail Rd, Round Rock, TX 78681', instr: 'Check in at dock B. Bring a hand truck.', lat: 30.5240, lon: -97.6891 },
+    { id: 'A2', name: 'Austin South', hub: 'Buda Hub', ppd: 9.00, market: 'M1', code: 'BD', facility: '2', pickup: '08:00', address: '325 Old San Antonio Rd, Buda, TX 78610', instr: 'Park in the east lot and ask for Marco.', lat: 30.0850, lon: -97.8400 },
     { id: 'A3', name: 'Indianapolis South', hub: 'Greenwood Hub', ppd: 3.40, market: 'M2', code: 'IN', facility: '4', pickup: '10:00', address: '37 South Park Blvd, Greenwood, IN 46143', instr: 'Load at door 4. Bring a cart and your cooler bags.', lat: 39.61715, lon: -86.07881 },
+    { id: 'A4', name: 'Columbus South', hub: 'Obetz Hub', ppd: 3.60, market: 'M3', code: 'CO', facility: '7', pickup: '10:00', address: '4100 Alum Creek Dr, Obetz, OH 43207', instr: 'Check in at the guard shack, load at door 12.', lat: 39.8790, lon: -82.9480 },
   ],
   markets: [
     { id: 'M1', name: 'Austin', client: 'Logiscal clients', region: 'Texas', lead: 'Mike Patel', areas: ['A1', 'A2'], codes: ['AUS'], rateSource: 'Logiscal master agreement, Jan 2026 (sample values)', log: [],
       p: { clientRate: 12.00, clientRateB2B: 12.00, b2bBonus: 0, aptBonus: 0, includedMiles: 0, mileRate: 0, firstLegFree: 0, firstLegRate: 0, floor: 20, targetMargin: 22, glidePct: 10, roundTo: 0.5, avgMph: 24, minPerStop: 5, loadMin: 20 } },
     { id: 'M2', name: 'Indianapolis', client: 'CookUnity', region: 'Midwest', lead: 'Terri Lang', areas: ['A3'], codes: ['INDY'], rateSource: 'CookUnity SOW, Oct 2026 (sample values)', log: [{ by: 'Terri Lang', at: T(12, 9, 15), field: 'Hourly floor', old: '18', new: '20' }],
       p: { clientRate: 5.75, clientRateB2B: 8.00, b2bBonus: 1.00, aptBonus: 0.40, includedMiles: 40, mileRate: 0.45, firstLegFree: 8, firstLegRate: 0.60, floor: 20, targetMargin: 28, glidePct: 10, roundTo: 0.5, avgMph: 24, minPerStop: 4, loadMin: 20 } },
+    { id: 'M3', name: 'Columbus', client: 'CookUnity', region: 'Midwest', lead: 'Mike Patel', areas: ['A4'], codes: ['CMH'], rateSource: 'CookUnity SOW, Nov 2026 (sample values)', log: [],
+      p: { clientRate: 5.90, clientRateB2B: 8.25, b2bBonus: 1.00, aptBonus: 0.40, includedMiles: 40, mileRate: 0.45, firstLegFree: 8, firstLegRate: 0.60, floor: 20, targetMargin: 28, glidePct: 10, roundTo: 0.5, avgMph: 24, minPerStop: 4, loadMin: 20 } },
   ],
   users: [
     { id: 'u1', key: 'dispatcher', name: 'Dana Ruiz', email: 'dana@logiscal.com', role: 'Dispatcher', client: 'Logiscal', pricing: 'view' },
@@ -1436,7 +1439,7 @@ function buildOnfleetPreview(text, file, sample) {
 function addUnknownDrivers() {
   const p = S.importPreview; let n = 0;
   p.unknown.forEach(name => { const r = p.routes.find(x => x.onfleetWorker === name); const id = 'd' + (100 + S.drivers.length); const num = String(5550200 + S.drivers.length).slice(-7);
-    S.drivers.push({ id, gid: 'GG-' + (2000 + S.drivers.length), name, phone: '+1317' + num, area: r ? r.area : 'A3', tier: '', active: true, optOut: false, rec: 'rec' + id, base: BLANK ? { offers: 0, answered: 0, accepted: 0, committed: 0, completed: 0, late: 0, early: 0, noshow: 0, confSent: 0, confOnTime: 0, rescues: 0, resp: 0 } : { offers: 6, answered: 6, accepted: 5, committed: 5, completed: 5, late: 0, early: 0, noshow: 0, confSent: 8, confOnTime: 8, rescues: 0, resp: 6 }, last: BLANK ? null : T(11, 10, 0), addedFromFile: true }); n++; });
+    S.drivers.push({ id, gid: 'GG-' + (2000 + S.drivers.length), name, phone: '+1' + ({ A1: '512', A2: '512', A3: '317', A4: '614' }[r ? r.area : ''] || '555') + num, area: r ? r.area : 'A3', tier: '', active: true, optOut: false, rec: 'rec' + id, base: BLANK ? { offers: 0, answered: 0, accepted: 0, committed: 0, completed: 0, late: 0, early: 0, noshow: 0, confSent: 0, confOnTime: 0, rescues: 0, resp: 0 } : { offers: 6, answered: 6, accepted: 5, committed: 5, completed: 5, late: 0, early: 0, noshow: 0, confSent: 8, confOnTime: 8, rescues: 0, resp: 6 }, last: BLANK ? null : T(11, 10, 0), addedFromFile: true }); n++; });
   S.importPreview = buildOnfleetPreview(p.text, p.file, p.sample); S.importPreview.text = p.text;
   toast(`${n} driver${n === 1 ? '' : 's'} added to the demo roster. In the real app they must exist in Airtable first.`); render();
 }
@@ -1604,7 +1607,7 @@ const NAV = [
   { id: 'markets', name: 'Markets and pricing', group: 'Reference' }, { id: 'coverage', name: 'Coverage', group: 'Reference' }, { id: 'lanes', name: 'Lanes', group: 'Reference' }, { id: 'drivers', name: 'Drivers', group: 'Reference' }, { id: 'settings', name: 'Settings', group: 'Reference' },
 ];
 function go(screen, params = {}) { S.screen = screen; S.params = params; render(); $('#main').scrollTop = 0; }
-function render() { renderNav(); renderMain(); renderPhone(); }
+function render() { const cm = $('#clientMarkets'); if (cm) cm.textContent = 'Client: Logiscal · ' + S.markets.map(m => m.name).join(', '); renderNav(); renderMain(); renderPhone(); }
 function renderNav() {
   const att = S.routes.filter(r => r.status === 'Needs attention' || (r.attention && r.status !== 'Cancelled')).length;
   const closeN = closeoutRoutes().filter(r => !r.approved).length;
