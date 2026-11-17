@@ -257,7 +257,6 @@ td.r,th.r{text-align:right}
       <select id="role" aria-label="Switch role">
         <option value="dispatcher">Dana Ruiz · Dispatcher</option>
         <option value="admin">Mike Patel · Client admin</option>
-        <option value="lead">Terri Lang · Regional Lead</option>
         <option value="ops">Ruston · Gigee ops</option>
       </select>
     </div>
@@ -888,7 +887,7 @@ const S = {
     { id: 'u1', key: 'dispatcher', name: 'Dana Ruiz', email: 'dana@logiscal.com', role: 'Dispatcher', client: 'Logiscal', pricing: 'view' },
     { id: 'u2', name: 'Chris Ambrose', email: 'chris@logiscal.com', role: 'Dispatcher', client: 'Logiscal', pricing: 'none' },
     { id: 'u3', key: 'admin', name: 'Mike Patel', email: 'mike@logiscal.com', role: 'Client admin', client: 'Logiscal', pricing: 'edit' },
-    { id: 'u4', key: 'lead', name: 'Terri Lang', email: 'terri@logiscal.com', role: 'Regional Lead', client: 'Logiscal', pricing: 'edit' },
+    { id: 'u4', name: 'Terri Lang', email: 'terri@logiscal.com', role: 'Dispatcher', client: 'Logiscal', pricing: 'none' },
     { id: 'u5', key: 'ops', name: 'Ruston', email: 'ruston@gigee.com', role: 'Gigee ops', client: 'All clients', pricing: 'edit' },
   ],
   calc: { n: 35, apt: 4, b2b: 1, miles: 50, first: 15 }, sim: [],
@@ -903,7 +902,7 @@ const S = {
     { id: 'd8', gid: 'GG-1162', name: 'Renee Walker', phone: '+15125550162', area: 'A2', tier: '', active: true, optOut: true, rec: 'recH4w7Jd', base: { offers: 7, answered: 7, accepted: 5, committed: 5, completed: 5, late: 0, early: 0, noshow: 0, confSent: 9, confOnTime: 9, rescues: 0, resp: 5 }, last: T(12, 8, 0) },
     { id: 'd9', gid: 'GG-1170', name: 'Jordan Pike', phone: '+15125550170', area: 'A1', tier: '', active: false, optOut: false, rec: 'recJ1q5Bv', base: { offers: 6, answered: 6, accepted: 6, committed: 5, completed: 5, late: 0, early: 0, noshow: 0, confSent: 8, confOnTime: 8, rescues: 0, resp: 8 }, last: T(13, 7, 30) },
   ],
-  routes: [], offers: [], messages: [], events: [], imports: [], exports: [], adjustments: [], holds: [], holdSuggestions: [], recruitRequests: [],
+  routes: [], offers: [], messages: [], events: [], imports: [], exports: [], adjustments: [], recruitRequests: [],
   importPreview: null, uploadsDone: {}, mapped: true,
 };
 
@@ -1004,7 +1003,6 @@ addRoute('BD-0215', 22, 'A2', 10, { lane: 'L3', skip: 3 });
   mkMsg({ dir: 'out', driverId: 'd3', routeId: 'BD-0196', offerId: bail.id, body: "You're confirmed for BD-0196 on Tue Nov 17. Pickup 4:30 PM at 325 Old San Antonio Rd, Buda, TX 78610. Park in the east lot and ask for Marco.", time: bail.acceptedAt });
   mkMsg({ dir: 'in', driverId: 'd3', routeId: 'BD-0196', offerId: bail.id, body: 'car trouble, cant make 4:30 today sorry', time: T(16, 13, 48) });
   mkMsg({ dir: 'out', driverId: 'd3', routeId: 'BD-0196', offerId: bail.id, body: "You've been released from BD-0196. Thanks for letting us know.", time: bail.releasedAt });
-  S.holdSuggestions.push({ id: 'HS1', driverId: 'd3', routeId: 'BD-0196', reason: 'Late bail on BD-0196, 2.6 h before start', at: T(16, 13, 52) });
   // RR-0418 open offer to d2, sent 4 min ago
   const op = mkOffer({ routeId: 'RR-0418', driverId: 'd2', sentAt: now.getTime() - 4 * 60000, open: true, expiresAt: now.getTime() + 11 * 60000 });
   byId('RR-0418').offerId = op.id; ev(op.id, 'Offer sent', 'Dana Ruiz', 'SMS', op.sentAt);
@@ -1019,14 +1017,13 @@ addRoute('BD-0215', 22, 'A2', 10, { lane: 'L3', skip: 3 });
   // BD-0206 accepted by d1
   acc('BD-0206', 'd5', 15, 10, { reconfirmSentAt: null, reconfirmedAt: null, finalSentAt: null, finalConfirmedAt: null });
   // inbox seeds
-  mkMsg({ dir: 'in', driverId: null, phone: '+17375550199', body: 'is this gigee? i signed up last week', time: T(16, 11, 22) });
   mkMsg({ dir: 'out', driverId: 'd7', routeId: 'RR-0417', body: 'Gigee route offer: Wed Nov 18, start 7:30 AM at Round Rock Hub. About 12 to 16 stops, pays $123.50. Reply YES to accept or NO to pass. Expires in 15 min.', status: 'failed', error: 'Twilio 30003: unreachable destination handset', time: T(16, 13, 5) });
   mkMsg({ dir: 'in', driverId: 'd3', body: 'can I start at 5 instead of 430 on the next one', time: T(16, 14, 2) });
   mkMsg({ dir: 'out', driverId: 'd3', body: 'Reply YES or NO to your latest route offer. Questions? Contact (512) 555-0100.', time: T(16, 14, 2) });
   mkMsg({ dir: 'in', driverId: 'd8', body: 'STOP', time: T(14, 19, 40) });
 })();
-S.imports.push({ id: 'IMP-118', file: 'onfleet_export_2026-11-17.csv', by: 'Dana Ruiz', time: T(16, 6, 12), counts: { new: 31, changed: 2, unchanged: 0, missing: 0, rejected: 1 } });
-S.imports.push({ id: 'IMP-117', file: 'onfleet_export_2026-11-16.csv', by: 'Dana Ruiz', time: T(15, 6, 4), counts: { new: 47, changed: 0, unchanged: 0, missing: 0, rejected: 0 } });
+S.imports.push({ id: 'IMP-118', file: 'onfleet_export_2026-11-17.csv', by: 'Dana Ruiz', time: T(16, 6, 12), counts: { routes: 9, new: 112, skipped: 4, rejected: 1 } });
+S.imports.push({ id: 'IMP-117', file: 'onfleet_export_2026-11-16.csv', by: 'Dana Ruiz', time: T(15, 6, 4), counts: { routes: 13, new: 161, skipped: 0, rejected: 0 } });
 
 /* ---------------- Helpers ---------------- */
 const $ = s => document.querySelector(s);
@@ -1052,10 +1049,15 @@ function payout(r) { return r.lockedPay != null ? r.lockedPay : price(r).pay; }
 function fee(r) { return Math.max(S.settings.feeMin, payout(r) * S.settings.feePct / 100); }
 function adjTotal(r) { return S.adjustments.filter(a => a.routeId === r.id).reduce((s, a) => s + a.amount, 0); }
 function net(r) { return payout(r) - fee(r) + adjTotal(r); }
+function adjs(r) { return S.adjustments.filter(a => a.routeId === r.id); }
+function adjStops(r) { return adjs(r).reduce((s, a) => s + (a.stops || 0), 0); }
+function routeStops(r) { return activeStops(r) + adjStops(r); }
+function driverPay(r) { return payout(r) + adjTotal(r); }
+function canAdjust(r) { return !r.history && r.status !== 'Cancelled' && !r.approved; }
 function hoursToStart(r) { return (routeStart(r) - now.getTime()) / 3600000; }
 function dur(ms) { const m = Math.max(0, Math.round(ms / 60000)); const h = Math.floor(m / 60); return h ? `${h}h ${String(m % 60).padStart(2, '0')}m` : `${m}m`; }
 function toast(t) { if (S.quiet) return; const el = document.createElement('div'); el.className = 'toast'; el.textContent = t; $('#toasts').appendChild(el); setTimeout(() => el.remove(), 3200); }
-function fill(tpl, r, d) { const a = area(r.area); const ctx = { date: fmtDate(routeDate(r)), start_time: hhmm(r.start), hub: a.hub, stops: activeStops(r), stop_range: stopRange(activeStops(r)), payout: payout(r).toFixed(2), route_detail: routeDetail(r), expiry: S.settings.expiry, route_name: r.name, pickup_address: a.address, instructions: a.instr, support_contact: S.settings.support, driver_first: d ? d.name.split(' ')[0] : '' }; return tpl.replace(/\{(\w+)\}/g, (_, k) => ctx[k] ?? ''); }
+function fill(tpl, r, d) { const a = area(r.area); const ctx = { date: fmtDate(routeDate(r)), start_time: hhmm(r.start), hub: a.hub, stops: routeStops(r), stop_range: stopRange(routeStops(r)), payout: driverPay(r).toFixed(2), route_detail: routeDetail(r), expiry: S.settings.expiry, route_name: r.name, pickup_address: a.address, instructions: a.instr, support_contact: S.settings.support, driver_first: d ? d.name.split(' ')[0] : '' }; return tpl.replace(/\{(\w+)\}/g, (_, k) => ctx[k] ?? ''); }
 
 /* ---------------- Reliability ---------------- */
 function stats(d) {
@@ -1077,14 +1079,14 @@ function stats(d) {
   return Object.assign(b, { respMin: b.resp, resp, acc, comp, conf, score, label, days });
 }
 const lblClass = l => l.replace(/\s.*/, '');
-function lblHtml(d) { const s = stats(d); if (!d.active) return `<span class="lbl Inactive">Inactive</span>`; if (d.optOut) return `<span class="lbl Opted">Opted out</span>`; if (onHold(d)) return `<span class="lbl Hold" title="${esc(onHold(d).reason)}">On hold</span>`; return `<span class="lbl ${lblClass(s.label)}">${s.label}</span>`; }
+function lblHtml(d) { const s = stats(d); if (!d.active) return `<span class="lbl Inactive">Inactive</span>`; if (d.optOut) return `<span class="lbl Opted">Opted out</span>`; return `<span class="lbl ${lblClass(s.label)}">${s.label}</span>`; }
 
 /* ---------------- Eligibility & actions ---------------- */
 function bookedOn(d, date, exceptId) { return S.routes.some(r => r.id !== exceptId && r.driverId === d.id && r.date === date && ['Accepted', 'Needs attention', 'Offered'].includes(r.status)); }
 function hasOpenOffer(d, exceptId) { return S.offers.some(o => o.driverId === d.id && o.open && o.routeId !== exceptId); }
 function eligibility(d, r) {
   const why = [];
-  if (!d.active) why.push('Inactive in Airtable'); if (d.optOut) why.push('Texted STOP'); if (onHold(d)) why.push('On hold'); if (d.area !== r.area) why.push('Other area');
+  if (!d.active) why.push('Inactive in Airtable'); if (d.optOut) why.push('Texted STOP'); if (d.area !== r.area) why.push('Other area');
   if (bookedOn(d, r.date, r.id)) why.push('Booked ' + fmtDate(routeDate(r))); if (hasOpenOffer(d, r.id)) why.push('Has an open offer');
   const prior = S.offers.filter(o => o.routeId === r.id && o.driverId === d.id && o.outcome);
   if (prior.some(o => ['Late bail', 'Early release', 'No-show'].includes(o.outcome))) why.push('Bailed on this route');
@@ -1119,7 +1121,6 @@ function release(r, by) {
   else { outcome = 'Client cancel'; next = 'Cancelled'; }
   o.outcome = outcome; o.outcomeBy = 'System'; ev(o.id, 'Released', actorName(), `${by}-initiated, ${o.hoursBefore} h before start`); ev(o.id, 'Outcome set', 'System', outcome);
   r.status = next; r.driverId = null; r.offerId = null; r.attention = null; r.onfleet = false; r.lockedPay = null; r.onfleetFixed = null;
-  if (outcome === 'Late bail') suggestHold(d, `Late bail on ${r.name}, ${o.hoursBefore} h before start`, r);
   if (next !== 'Cancelled') sendSms(d, fill(S.settings.templates.released, r, d), r, o);
   toast(`${d.name} released from ${r.name}: ${outcome}.${hb < 24 && by === 'Driver' ? ' Route flagged Rescue.' : ''}`); closeModal(); render();
 }
@@ -1129,37 +1130,6 @@ function sendHeadsUp(r) { const o = offer(r.offerId), d = driver(r.driverId); ev
 function silentOnCheck(r) { const o = offer(r.offerId); ev(o.id, `No reply in ${o.pending === 'reconfirm' ? S.settings.reconfirmWindow : S.settings.finalWindow} min`, 'System', 'Route moved to Needs attention'); r.status = 'Needs attention'; r.attention = o.pending === 'reconfirm' ? 'Silent on reconfirm' : 'Silent on final confirm'; if (hoursToStart(r) < 24) r.rescue = true; toast(`${r.name}: driver silent. Moved to Needs attention.`); render(); }
 function retext(r) { const d = driver(r.driverId), o = offer(r.offerId); sendSms(d, `Update to ${r.name} on ${fmtDate(routeDate(r))}: now about ${stopRange(activeStops(r))} stops, pays ${money(payout(r))}. Reply YES to keep it or NO to release.`, r, o); o.pending = 'change'; S.phoneDriver = d.id; ev(o.id, 'Change notice sent', actorName(), ''); toast(`${d.name} texted about the change.`); render(); }
 function clearAttention(r) { r.status = 'Accepted'; r.attention = null; render(); }
-
-/* ---------------- Performance holds ---------------- */
-function onHold(d) { return d && S.holds.find(h => h.driverId === d.id); }
-function suggestHold(d, reason, r) {
-  if (!d || onHold(d)) return;
-  const ex = S.holdSuggestions.find(x => x.driverId === d.id);
-  if (ex) { ex.reason += `; ${reason}`; ex.at = now.getTime(); return; }
-  S.holdSuggestions.push({ id: 'HS' + (S.holdSuggestions.length + 2), driverId: d.id, routeId: r ? r.id : null, reason, at: now.getTime() });
-}
-function putOnHold(did, reason, suggestionId) {
-  const d = driver(did); if (!d || onHold(d)) return;
-  reason = (reason || '').trim(); if (!reason) { toast('Add a reason so the team knows why.'); return; }
-  S.holds.push({ driverId: did, reason, by: actorName(), at: now.getTime() });
-  S.holdSuggestions = S.holdSuggestions.filter(x => x.driverId !== did);
-  const up = S.routes.filter(r => r.driverId === did && routeStart(r) > now.getTime() && ['Offered', 'Accepted', 'Needs attention'].includes(r.status));
-  up.forEach(r => { const o = offer(r.offerId); if (r.status === 'Offered') { o.open = false; o.outcome = 'Withdrawn'; ev(o.id, 'Withdrawn', actorName(), 'Driver put on hold'); r.status = 'Unassigned'; r.driverId = null; r.offerId = null; } else { r.status = 'Needs attention'; r.attention = 'Driver on hold'; ev(o.id, 'Driver put on hold', actorName(), reason); } });
-  toast(`${d.name} is on hold. Skipped in every offer and suggestion until removed.${up.length ? ` ${up.length} upcoming route${up.length > 1 ? 's' : ''} moved to Needs attention.` : ''}`); render();
-}
-function removeHold(did) { S.holds = S.holds.filter(h => h.driverId !== did); toast(`${driver(did).name} is off hold and can be offered routes again.`); render(); }
-function dismissSuggestion(id) { const x = S.holdSuggestions.find(h => h.id === id); S.holdSuggestions = S.holdSuggestions.filter(h => h.id !== id); if (x) toast(`Hold suggestion for ${driver(x.driverId).name} dismissed.`); render(); }
-function holdSuggestionsHtml() {
-  if (!S.holdSuggestions.length) return '';
-  return `<div class="panel"><h3>Suggested holds <span class="muted small">${S.holdSuggestions.length}</span></h3><p class="small muted" style="margin:0 0 8px">Raised automatically after a no-show or late bail. Confirm to skip the driver in every offer until someone removes the hold, or dismiss.</p>
-  ${S.holdSuggestions.map(x => { const d = driver(x.driverId); return `<div class="row" style="padding:8px 0;border-top:1px solid var(--line)"><span class="avatar">${initials(d.name)}</span><div style="flex:1;min-width:180px"><b>${d.name}</b> ${lblHtml(d)}<div class="small" style="color:var(--warn)">${esc(x.reason)}</div><div class="small muted">${fmtDT(x.at)}</div></div><button class="btn sm primary" onclick="putOnHold('${d.id}',S.holdSuggestions.find(h=>h.id==='${x.id}').reason,'${x.id}')">Confirm hold</button><button class="btn sm" onclick="dismissSuggestion('${x.id}')">Dismiss</button></div>`; }).join('')}</div>`;
-}
-function holdsPanelHtml() {
-  const opts = S.drivers.filter(d => d.active && !onHold(d)).map(d => `<option value="${d.id}">${d.name}</option>`).join('');
-  return `<div class="panel"><h3>Performance holds <span class="muted small">${S.holds.length} on hold</span></h3><p class="small muted" style="margin:0 0 10px">A driver on hold is skipped in every offer, lane suggestion and rescue until the hold is removed. Holds live in this app; Airtable status is not changed.</p>
-  ${S.holds.length ? `<div class="tbl" style="margin-bottom:10px"><table><thead><tr><th>Driver</th><th>Reason</th><th>Set by</th><th>Since</th><th></th></tr></thead><tbody>${S.holds.map(h => { const d = driver(h.driverId); return `<tr><td>${d.name}</td><td class="small">${esc(h.reason)}</td><td class="small">${h.by}</td><td class="small mono">${fmtDT(h.at)}</td><td><button class="btn sm" onclick="removeHold('${d.id}')">Remove hold</button></td></tr>`; }).join('')}</tbody></table></div>` : ''}
-  <div class="row"><select id="holdDriver" aria-label="Driver">${opts}</select><input id="holdReason" placeholder="Reason, e.g. 2 late arrivals this week" style="flex:1;min-width:220px"><button class="btn" onclick="putOnHold($('#holdDriver').value,$('#holdReason').value)">Put on hold</button></div></div>`;
-}
 
 /* ---------------- Site check-in ---------------- */
 function checkinRoutes() { return S.routes.filter(r => dayOffset(r) === 0 && r.status !== 'Cancelled' && !r.history && (r.driverId || r.checkin || r.noShow)).sort((a, b) => routeStart(a) - routeStart(b)); }
@@ -1187,7 +1157,6 @@ function noShow(r) {
   r.noShow = { driverId: d.id, at: now.getTime(), by: actorName() };
   r.status = 'Unassigned'; r.driverId = null; r.offerId = null; r.onfleet = false; r.attention = null; r.checkin = null; r.rescue = true; r.lockedPay = null;
   sendSms(d, fill(S.settings.templates.noshow, r, d), r, o);
-  suggestHold(d, `No-show on ${r.name}, ${fmtDate(routeDate(r))}${stats(d).noshow > 1 ? ` (${stats(d).noshow} in 90 days)` : ''}`, r);
   let msg = `${d.name} marked no-show on ${r.name}. Route flagged Rescue.`;
   if (S.settings.noShowRescue === 'auto') {
     const c = rescueCandidate(r);
@@ -1201,7 +1170,7 @@ function noShow(r) {
 function staffing(dayOff, areaIds) {
   return areaIds.map(aid => {
     const rs = S.routes.filter(r => r.area === aid && !r.history && r.status !== 'Cancelled' && dayOffset(r) === dayOff);
-    const pool = S.drivers.filter(d => d.area === aid && d.active && !d.optOut && !onHold(d));
+    const pool = S.drivers.filter(d => d.area === aid && d.active && !d.optOut);
     const booked = new Set(rs.filter(r => r.driverId && ['Offered', 'Accepted', 'Needs attention', 'Completed'].includes(r.status) && pool.some(d => d.id === r.driverId)).map(r => r.driverId));
     const target = Math.ceil(rs.length * (1 + S.settings.benchPct / 100));
     const open = rs.filter(r => ['Unassigned', 'Offered', 'Needs attention'].includes(r.status)).length;
@@ -1219,7 +1188,7 @@ function healthHtml() {
   if (!rows.length) return '';
   return `<div class="panel health" style="margin-bottom:14px"><h3>Staffing health <span class="muted small">routes vs active drivers + ${S.settings.benchPct}% bench</span></h3><div class="tbl"><table><thead><tr><th>Area</th><th class="r">Routes</th><th class="r">Target (+${S.settings.benchPct}%)</th><th class="r">Active drivers</th><th class="r">Booked</th><th class="r">Bench free</th><th class="r">Open routes</th><th>Coverage</th></tr></thead><tbody>
   ${rows.map(x => `<tr><td>${x.a.name}</td><td class="r num">${x.routes}</td><td class="r num">${x.target}</td><td class="r num">${x.active}</td><td class="r num">${x.booked}</td><td class="r num">${x.bench}</td><td class="r num">${x.open}</td><td class="st">${x.short ? `<span class="pill attention">Short ${x.short}</span> ${x.req ? `<span class="small muted">Recruiting asked ${fmtTime(x.req.at)}</span>` : `<button class="btn sm" onclick="requestRecruiting('${x.a.id}','${x.date}',${x.short})">Ask Gigee to recruit</button>`}` : '<span class="pill accepted">Healthy</span>'}</td></tr>`).join('')}
-  </tbody></table></div><p class="small muted" style="margin:6px 0 0">Active means active in Airtable, not opted out and not on hold. Gigee recruits only when an area drops below target.</p></div>`;
+  </tbody></table></div><p class="small muted" style="margin:6px 0 0">Active means active in Airtable and not opted out. Gigee recruits only when an area drops below target.</p></div>`;
 }
 
 function actorName() { return { dispatcher: 'Dana Ruiz', admin: 'Mike Patel', lead: 'Terri Lang', ops: 'Ruston' }[S.role]; }
@@ -1233,17 +1202,17 @@ function inbound(d, text) {
   const yes = ['YES', 'Y', 'ACCEPT'].includes(up), no = ['NO', 'N', 'DECLINE'].includes(up);
   const open = S.offers.find(o => o.driverId === d.id && o.open);
   const pend = S.offers.find(o => o.driverId === d.id && o.pending && route(o.routeId).driverId === d.id);
-  if (open) { m.offerId = open.id; m.routeId = open.routeId; if (yes) acceptOffer(open); else if (no) declineOffer(open); else { m.kind = 'other'; sendSms(d, fill(S.settings.templates.help, route(open.routeId), d), route(open.routeId), open); toast('Unrecognized reply logged to inbox.'); } render(); return; }
+  if (open) { m.offerId = open.id; m.routeId = open.routeId; if (yes) acceptOffer(open); else if (no) declineOffer(open); else { m.kind = 'other'; sendSms(d, fill(S.settings.templates.help, route(open.routeId), d), route(open.routeId), open); toast('Unrecognized reply. Help text sent; it shows in the route text history.'); } render(); return; }
   if (pend) {
     const r = route(pend.routeId); m.offerId = pend.id; m.routeId = r.id;
     if (yes) { if (pend.pending === 'reconfirm') pend.reconfirmedAt = now.getTime(); else if (pend.pending === 'final') pend.finalConfirmedAt = now.getTime(); ev(pend.id, pend.pending === 'change' ? 'Kept after change' : (pend.pending === 'reconfirm' ? 'Reconfirmed' : 'Final confirmed'), 'Driver', 'SMS'); pend.pending = null; if (r.status === 'Needs attention') { r.status = 'Accepted'; r.attention = null; } toast(`${d.name} confirmed ${r.name}.`); }
     else if (no) { pend.pending = null; release(r, 'Driver'); return; }
-    else { m.kind = 'other'; sendSms(d, fill(S.settings.templates.help, r, d), r, pend); toast('Unrecognized reply logged to inbox.'); }
+    else { m.kind = 'other'; sendSms(d, fill(S.settings.templates.help, r, d), r, pend); toast('Unrecognized reply. Help text sent; it shows in the route text history.'); }
     render(); return;
   }
   // YES/NO with nothing open
   if (yes || no) { const lastO = S.offers.filter(o => o.driverId === d.id && o.sentAt).sort((a, b) => b.sentAt - a.sentAt)[0]; if (lastO) { m.offerId = lastO.id; m.routeId = lastO.routeId; } m.kind = 'late'; sendSms(d, fill(S.settings.templates.expired, lastO ? route(lastO.routeId) : S.routes[0], d), null, null); toast(`${d.name} replied with no open offer. Told the route is closed.`); render(); return; }
-  m.kind = 'other'; sendSms(d, fill(S.settings.templates.help, S.routes[0], d), null, null); toast('Unrecognized text logged to inbox.'); render();
+  m.kind = 'other'; sendSms(d, fill(S.settings.templates.help, S.routes[0], d), null, null); toast('Unrecognized text. Help text sent.'); render();
 }
 
 /* ---------------- Lanes: route recognition and history ---------------- */
@@ -1297,8 +1266,7 @@ const ROAD = 1.25; // straight-line miles to road miles
 function market(id) { return S.markets.find(m => m.id === id); }
 function areaMarket(aid) { return market(area(aid).market); }
 function me() { return S.users.find(u => u.key === S.role) || S.users[0]; }
-function pricingAccess() { return me().pricing; }
-function canEditAccess() { return ['ops', 'lead'].includes(S.role); }
+function canSeePricing() { return ['admin', 'ops'].includes(S.role); } // Markets and pricing: admins only
 function hv(a, b) { const R = 3958.8, r = x => x * Math.PI / 180; const dLa = r(b[0] - a[0]), dLo = r(b[1] - a[1]); const x = Math.sin(dLa / 2) ** 2 + Math.cos(r(a[0])) * Math.cos(r(b[0])) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); }
 function geoStats(r) {
   const a = area(r.area); const os = r.orders.filter(o => o.status === 'active' && o.lat != null).sort((x, y) => (x.seq || 0) - (y.seq || 0));
@@ -1351,7 +1319,7 @@ const PARAMS = [
 const PLABEL = Object.fromEntries(PARAMS.flatMap(g => g[1]).map(x => [x[0], x[1]]));
 function marketRoutes(mid) { return S.routes.filter(r => !r.history && area(r.area).market === mid && !['Completed', 'Cancelled'].includes(r.status) && dayOffset(r) >= 0).sort((a, b) => routeStart(a) - routeStart(b) || a.name.localeCompare(b.name)); }
 function setParam(mid, key, val, isArea) {
-  if (pricingAccess() !== 'edit') { toast('View only. Ask a Regional Lead for edit access.'); render(); return; }
+  if (!canSeePricing()) { toast('Only an admin can change pricing. Ask for edit access.'); render(); return; }
   const m = market(mid); val = Number(val); if (isNaN(val)) return;
   const old = isArea ? area(key).ppd : m.p[key]; if (old === val) return;
   if (isArea) area(key).ppd = val; else m.p[key] = val;
@@ -1359,21 +1327,19 @@ function setParam(mid, key, val, isArea) {
   const rs = marketRoutes(mid), locked = rs.filter(r => r.lockedPay != null).length;
   toast(`${m.name}: ${rs.length - locked} open route${rs.length - locked === 1 ? '' : 's'} re-priced.${locked ? ` ${locked} offered or accepted keep the pay the driver saw.` : ''}`); render();
 }
-function setAccess(uid, v) { if (!canEditAccess()) { toast('Only a Regional Lead or Gigee ops can change pricing access.'); render(); return; } const u = S.users.find(x => x.id === uid); u.pricing = v; toast(`${u.name}: pricing ${v === 'none' ? 'hidden' : v === 'view' ? 'view only' : 'can edit'}.`); render(); }
 function pct(x) { return x == null ? '–' : Math.round(x * 100) + '%'; }
 function marginCell(pr) { if (pr.margin == null) return '–'; return `<span style="color:${pr.below ? 'var(--warn)' : 'var(--ok)'}">${pct(pr.margin)}</span>`; }
 
 function vMarkets() {
-  const acc = pricingAccess();
+  const acc = canSeePricing() ? 'edit' : 'none';
   const head = `<div class="page-head"><div><h1>Markets and pricing</h1><p>One set of pricing parameters per market. Every uploaded route is priced from its market, and that price is what the offer text says.</p></div></div>`;
-  if (acc === 'none') return head + `<div class="notice warn"><div>${me().name} does not have pricing access. A Regional Lead or Gigee ops can grant it below their market's parameters.</div></div>`;
+  if (acc === 'none') return head + `<div class="notice warn"><div>Markets and pricing is for admins only. Switch the header to <b>Mike Patel · Client admin</b>.</div></div>`;
   S.mkt = S.mkt || 'M2'; const m = market(S.mkt), p = m.p, ed = acc === 'edit';
   const inp = (k, v, unit) => `<label>${PLABEL[k]} <span class="muted">(${unit})</span><input type="number" step="any" value="${v}" ${ed ? '' : 'disabled'} onchange="setParam('${m.id}','${k}',this.value)"></label>`;
   const rs = marketRoutes(m.id);
   const c = S.calc; const cr = priceCore(m, area(m.areas[0]).ppd, { n: c.n, apt: c.apt, b2b: c.b2b, miles: c.miles, first: c.first }, null);
   const tot = rs.reduce((s, r) => { const pr = price(r); s.rev += pr.revenue; s.pay += payout(r); return s; }, { rev: 0, pay: 0 });
   return head + `<div class="tabs">${S.markets.map(x => `<button class="${S.mkt === x.id ? 'active' : ''}" onclick="S.mkt='${x.id}';render()">${x.name}<span class="n">${x.client}</span></button>`).join('')}</div>
-  ${ed ? '' : `<div class="notice info" style="margin-bottom:12px"><div>View only for ${me().name}. Switch to <b>Terri Lang · Regional Lead</b> in the header to edit.</div></div>`}
   <div class="two">
     <div class="stack">
       <div class="panel"><h3>${m.name} <span class="muted small">${m.client}</span></h3><dl class="kv"><dt>Region</dt><dd>${m.region}</dd><dt>Regional Lead</dt><dd>${m.lead}</dd><dt>Hubs</dt><dd>${m.areas.map(id => `${area(id).hub} <span class="muted small">(${area(id).name}${area(id).facility ? ', Onfleet facility ' + area(id).facility : ''})</span>`).join('<br>')}</dd><dt>Client rate source</dt><dd>${m.rateSource}</dd><dt>Recognized in files by</dt><dd class="mono small">${m.areas.map(id => area(id).facility ? 'facilityId ' + area(id).facility : '').filter(Boolean).concat(m.codes.map(x => 'workerName …' + x + '_LOGISCAL')).join(', ') || 'Austin sample only'}</dd></dl></div>
@@ -1385,7 +1351,7 @@ function vMarkets() {
         <div class="counts" style="margin-top:10px"><div class="cnt"><div class="v num">${cr.hours.toFixed(1)} h</div><div class="k">Est. time</div></div><div class="cnt"><div class="v num">${money(cr.perHour)}</div><div class="k">Per hour</div></div><div class="cnt"><div class="v num">${money(cr.revenue)}</div><div class="k">Client revenue</div></div><div class="cnt ${cr.below ? 'missing' : 'new'}"><div class="v num">${pct(cr.margin)}</div><div class="k">Margin (target ${p.targetMargin}%)</div></div></div></div>
       <div class="panel"><h3>Open routes in ${m.name} <span class="muted small">${rs.length}</span></h3>${rs.length ? `<p class="small muted" style="margin:0 0 8px">Changes above re-price these right away, except routes already offered or accepted: those keep the pay the driver was texted. ${tot.rev ? `Total ${money(tot.pay)} pay on ${money(tot.rev)} revenue, ${pct((tot.rev - tot.pay) / tot.rev)} margin.` : ''}</p><div class="tbl"><table><thead><tr><th>Route</th><th class="r">Stops</th><th class="r">Mi / h</th><th class="r">Pay</th><th class="r">$/hr</th><th class="r">Margin</th></tr></thead><tbody>${rs.map(r => { const pr = price(r); const lk = r.lockedPay != null; return `<tr class="clickable" onclick="go('route',{id:'${r.id}'})"><td class="mono" style="white-space:nowrap">${r.name}<div class="muted small">${fmtDate(routeDate(r))}</div>${lk ? ' <span class="pill offered" title="Pay locked when the offer went out">Locked</span>' : ''}</td><td class="r num">${activeStops(r)}</td><td class="r num small">${pr.miles != null ? Math.round(pr.miles) + ' / ' + pr.hours.toFixed(1) : '–'}</td><td class="r num">${money(payout(r))}${lk && Math.abs(payout(r) - pr.pay) > 0.01 ? `<div class="small muted">now ${money(pr.pay)}</div>` : ''}</td><td class="r num">${pr.hours ? money(payout(r) / pr.hours) : '–'}</td><td class="r num">${marginCell(Object.assign({}, pr, { margin: pr.revenue ? (pr.revenue - payout(r)) / pr.revenue : null, below: pr.revenue ? (pr.revenue - payout(r)) / pr.revenue * 100 < p.targetMargin : false }))}</td></tr>`; }).join('')}</tbody></table></div>` : `<p class="small muted" style="margin:0">No open routes yet. ${m.id === 'M2' ? 'Upload the Indianapolis sample on Upload and review.' : ''}</p>`}</div>
       <div class="panel"><h3>Change log</h3>${m.log.length ? `<div class="tbl"><table><thead><tr><th>When</th><th>Who</th><th>Parameter</th><th>Old → new</th></tr></thead><tbody>${m.log.map(x => `<tr><td class="small mono">${fmtDT(x.at)}</td><td class="small">${x.by}</td><td class="small">${x.field}</td><td class="small num">${x.old} → ${x.new}</td></tr>`).join('')}</tbody></table></div>` : '<p class="small muted" style="margin:0">No changes yet.</p>'}</div>
-      <div class="panel"><h3>Who can see pricing</h3><p class="small muted" style="margin:0 0 8px">Edit changes parameters. View sees rates, revenue and margin. None sees only driver pay on routes. ${canEditAccess() ? '' : 'Only a Regional Lead or Gigee ops can change this.'}</p><div class="tbl"><table><thead><tr><th>User</th><th>Role</th><th>Pricing</th></tr></thead><tbody>${S.users.map(u => `<tr><td>${u.name}</td><td class="small">${u.role}</td><td><select ${canEditAccess() ? '' : 'disabled'} onchange="setAccess('${u.id}',this.value)">${['edit', 'view', 'none'].map(v => `<option value="${v}" ${u.pricing === v ? 'selected' : ''}>${{ edit: 'Edit', view: 'View', none: 'None' }[v]}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div></div>
+      <div class="panel"><h3>Who can see pricing</h3><p class="small muted" style="margin:0">Admins only: the client admin and Gigee ops. Dispatchers never see this page, client rates or margin; they see driver pay on each route.</p></div>
     </div>
   </div>`;
 }
@@ -1446,51 +1412,34 @@ function onfleetPlan(r) {
   return { kind: 'none', alt: laneAlt(r) };
 }
 function laneAlt(r) { if (!r.laneId || S.settings.laneAuto === 'off') return null; const s = laneSuggestion(r); return s && s.pick ? s.pick : null; }
+function textHash(t) { t = t.replace(/\r/g, '').trim(); let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return h; }
 function buildOnfleetPreview(text, file, sample) {
   const x = readOnfleet(text); if (x.error) return x;
-  const p = { kind: 'onfleet', file, sample, rows: x.rows, hub: x.hub, rejected: x.rejected, clients: [...x.clients].filter(Boolean), routes: [], changed: [], missing: [], workerChanges: [], unchanged: 0, newOrders: 0 };
+  const hash = textHash(text);
+  const p = { kind: 'onfleet', file, sample, hash, dupOf: S.imports.find(b => b.hash === hash) || null, rows: x.rows, hub: x.hub, rejected: x.rejected, clients: [...x.clients].filter(Boolean), routes: [], skipped: [], newOrders: 0 };
   for (const g of Object.values(x.groups).sort((a, b) => a.name.localeCompare(b.name))) {
     const ex = route(g.name);
     if (!ex) { const t = newRouteObj(g); relink(t); p.routes.push(t); p.newOrders += t.orders.length; continue; }
-    const byId = Object.fromEntries(ex.orders.map(o => [o.id, o])), ids = new Set(g.orders.map(o => o.id));
-    const added = g.orders.filter(o => !byId[o.id]);
-    g.orders.forEach(o => { const old = byId[o.id]; if (!old) return; if (old.addr !== o.addr) p.changed.push({ route: ex, order: old, field: 'Delivery address', old: old.addr, new: o.addr, next: o }); else p.unchanged++; });
-    if (added.length) p.changed.push({ route: ex, field: 'Orders added', old: '', new: `${added.length} new order${added.length > 1 ? 's' : ''}`, added });
-    ex.orders.filter(o => o.status === 'active' && !ids.has(o.id)).forEach(o => p.missing.push({ route: ex, order: o, decision: 'keep' }));
+    // Already in the app: never re-imported. Show how the file differs so the dispatcher can adjust the route instead.
     const nw = normWorker(g.worker) || null;
-    if (nw !== ex.onfleetWorker) p.workerChanges.push({ route: ex, old: ex.onfleetWorker, new: nw, newId: (findDriverByName(nw) || {}).id || null });
+    p.skipped.push({ route: ex, fileStops: g.orders.length, appStops: routeStops(ex), worker: nw, workerDiffers: !!(nw && ex.onfleetWorker !== nw) });
   }
-  p.unknown = [...new Set(p.routes.filter(r => r.onfleetWorker && !r.onfleetDriverId).map(r => r.onfleetWorker).concat(p.workerChanges.filter(w => w.new && !w.newId).map(w => w.new)))];
+  p.unknown = [...new Set(p.routes.filter(r => r.onfleetWorker && !r.onfleetDriverId).map(r => r.onfleetWorker))];
   return p;
 }
 function addUnknownDrivers() {
   const p = S.importPreview; let n = 0;
-  p.unknown.forEach(name => { const r = p.routes.find(x => x.onfleetWorker === name) || (p.workerChanges.find(w => w.new === name) || {}).route; const id = 'd' + (100 + S.drivers.length); const num = String(5550200 + S.drivers.length).slice(-7);
+  p.unknown.forEach(name => { const r = p.routes.find(x => x.onfleetWorker === name); const id = 'd' + (100 + S.drivers.length); const num = String(5550200 + S.drivers.length).slice(-7);
     S.drivers.push({ id, gid: 'GG-' + (2000 + S.drivers.length), name, phone: '+1317' + num, area: r ? r.area : 'A3', tier: '', active: true, optOut: false, rec: 'rec' + id, base: { offers: 6, answered: 6, accepted: 5, committed: 5, completed: 5, late: 0, early: 0, noshow: 0, confSent: 8, confOnTime: 8, rescues: 0, resp: 6 }, last: T(11, 10, 0), addedFromFile: true }); n++; });
   S.importPreview = buildOnfleetPreview(p.text, p.file, p.sample); S.importPreview.text = p.text;
   toast(`${n} driver${n === 1 ? '' : 's'} added to the demo roster. In the real app they must exist in Airtable first.`); render();
 }
 function applyOnfleetImport(p) {
-  const batch = { id: 'IMP-' + (119 + S.imports.length - 2), file: p.file, by: actorName(), time: now.getTime(), counts: { new: p.newOrders, changed: p.changed.length + p.workerChanges.length, unchanged: p.unchanged, missing: p.missing.length, rejected: p.rejected.length } };
+  if (!p.routes.length) { toast('Nothing new in this file. Routes already in the app are never re-imported.'); return null; }
+  const batch = { id: 'IMP-' + (119 + S.imports.length - 2), file: p.file, hash: p.hash, by: actorName(), time: now.getTime(), counts: { routes: p.routes.length, new: p.newOrders, skipped: p.skipped.length, rejected: p.rejected.length } };
   S.imports.unshift(batch);
   const texted = [], waiting = [];
   for (const t of p.routes) { t.onfleetAt = now.getTime(); t.importId = batch.id; S.routes.push(t); relink(t); }
-  for (const c of p.changed) {
-    const r = c.route;
-    if (c.order) { c.order.history.push({ field: c.field, old: c.old, new: c.new, batch: batch.id, time: now.getTime() }); Object.assign(c.order, { addr: c.new, lat: c.next.lat, lon: c.next.lon, key: c.next.key, apt: c.next.apt, city: c.next.city }); }
-    if (c.added) c.added.forEach(o => { o.history.push({ field: 'Route', old: '', new: r.name, batch: batch.id, time: now.getTime() }); r.orders.push(o); });
-    if (r.lockedPay != null) r.lockedPay = price(r).pay;
-    if (['Offered', 'Accepted'].includes(r.status)) { r.status = 'Needs attention'; r.attention = 'Order changed after acceptance'; if (r.offerId) ev(r.offerId, 'Order changed after acceptance', 'Import ' + batch.id, c.field); }
-    relink(r);
-  }
-  for (const mrow of p.missing) { mrow.order.inLatest = false; if (mrow.decision === 'cancel') { mrow.order.status = 'cancelled'; mrow.order.history.push({ field: 'Status', old: 'active', new: 'cancelled', batch: batch.id, time: now.getTime() }); } else mrow.route.attention = mrow.route.attention || 'Order not in latest file'; }
-  for (const w of p.workerChanges) {
-    const r = w.route; r.onfleetWorker = w.new; r.onfleetDriverId = w.newId; r.onfleetAt = now.getTime(); r.importId = batch.id; r.onfleetFixed = null;
-    const d = driver(r.driverId);
-    if (d && ['Offered', 'Accepted', 'Needs attention'].includes(r.status) && w.newId !== d.id) { r.attention = `Onfleet shows ${w.new || 'no driver'}, app has ${d.name}`; if (r.status === 'Accepted') r.status = 'Needs attention'; if (r.offerId) ev(r.offerId, 'Onfleet driver changed', 'Import ' + batch.id, `${w.old || 'none'} → ${w.new || 'none'}`); }
-    else if (r.status === 'Unassigned') p.routes.push(r);
-  }
-  p.routes.forEach(r => r.onfleetAt = r.onfleetAt || now.getTime());
   for (const r of p.routes.filter(x => x.status === 'Unassigned').sort((a, b) => routeStart(a) - routeStart(b) || a.name.localeCompare(b.name))) {
     const plan = onfleetPlan(r);
     if (plan.kind === 'confirm' && S.settings.preConfirm === 'auto') { confirmOnfleet(r, plan.d, true); texted.push(r.name); }
@@ -1503,58 +1452,12 @@ function applyOnfleetImport(p) {
     const g = S.drivers.find(d => d.name === 'Grace Okonkwo'); if (g) S.phoneDriver = g.id;
   }
   S.uploadsDone[p.file] = true;
-  toast(`Imported ${batch.id}: ${p.routes.length ? p.routes.length + ' routes, ' : ''}${batch.counts.new} new orders, ${batch.counts.changed} changed, ${batch.counts.missing} missing, ${batch.counts.rejected} rejected.`);
+  toast(`Imported ${batch.id}: ${p.routes.length} new route${p.routes.length > 1 ? 's' : ''}, ${batch.counts.new} orders${p.skipped.length ? `, ${p.skipped.length} already in the app skipped` : ''}${p.rejected.length ? `, ${p.rejected.length} rows rejected` : ''}.`);
   if (texted.length) setTimeout(() => toast(`Confirm texts sent to the Onfleet driver on ${texted.length} route${texted.length > 1 ? 's' : ''}.`), 400);
   if (waiting.length) setTimeout(() => toast(`${waiting.length} route${waiting.length > 1 ? 's have' : ' has'} an Onfleet driver ready to confirm with one click.`), 400);
-  if (p.workerChanges.some(w => w.route.attention && w.route.attention.startsWith('Onfleet shows'))) setTimeout(() => toast('Onfleet changed a driver on an accepted route. See Onfleet check.'), 800);
   return batch;
 }
 function confirmOnfleet(r, d, silent) { offerRoute(r, d, 'sms', { silent, actor: silent ? 'System (Onfleet driver)' : actorName(), template: 'preassigned', expiryMin: S.settings.preConfirmWindow, detail: 'Confirm with the driver already set in Onfleet' }); r.attention = null; }
-
-/* ---------------- Onfleet check ---------------- */
-function onfleetState(r) {
-  if (r.history || ['Completed', 'Cancelled'].includes(r.status)) return null;
-  const committed = ['Accepted', 'Needs attention'].includes(r.status) && r.driverId ? driver(r.driverId) : null;
-  if (!r.fromOnfleet) { if (!committed) return null; return r.onfleet ? { k: 'ok', t: 'Checked in Onfleet' } : { k: 'todo', t: `Assign ${committed.name} in Onfleet` }; }
-  const fixed = r.onfleetFixed && r.onfleetFixed.key === (r.driverId || '') + r.status;
-  const ow = r.onfleetWorker ? `${r.onfleetWorker}${r.onfleetDriverId ? '' : ' (not in Airtable)'}` : 'no driver';
-  if (committed) {
-    if (r.onfleetDriverId === committed.id) return { k: 'ok', t: 'Matches the latest Onfleet file' };
-    if (fixed) return { k: 'ok', t: `Updated in Onfleet by ${r.onfleetFixed.by}. The next file confirms it.` };
-    return r.onfleetWorker ? { k: 'bad', t: `Onfleet shows ${ow}, app has ${committed.name}` } : { k: 'todo', t: `Assign ${committed.name} in Onfleet` };
-  }
-  if (!r.onfleetWorker) return null;
-  if (r.status === 'Offered' && r.driverId === r.onfleetDriverId) return { k: 'wait', t: `Confirm text out to ${driver(r.driverId).name}` };
-  if (fixed) return { k: 'ok', t: `Updated in Onfleet by ${r.onfleetFixed.by}` };
-  return { k: 'bad', t: `Onfleet shows ${ow}, app has ${r.driverId ? 'an offer out to ' + driver(r.driverId).name : 'no driver'}` };
-}
-function markOnfleetFixed(rid) {
-  const r = route(rid); if (!r.fromOnfleet) { r.onfleet = true; } else r.onfleetFixed = { key: (r.driverId || '') + r.status, by: actorName(), at: now.getTime() };
-  if (r.attention && r.attention.startsWith('Onfleet')) { r.attention = null; if (r.status === 'Needs attention') r.status = 'Accepted'; }
-  if (r.offerId) ev(r.offerId, 'Onfleet checked', actorName(), r.driverId ? `Onfleet set to ${driver(r.driverId).name}` : 'Onfleet driver removed');
-  toast(`${r.name}: marked as updated in Onfleet.`); render();
-}
-function switchToOnfleet(rid) {
-  const r = route(rid), od = driver(r.onfleetDriverId); if (!od) return;
-  if (r.status === 'Offered') { const o = offer(r.offerId); o.open = false; o.outcome = 'Withdrawn'; ev(o.id, 'Withdrawn', actorName(), 'Switching to the Onfleet driver'); sendSms(driver(o.driverId), fill(S.settings.templates.expired, r), r, o); r.status = 'Unassigned'; r.driverId = null; r.offerId = null; r.lockedPay = null; }
-  else release(r, 'Dispatcher');
-  r.attention = null; confirmOnfleet(r, od, false);
-}
-function canSwitch(r) { const d = driver(r.onfleetDriverId); return d && d.active && !d.optOut && !onHold(d) && !bookedOn(d, r.date, r.id) && !hasOpenOffer(d, r.id); }
-function onfleetRoutes() { return S.routes.filter(r => { const o = dayOffset(r); return o >= 0 && o <= 3; }).map(r => ({ r, s: onfleetState(r) })).filter(x => x.s); }
-function onfleetBadge() { return onfleetRoutes().filter(x => ['bad', 'todo'].includes(x.s.k) && dayOffset(x.r) <= 2).length; }
-function onfleetTag(r) { const s = onfleetState(r); if (!s) return ''; return { ok: '<span class="ofc ok" title="' + esc(s.t) + '">Onfleet ✓</span>', bad: '<span class="ofc bad" title="' + esc(s.t) + '">Onfleet out of sync</span>', todo: '<span class="ofc todo" title="' + esc(s.t) + '">Set in Onfleet</span>', wait: '' }[s.k]; }
-function vOnfleet() {
-  const xs = onfleetRoutes(); const grp = k => xs.filter(x => x.s.k === k).sort((a, b) => routeStart(a.r) - routeStart(b.r) || a.r.name.localeCompare(b.r.name));
-  const row = ({ r, s }) => { const d = driver(r.driverId); return `<tr class="clickable" onclick="go('route',{id:'${r.id}'})"><td><b class="mono">${r.name}</b><div class="small muted">${fmtDate(routeDate(r))} ${hhmm(r.start)} · ${area(r.area).hub}</div></td><td>${d && r.status !== 'Unassigned' ? `${d.name} <span class="small muted">${r.status === 'Offered' ? 'offer out' : 'accepted'}</span>` : '<span class="muted">No driver</span>'}</td><td>${r.fromOnfleet ? (r.onfleetWorker ? esc(r.onfleetWorker) + (r.onfleetDriverId ? '' : ' <span class="small" style="color:var(--warn)">not in Airtable</span>') : '<span class="muted">Unassigned</span>') : '<span class="muted small">Older file, no driver column</span>'}<div class="small muted">${r.importId ? r.importId + ', ' + fmtDT(r.onfleetAt) : ''}</div></td><td class="small" style="color:${s.k === 'bad' ? 'var(--crit)' : s.k === 'todo' ? 'var(--warn)' : 'var(--muted)'}">${esc(s.t)}</td><td onclick="event.stopPropagation()">${['bad', 'todo'].includes(s.k) ? `<button class="btn sm primary" onclick="markOnfleetFixed('${r.id}')">${s.k === 'todo' ? 'Done in Onfleet' : 'I updated Onfleet'}</button>` : ''}${s.k === 'bad' && r.onfleetDriverId && r.driverId && r.driverId !== r.onfleetDriverId && canSwitch(r) ? ` <button class="btn sm" onclick="switchToOnfleet('${r.id}')">Use Onfleet's driver</button>` : ''}</td></tr>`; };
-  const tbl = (t, k, note) => { const rs = grp(k); return rs.length ? `<div class="group-title"><h3>${t}</h3><span class="n">${rs.length}</span></div>${note ? `<p class="small muted" style="margin:-4px 0 8px">${note}</p>` : ''}<div class="panel"><div class="tbl"><table><thead><tr><th>Route</th><th>App driver</th><th>Onfleet driver</th><th>Check</th><th></th></tr></thead><tbody>${rs.map(row).join('')}</tbody></table></div></div>` : ''; };
-  const n = k => grp(k).length;
-  return `<div class="page-head"><div><h1>Onfleet check</h1><p>The app and Onfleet have to agree before drivers show up. Each upload compares the driver Onfleet has on a route with the driver who confirmed in the app. Fix Onfleet, then mark it here.</p></div><div class="row"><button class="btn" onclick="go('upload')">Upload a fresh Onfleet file</button></div></div>
-  <div class="counts" style="margin-bottom:14px"><div class="cnt rejected"><div class="v num">${n('bad')}</div><div class="k">Out of sync</div></div><div class="cnt changed"><div class="v num">${n('todo')}</div><div class="k">Set in Onfleet</div></div><div class="cnt"><div class="v num">${n('wait')}</div><div class="k">Waiting on driver</div></div><div class="cnt new"><div class="v num">${n('ok')}</div><div class="k">Matches</div></div></div>
-  ${tbl('Out of sync', 'bad', 'Onfleet has a different driver than the app. Change Onfleet to match, or use the Onfleet driver instead.')}${tbl('Set in Onfleet', 'todo', 'Accepted in the app, not yet on the route in Onfleet.')}${tbl('Waiting on the driver', 'wait')}${tbl('Matches', 'ok')}
-  ${xs.length ? '' : '<div class="notice ok"><div>Nothing to check for today through the next 3 days.</div></div>'}`;
-}
-
 
 /* ---------------- Indianapolis seed: roster and two past Fridays of lane history ---------------- */
 (function seedIndy() {
@@ -1585,7 +1488,7 @@ function vOnfleet() {
   // Drivers keep the pay they were texted: lock every seeded route that already has a driver.
   S.routes.filter(r => r.driverId && r.lockedPay == null).forEach(r => r.lockedPay = price(r).pay);
 })();
-// A second Indianapolis export, as if pulled Thursday morning: Onfleet moved IN-1120-06 to Ben, one order dropped and two added on IN-1120-13.
+// A second Indianapolis export, as if pulled Thursday morning: Onfleet moved IN-1120-06 to Ben, and IN-1120-13 lost one order and gained two (net +1 stop). Every route is already in the app, so nothing imports; the preview points the dispatcher to Adjust route.
 function sampleIndyReexport() {
   const lines = document.getElementById('sampleIndy').textContent.trim().split('\n'); const out = [lines[0]]; let drop = true;
   for (const ln of lines.slice(1)) {
@@ -1612,7 +1515,7 @@ function vUploadOnfleet(p) {
   const conf = p.routes.filter(r => onfleetPlan(r).kind === 'confirm').length;
   const auto = S.settings.preConfirm === 'auto';
   const byM = {}; p.routes.forEach(r => { const pr = price(r), m = area(r.area).market; byM[m] = byM[m] || { rev: 0, pay: 0, n: 0 }; byM[m].rev += pr.revenue; byM[m].pay += pr.pay; byM[m].n++; });
-  const acc = pricingAccess();
+  const acc = canSeePricing() ? 'edit' : 'none';
   const rowsHtml = p.routes.map(r => {
     const pr = price(r), plan = onfleetPlan(r), g = geoStats(r), lm = r.laneId ? lane(r.laneId) : null, s = lm ? laneSuggestion(r) : null;
     const lastRun = s && s.runs[0];
@@ -1620,74 +1523,31 @@ function vUploadOnfleet(p) {
     const act = plan.kind === 'confirm' ? (auto ? `<span class="pill offered">Confirm text to ${shortName(plan.d)}</span>` : `<span class="pill accepted">One-click confirm</span>`) : plan.alt ? `<span class="pill accepted">Suggest ${shortName(plan.alt.d)}</span><div class="small muted">${plan.kind === 'blocked' ? plan.why.join(', ').toLowerCase() : plan.kind === 'unknown' ? 'Onfleet driver not in Airtable' : 'from lane history'}</div>` : `<span class="pill unassigned">Unassigned</span>${plan.kind === 'blocked' ? `<div class="small muted">${plan.why.join(', ').toLowerCase()}</div>` : ''}`;
     return `<tr><td class="mono">${r.name}<div class="small muted">${fmtDate(routeDate(r))} ${hhmm(r.start)}</div></td><td class="small">${g ? g.cities.join(', ') : '–'}</td><td class="r num">${activeStops(r)}<div class="small muted">${g ? `${g.apt} apt · ${g.b2b} B2B` : ''}</div></td><td class="r num">${g ? Math.round(g.miles) + ' mi' : '–'}<div class="small muted">${pr.hours ? pr.hours.toFixed(1) + ' h' : ''}</div></td><td class="r num"><b>${money(pr.pay)}</b><div class="small muted">${pr.perHour ? money(pr.perHour) + '/hr' : ''}${pr.glide ? ' · glide' : ''}</div></td>${acc !== 'none' ? `<td class="r num">${marginCell(pr)}</td>` : ''}<td>${lm ? `<span class="lane"><span class="ico">↻</span>${esc(lm.name)}</span><div class="small muted">${Math.round(r.laneMatch.pct * 100)}% of stops seen${lastRun ? `, last run ${shortName(driver(lastRun.driverId))} ${fmtDate(routeDate(lastRun))}` : ''}</div>` : `<span class="muted">New route</span>${r.laneMatch && r.laneMatch.pct ? `<div class="small muted">closest ${Math.round(r.laneMatch.pct * 100)}%</div>` : ''}`}</td><td>${ofl}</td><td>${act}</td></tr>`;
   }).join('');
-  return `<div class="page-head"><div><h1>Upload and review</h1><p>Onfleet task export. Each Driver Number is one route. Hub rows are skipped, the market comes from the hub, and every route is priced before anything goes out.</p></div></div>
-  <div class="panel" style="margin-bottom:12px"><div class="row" style="justify-content:space-between"><div><b class="mono">${esc(p.file)}</b> <span class="muted small">· ${p.rows} rows · ${p.clients.join(', ') || 'client not named'} · ${p.hub} hub rows skipped</span></div><div class="row"><button class="btn" onclick="S.importPreview=null;render()">Discard</button><button class="btn primary" onclick="applyOnfleetImport(S.importPreview);S.importPreview=null;S.boardTab=${p.routes[0] ? Math.min(4, dayOffset(p.routes[0])) : 'S.boardTab'};go('board')">${p.routes.length && conf && auto ? `Import and text ${conf} Onfleet driver${conf > 1 ? 's' : ''}` : 'Confirm import'}</button></div></div>
+  const nothing = !p.routes.length;
+  const diffs = p.skipped.filter(x => x.fileStops !== x.appStops);
+  return `<div class="page-head"><div><h1>Upload and review</h1><p>Onfleet task export. Each Driver Number is one route. Only routes not already in the app are added; a route that is already here is never re-imported or changed by a file.</p></div></div>
+  ${p.dupOf ? `<div class="notice warn" style="margin-bottom:12px"><div><b>This file was already imported</b> as ${p.dupOf.id} by ${p.dupOf.by}, ${fmtDT(p.dupOf.time)}. Nothing new to add.</div></div>` : nothing && p.skipped.length ? `<div class="notice info" style="margin-bottom:12px"><div><b>Nothing new in this file.</b> All ${p.skipped.length} routes are already in the app. If Onfleet changed a route since, adjust it below instead of re-importing.</div></div>` : ''}
+  <div class="panel" style="margin-bottom:12px"><div class="row" style="justify-content:space-between"><div><b class="mono">${esc(p.file)}</b> <span class="muted small">· ${p.rows} rows · ${p.clients.join(', ') || 'client not named'} · ${p.hub} hub rows skipped</span></div><div class="row"><button class="btn" onclick="S.importPreview=null;render()">${nothing ? 'Close' : 'Discard'}</button><button class="btn primary" ${nothing ? 'disabled' : ''} onclick="applyOnfleetImport(S.importPreview);S.importPreview=null;S.boardTab=${p.routes[0] ? Math.min(4, dayOffset(p.routes[0])) : 'S.boardTab'};go('board')">${nothing ? 'Nothing to import' : p.routes.length && conf && auto ? `Import ${p.routes.length} routes and text ${conf} Onfleet driver${conf > 1 ? 's' : ''}` : `Import ${p.routes.length} route${p.routes.length > 1 ? 's' : ''}`}</button></div></div>
   ${p.sample ? '<p class="small muted" style="margin:6px 0 0">Scrubbed copy of the Oct 15 CookUnity export, dates moved to Fri Nov 20: real stop order, cities and coordinates, made-up house numbers, customers and drivers.</p>' : '<p class="small muted" style="margin:6px 0 0">Customer names, phones and addresses stay in this browser tab. Nothing in the demo is sent anywhere.</p>'}</div>
-  <div class="counts"><div class="cnt new"><div class="v">${p.routes.length}</div><div class="k">New routes</div></div><div class="cnt new"><div class="v">${p.newOrders}</div><div class="k">New orders</div></div><div class="cnt changed"><div class="v">${p.changed.length + p.workerChanges.length}</div><div class="k">Changed</div></div><div class="cnt"><div class="v">${p.unchanged}</div><div class="k">Unchanged</div></div><div class="cnt missing"><div class="v">${p.missing.length}</div><div class="k">Missing</div></div><div class="cnt rejected"><div class="v">${p.rejected.length}</div><div class="k">Rejected</div></div></div>
+  <div class="counts"><div class="cnt new"><div class="v">${p.routes.length}</div><div class="k">New routes</div></div><div class="cnt new"><div class="v">${p.newOrders}</div><div class="k">New orders</div></div><div class="cnt"><div class="v">${p.skipped.length}</div><div class="k">Already in app, skipped</div></div><div class="cnt ${diffs.length ? 'changed' : ''}"><div class="v">${diffs.length}</div><div class="k">Stops differ</div></div><div class="cnt rejected"><div class="v">${p.rejected.length}</div><div class="k">Rejected</div></div></div>
   ${p.unknown.length ? `<div class="notice warn" style="margin-top:12px"><div><b>${p.unknown.length} Onfleet driver${p.unknown.length > 1 ? 's are' : ' is'} not in Airtable:</b> ${p.unknown.map(esc).join(', ')}. Their routes fall back to lane history or stay Unassigned. <button class="btn sm" style="margin-left:6px" onclick="addUnknownDrivers()">Add to the demo roster</button></div></div>` : ''}
-  ${p.routes.length ? `<div class="group-title"><h3>Priced routes</h3><span class="n">${Object.entries(byM).map(([m, t]) => `${market(m).name}: ${money(t.pay)} driver pay${acc !== 'none' ? ` on ${money(t.rev)}, ${pct((t.rev - t.pay) / t.rev)} margin vs ${market(m).p.targetMargin}% target` : ''}`).join(' · ')}</span></div>
+  ${p.routes.length ? `<div class="group-title"><h3>New routes, priced</h3><span class="n">${Object.entries(byM).map(([m, t]) => `${market(m).name}: ${money(t.pay)} driver pay${acc !== 'none' ? ` on ${money(t.rev)}, ${pct((t.rev - t.pay) / t.rev)} margin vs ${market(m).p.targetMargin}% target` : ''}`).join(' · ')}</span></div>
   <div class="panel"><div class="tbl"><table><thead><tr><th>Route</th><th>Cities</th><th class="r">Stops</th><th class="r">Miles</th><th class="r">Pay</th>${acc !== 'none' ? '<th class="r">Margin</th>' : ''}<th>Recognized as</th><th>Onfleet driver</th><th>On import</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>
-  <p class="small muted" style="margin:8px 0 0">Pay comes from ${[...new Set(p.routes.map(r => market(area(r.area).market).name))].join(', ')} on Markets and pricing. The driver Onfleet already has on a route is the preferred driver: ${auto ? 'they get a confirm text on import with the exact pay, a stop range, cities, miles and hours.' : 'one click sends them a confirm text.'} Routes with no usable Onfleet driver fall back to lane history.</p></div>` : ''}
-  ${p.workerChanges.length ? `<div class="group-title"><h3>Onfleet driver changed</h3></div><div class="panel"><div class="tbl"><table><thead><tr><th>Route</th><th>Onfleet before → now</th><th>App</th><th>Effect</th></tr></thead><tbody>${p.workerChanges.map(w => { const d = driver(w.route.driverId); const clash = d && w.newId !== d.id && ['Offered', 'Accepted', 'Needs attention'].includes(w.route.status); return `<tr><td class="mono">${w.route.name}</td><td class="diff"><span class="old">${esc(w.old || 'none')}</span><br><span class="new">${esc(w.new || 'none')}</span></td><td>${d ? `${d.name} <span class="pill ${w.route.status === 'Offered' ? 'offered' : 'accepted'}">${w.route.status}</span>` : '<span class="muted">No driver</span>'}</td><td>${clash ? '<span class="pill attention">Out of sync, flags Needs attention</span>' : '<span class="muted small">Preferred driver updated</span>'}</td></tr>`; }).join('')}</tbody></table></div></div>` : ''}
-  ${p.changed.length ? `<div class="group-title"><h3>Changed orders</h3></div><div class="panel"><div class="tbl"><table><thead><tr><th>Route</th><th>Field</th><th>Old → new</th><th>Effect</th></tr></thead><tbody>${p.changed.map(c => `<tr><td class="mono">${c.route.name} <span class="pill ${c.route.status === 'Unassigned' ? 'unassigned' : 'accepted'}">${c.route.status}</span></td><td>${c.field}</td><td class="diff">${c.old ? `<span class="old">${esc(c.old)}</span><br>` : ''}<span class="new">${esc(c.new)}</span></td><td>${['Offered', 'Accepted', 'Needs attention'].includes(c.route.status) ? '<span class="pill attention">Re-prices, flags Needs attention</span>' : '<span class="muted small">Route re-prices</span>'}</td></tr>`).join('')}</tbody></table></div></div>` : ''}
-  ${p.missing.length ? `<div class="group-title"><h3>In the app but missing from this file</h3></div><div class="panel"><div class="tbl"><table><thead><tr><th>Order</th><th>Route</th><th>Address</th><th>Decision</th></tr></thead><tbody>${p.missing.map((m, i) => `<tr><td class="mono">${m.order.id}</td><td class="mono">${m.route.name}</td><td>${esc(m.order.addr)}</td><td><select onchange="S.importPreview.missing[${i}].decision=this.value"><option value="keep">Keep, mark "Not in latest file"</option><option value="cancel">Cancel the order</option></select></td></tr>`).join('')}</tbody></table></div></div>` : ''}
-  ${p.rejected.length ? `<div class="group-title"><h3>Rejected rows</h3><span class="n">the rest of the file still imports</span></div><div class="panel"><div class="tbl"><table><thead><tr><th>Row</th><th>Order ID</th><th>Reason</th></tr></thead><tbody>${p.rejected.slice(0, 50).map(x => `<tr><td class="num">${x.row}</td><td class="mono">${esc(x.id)}</td><td style="color:var(--crit)">${esc(x.reason)}</td></tr>`).join('')}</tbody></table></div></div>` : ''}
-  ${!p.routes.length && !p.changed.length && !p.missing.length && !p.workerChanges.length ? '<div class="notice ok" style="margin-top:12px"><div>Everything in this file is already in the app. Confirming records the batch and changes nothing.</div></div>' : ''}`;
+  <p class="small muted" style="margin:8px 0 0">Pay comes from the market's pricing parameters. The driver Onfleet already has on a route is the preferred driver: ${auto ? 'they get a confirm text on import with the exact pay, a stop range, cities, miles and hours.' : 'one click sends them a confirm text.'} Routes with no usable Onfleet driver fall back to lane history.</p></div>` : ''}
+  ${p.skipped.length ? `<div class="group-title"><h3>Already in the app</h3><span class="n">${p.skipped.length} skipped, not changed</span></div><div class="panel"><div class="tbl"><table><thead><tr><th>Route</th><th>Status</th><th class="r">In app</th><th class="r">In this file</th><th>Note</th><th></th></tr></thead><tbody>${p.skipped.map(x => { const r = x.route, df = x.fileStops - x.appStops; return `<tr><td class="mono">${r.name}<div class="small muted">${fmtDate(routeDate(r))}</div></td><td>${statusPill(r)}</td><td class="r num">${x.appStops}</td><td class="r num">${x.fileStops}</td><td class="small">${df ? `<span style="color:var(--warn)">${df > 0 ? '+' : ''}${df} stop${Math.abs(df) === 1 ? '' : 's'} in Onfleet</span>` : '<span class="muted">Same stop count</span>'}${x.workerDiffers ? `<div class="muted">Onfleet now shows ${esc(x.worker)}${r.driverId ? `, app has ${driver(r.driverId).name}` : ''}</div>` : ''}</td><td>${df && canAdjust(r) ? `<button class="btn sm primary" onclick="openAdj('${r.id}',${df})">Adjust route</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div><p class="small muted" style="margin:8px 0 0">Uploading the same routes twice can't double them or reset a driver. When Onfleet changes a route after it is here, record the change with Adjust route: stops and pay, logged on the route and in pay.</p></div>` : ''}
+  ${p.rejected.length ? `<div class="group-title"><h3>Rejected rows</h3><span class="n">the rest of the file still imports</span></div><div class="panel"><div class="tbl"><table><thead><tr><th>Row</th><th>Order ID</th><th>Reason</th></tr></thead><tbody>${p.rejected.slice(0, 50).map(x => `<tr><td class="num">${x.row}</td><td class="mono">${esc(x.id)}</td><td style="color:var(--crit)">${esc(x.reason)}</td></tr>`).join('')}</tbody></table></div></div>` : ''}`;
 }
 
 /* ---------------- Closeout ---------------- */
-function closeoutRoutes() { return S.routes.filter(r => dayOffset(r) < 0 && r.driverId && ['Accepted', 'Needs attention', 'Completed'].includes(r.status) && !r.paid); }
+function closeoutRoutes() { return S.routes.filter(r => !r.history && routeStart(r) < now.getTime() && r.driverId && ['Accepted', 'Needs attention', 'Completed'].includes(r.status) && !r.paid); }
+function closeoutDays() { return [...new Set(closeoutRoutes().map(r => r.date))].sort(); }
 function setOutcome(r, outcome) {
   const o = offer(r.offerId); o.outcome = outcome; o.outcomeBy = actorName(); ev(o.id, 'Outcome set', actorName(), outcome); r.outcome = outcome; r.status = 'Completed';
-  if (outcome === 'No-show') suggestHold(driver(o.driverId), `No-show on ${r.name}, ${fmtDate(routeDate(r))}`, r);
   if (outcome === 'Completed' && !r.laneId) { const l = { id: 'L' + (S.lanes.length + 1), name: `${area(r.area).hub} ${r.name}`, area: r.area, preferredDriverId: null, pool: [], fromRun: r.name }; S.lanes.push(l); r.laneId = l.id; r.laneManual = true; toast(`${r.name} had no match, so it starts a new lane: ${l.name}. Rename it on the Lanes screen.`); }
 }
-function approve(r) { r.approved = { by: actorName(), at: now.getTime() }; ev(r.offerId, 'Approved for pay', actorName(), money(net(r))); }
-function exportPay(rs) { const x = { id: 'EXP-' + (S.exports.length + 31), range: `${fmtDate(routeDate(rs[0]))} to ${fmtDate(routeDate(rs[rs.length - 1]))}`, by: actorName(), at: now.getTime(), status: 'exported', routeIds: rs.map(r => r.id) }; S.exports.push(x); rs.forEach(r => r.exportId = x.id); return x; }
+function signOff(r) { if (!r.outcome || r.approved) return; r.approved = { by: actorName(), at: now.getTime() }; ev(r.offerId, 'Signed off ready to pay', actorName(), money(net(r))); }
+function exportPay(rs) { const x = { id: 'EXP-' + (S.exports.length + 31), range: fmtDate(routeDate(rs[0])), by: actorName(), at: now.getTime(), status: 'exported', routeIds: rs.map(r => r.id) }; S.exports.push(x); rs.forEach(r => r.exportId = x.id); return x; }
 function markPaid(x) { x.status = 'paid'; x.paidAt = now.getTime(); x.routeIds.forEach(id => route(id).paid = true); }
-
-/* ---------------- Import ---------------- */
-function buildPreview(fileKey) {
-  const file = fileKey === 'weekend' ? 'onfleet_export_2026-11-18_19.csv' : 'onfleet_export_2026-11-18_19.csv';
-  const done = S.uploadsDone.weekend;
-  if (done) { return { file, rows: 61, new: [], changed: [], missing: [], rejected: [], unchanged: 61, repeat: true }; }
-  const r17 = route('RR-0417'), b206 = route('BD-0206'), b202 = route('BD-0202');
-  const newOrders = laneOrders('L2', ymd(17), 13, 4, 2);
-  return {
-    file, rows: 77, unchanged: 59, repeat: false,
-    new: newOrders.map(o => ({ order: o, routeName: 'RR-0420', area: 'A1' })),
-    routes: [{ name: 'RR-0420', area: 'A1', date: ymd(17), orders: newOrders }],
-    changed: [
-      { order: r17.orders[2], routeName: 'RR-0417', routeStatus: r17.status, field: 'Delivery address', old: r17.orders[2].addr, new: '2210 Sunrise Rd, Round Rock, TX 78664' },
-      { order: b206.orders[5], routeName: 'BD-0206', routeStatus: b206.status, field: 'Package count', old: String(b206.orders[5].pkgs), new: '4' },
-      { order: null, routeName: 'BD-0206', routeStatus: b206.status, field: 'Route', old: 'BD-0206', new: 'BD-0206 + 2 orders', added: mkOrders('A2', 2, ymd(18)) },
-    ],
-    missing: [{ order: b202.orders[4], routeName: 'BD-0202', routeStatus: b202.status, decision: 'keep' }],
-    rejected: [
-      { row: 44, id: 'OF-84207', reason: 'No Onfleet route ID' },
-      { row: 58, id: 'OF-84190', reason: 'Duplicate order ID in file (row 58 and 71)' },
-      { row: 71, id: 'OF-84190', reason: 'Duplicate order ID in file (row 58 and 71)' },
-    ],
-  };
-}
-function applyImport(p) {
-  const batch = { id: 'IMP-' + (119 + S.imports.length - 2), file: p.file, by: actorName(), time: now.getTime(), counts: { new: p.new.length, changed: p.changed.length, unchanged: p.unchanged, missing: p.missing.length, rejected: p.rejected.length } };
-  S.imports.unshift(batch);
-  if (p.repeat) { toast('Same file as last import. Nothing changed.'); return; }
-  const nr = addRoute('RR-0420', 17, 'A1', 0); nr.orders = p.new.map(x => x.order); nr.vehicle = 'SUV'; relink(nr);
-  for (const c of p.changed) {
-    const r = route(c.routeName);
-    if (c.order) { const o = c.order; o.history.push({ field: c.field, old: c.old, new: c.new, batch: batch.id, time: now.getTime() }); if (c.field === 'Delivery address') o.addr = c.new; else if (c.field === 'Package count') o.pkgs = Number(c.new); }
-    if (c.added) { c.added.forEach(o => { o.history.push({ field: 'Route', old: '', new: r.name, batch: batch.id, time: now.getTime() }); r.orders.push(o); }); r.vehicle = activeStops(r) > 13 ? 'Van' : r.vehicle; }
-    if (r.lockedPay != null) r.lockedPay = price(r).pay;
-    if (['Offered', 'Accepted'].includes(r.status) && r.status !== 'Needs attention') { r.status = 'Needs attention'; r.attention = 'Order changed after acceptance'; if (r.offerId) ev(r.offerId, 'Order changed after acceptance', 'Import ' + batch.id, c.field); }
-  }
-  for (const mrow of p.missing) { mrow.order.inLatest = false; const r = route(mrow.routeName); if (mrow.decision === 'cancel') { mrow.order.status = 'cancelled'; mrow.order.history.push({ field: 'Status', old: 'active', new: 'cancelled', batch: batch.id, time: now.getTime() }); } else { r.attention = r.attention || 'Order not in latest file'; } }
-  S.uploadsDone.weekend = true;
-  p.changed.forEach(c => relink(route(c.routeName)));
-  toast(`Imported ${batch.id}: ${batch.counts.new} new, ${batch.counts.changed} changed, ${batch.counts.missing} missing, ${batch.counts.rejected} rejected.`);
-  if (S.settings.laneAuto === 'auto') { const o = autoOffer([nr]); setTimeout(() => toast(o.sent.length ? `Lane rule: offer texted for ${o.sent.join('; ')}.` : o.skipped.length ? `Lane rule skipped ${o.skipped.join('; ')}.` : `Lane rule: ${nr.name} did not match a lane, left Unassigned.`), 400); }
-}
 
 /* ---------------- Clock ---------------- */
 setInterval(() => {
@@ -1702,19 +1562,18 @@ setInterval(() => {
 
 /* ---------------- Rendering ---------------- */
 const NAV = [
-  { id: 'board', name: 'Dispatch board', group: 'Daily' }, { id: 'checkin', name: 'Site check-in', group: 'Daily' }, { id: 'upload', name: 'Upload and review', group: 'Daily' }, { id: 'onfleet', name: 'Onfleet check', group: 'Daily' }, { id: 'attention', name: 'Needs attention', group: 'Daily' }, { id: 'inbox', name: 'Messages inbox', group: 'Daily' },
-  { id: 'closeout', name: 'Closeout and pay', group: 'Weekly' }, { id: 'markets', name: 'Markets and pricing', group: 'Reference' }, { id: 'lanes', name: 'Lanes', group: 'Reference' }, { id: 'drivers', name: 'Drivers', group: 'Reference' }, { id: 'settings', name: 'Settings', group: 'Reference' },
+  { id: 'board', name: 'Dispatch board', group: 'Daily' }, { id: 'checkin', name: 'Site check-in', group: 'Daily' }, { id: 'upload', name: 'Upload and review', group: 'Daily' }, { id: 'attention', name: 'Needs attention', group: 'Daily' }, { id: 'closeout', name: 'Daily closeout', group: 'Daily' },
+  { id: 'markets', name: 'Markets and pricing', group: 'Reference' }, { id: 'lanes', name: 'Lanes', group: 'Reference' }, { id: 'drivers', name: 'Drivers', group: 'Reference' }, { id: 'settings', name: 'Settings', group: 'Reference' },
 ];
 function go(screen, params = {}) { S.screen = screen; S.params = params; render(); $('#main').scrollTop = 0; }
 function render() { renderNav(); renderMain(); renderPhone(); }
 function renderNav() {
   const att = S.routes.filter(r => r.status === 'Needs attention' || (r.attention && r.status !== 'Cancelled')).length;
-  const inboxN = S.messages.filter(m => (m.dir === 'in' && (!m.driverId || m.kind)) || m.status === 'failed').length;
-  const closeN = closeoutRoutes().filter(r => !r.outcome).length;
-  const ciN = checkinRoutes().filter(r => r.driverId && r.status !== 'Offered' && !r.checkin).length; const attN = att + S.holdSuggestions.length;
-  let g = ''; $('#nav').innerHTML = NAV.map(n => { const gh = n.group !== g ? `<div class="group">${n.group}</div>` : ''; g = n.group; const c = n.id === 'attention' ? attN : n.id === 'inbox' ? inboxN : n.id === 'closeout' ? closeN : n.id === 'checkin' ? ciN : n.id === 'onfleet' ? onfleetBadge() : 0; return gh + `<button class="${S.screen === n.id || (S.screen === 'route' && n.id === 'board') || (S.screen === 'driver' && n.id === 'drivers') || (S.screen === 'lane' && n.id === 'lanes') ? 'active' : ''}" onclick="go('${n.id}')">${n.name}${c ? `<span class="count ${n.id === 'attention' ? 'warn' : ''}">${c}</span>` : ''}</button>`; }).join('');
+  const closeN = closeoutRoutes().filter(r => !r.approved).length;
+  const ciN = checkinRoutes().filter(r => r.driverId && r.status !== 'Offered' && !r.checkin).length; const attN = att;
+  let g = ''; $('#nav').innerHTML = NAV.filter(n => n.id !== 'markets' || canSeePricing()).map(n => { const gh = n.group !== g ? `<div class="group">${n.group}</div>` : ''; g = n.group; const c = n.id === 'attention' ? attN : n.id === 'closeout' ? closeN : n.id === 'checkin' ? ciN : 0; return gh + `<button class="${S.screen === n.id || (S.screen === 'route' && n.id === 'board') || (S.screen === 'driver' && n.id === 'drivers') || (S.screen === 'lane' && n.id === 'lanes') ? 'active' : ''}" onclick="go('${n.id}')">${n.name}${c ? `<span class="count ${n.id === 'attention' ? 'warn' : ''}">${c}</span>` : ''}</button>`; }).join('');
 }
-function renderMain() { const fn = { board: vBoard, upload: vUpload, route: vRoute, attention: vAttention, inbox: vInbox, closeout: vCloseout, checkin: vCheckin, drivers: vDrivers, driver: vDriver, settings: vSettings, lanes: vLanes, lane: vLane, markets: vMarkets, onfleet: vOnfleet }[S.screen]; $('#main').innerHTML = fn(); }
+function renderMain() { const fn = { board: vBoard, upload: vUpload, route: vRoute, attention: vAttention, closeout: vCloseout, checkin: vCheckin, drivers: vDrivers, driver: vDriver, settings: vSettings, lanes: vLanes, lane: vLane, markets: vMarkets }[S.screen]; $('#main').innerHTML = fn(); }
 function laneLine(r) {
   const l = lane(r.laneId); if (!l) return r.laneMatch && !r.history ? `<div class="lane muted"><span class="ico" style="background:var(--surface-2);color:var(--muted)">?</span>No history for these stops</div>` : '';
   const pct = laneMatchPct(r), s = laneSuggestion(r), last = s && s.runs[0];
@@ -1724,11 +1583,11 @@ function statusPill(r) { const cls = { 'Unassigned': 'unassigned', 'Offered': 'o
 function driverLine(r) { const d = driver(r.driverId); if (!d) return `<span class="muted small">No driver</span>`; return `<span class="avatar">${initials(d.name)}</span><span>${d.name} <span class="muted small mono">${d.gid}</span></span>${lblHtml(d)}`; }
 
 function guide() {
-  let hidden = false; try { hidden = localStorage.getItem('ld-guide5') === '1'; } catch (e) { }
+  let hidden = false; try { hidden = localStorage.getItem('ld-guide6') === '1'; } catch (e) { }
   if (hidden) return '';
   return `<div class="guide"><div><b>Clickable demo.</b> Everything is simulated in the page, and the clock runs at one minute per second so offers expire in 15 seconds.
-  <ol><li><b>Pricing.</b> Open <b>Markets and pricing</b> › Indianapolis. Dana can only view; switch the header to <b>Terri Lang · Regional Lead</b> to edit. Try a route on the right, and note who can see pricing.</li><li><b>Upload.</b> On <b>Upload and review</b>, drop the Fri Nov 20 CookUnity Onfleet export (or load the <b>CookUnity Indianapolis</b> sample, the same file). Its 16 routes land on the <b>3 days</b> tab. Each route is priced from the market, matched to last Friday's runs, and shows the driver Onfleet already has on it. Dev Kapoor is not in Airtable, so IN-1120-08 falls back to Darius, who ran it last week.</li><li><b>Confirm texts.</b> Import: 14 Onfleet drivers get a confirm text with exact pay, a stop range, cities, miles and hours. Grace's text is open on the phone: reply YES. Over the next few minutes most drivers reply YES, Victor passes and Kevin stays silent.</li><li><b>Re-price.</b> As Terri, raise the Indianapolis floor or the per-mile rate. Open routes re-price; routes already texted keep the pay the driver saw.</li><li><b>Onfleet check.</b> Load the <b>Indianapolis re-export</b>: Onfleet moved IN-1120-06 from Fatima to Ben, so <b>Onfleet check</b> flags it. Keep Fatima and mark Onfleet fixed, or switch to Ben. Routes Victor and Kevin did not take still show Onfleet out of sync until you fix them.</li><li>Austin still works as before: on <b>Tomorrow</b>, offer RR-0417 to Marcus, mark Omar <b>No-show</b> on <b>Site check-in</b>, confirm Luis's hold on <b>Needs attention</b>, then run <b>Closeout and pay</b>.</li></ol></div>
-  <button class="btn sm ghost x" onclick="try{localStorage.setItem('ld-guide5','1')}catch(e){};render()">Hide</button></div>`;
+  <ol><li><b>Upload.</b> On <b>Upload and review</b>, drop the Fri Nov 20 CookUnity Onfleet export (or load the <b>CookUnity Indianapolis</b> sample, the same file). Its 16 routes land on the <b>3 days</b> tab, each priced, matched to last Friday's runs, and showing the driver Onfleet already has on it. Dev Kapoor is not in Airtable, so IN-1120-08 falls back to Darius, who ran it last week.</li><li><b>Confirm texts.</b> Import: 14 Onfleet drivers get a confirm text with exact pay, a stop range, cities, miles and hours. Grace's text is open on the phone: reply YES. Over the next few minutes most drivers reply YES, Victor passes and Kevin stays silent.</li><li><b>No double uploads.</b> Drop the same file again: the app says it was already imported and there is nothing to add. Then load the <b>Indianapolis re-export</b>: every route is already here, so nothing imports, but IN-1120-13 now has 1 more stop in Onfleet. Click <b>Adjust route</b>: +1 stop, the pay change is suggested, and the driver gets a text.</li><li><b>Pricing is admin only.</b> Dana does not see <b>Markets and pricing</b>. Switch the header to <b>Mike Patel · Client admin</b>, open it, and raise the Indianapolis floor or per-mile rate. Open routes re-price; routes already texted keep the pay the driver saw.</li><li><b>Austin today.</b> Back as Dana, on <b>Tomorrow</b> offer RR-0417 to Marcus, and on <b>Site check-in</b> mark Omar a <b>No-show</b> on RR-0412.</li><li><b>Daily closeout.</b> On <b>Daily closeout</b>, mark yesterday's 4 Austin routes Completed and <b>Sign off</b> each one as ready to pay. Switch to <b>Ruston · Gigee ops</b> to export the day's pay and mark it paid.</li></ol></div>
+  <button class="btn sm ghost x" onclick="try{localStorage.setItem('ld-guide6','1')}catch(e){};render()">Hide</button></div>`;
 }
 
 function vBoard() {
@@ -1743,7 +1602,7 @@ function vBoard() {
     const s = suggest && r.status === 'Unassigned' && r.laneId ? laneSuggestion(r) : null;
     return `<div class="card ${r.rescue && !['Accepted', 'Completed', 'Cancelled'].includes(r.status) ? 'rescue' : r.status === 'Needs attention' ? 'attention' : ''}" onclick="go('route',{id:'${r.id}'})">
       <div class="title"><span class="rn">${r.name}</span>${statusPill(r)}</div>
-      <div class="meta"><span>${area(r.area).hub}</span><span><b>${hhmm(r.start)}</b></span><span><b>${activeStops(r)}</b> stops</span><span><b>${money(payout(r))}</b></span>${geoStats(r) ? (() => { const pr = price(r); return `<span>${Math.round(pr.miles)} mi · ${pr.hours.toFixed(1)} h</span>`; })() : `<span>${r.vehicle}</span>`}</div>
+      <div class="meta"><span>${area(r.area).hub}</span><span><b>${hhmm(r.start)}</b></span><span><b>${routeStops(r)}</b> stops${adjStops(r) ? ` <span class="muted">(${adjStops(r) > 0 ? '+' : ''}${adjStops(r)} adj)</span>` : ''}</span><span><b>${money(driverPay(r))}</b></span>${geoStats(r) ? (() => { const pr = price(r); return `<span>${Math.round(pr.miles)} mi · ${pr.hours.toFixed(1)} h</span>`; })() : `<span>${r.vehicle}</span>`}</div>
       ${laneLine(r)}
       ${r.rescue && !['Accepted', 'Completed', 'Cancelled'].includes(r.status) ? `<div class="pickup-in" data-pickup="${r.id}">Pickup in ${dur(routeStart(r) - now.getTime())}</div>` : ''}
       ${r.attention ? `<div class="small" style="color:var(--warn)">${r.attention}</div>` : ''}
@@ -1753,7 +1612,6 @@ function vBoard() {
         ${r.status === 'Unassigned' && r.onfleetDriverId && !eligibility(driver(r.onfleetDriverId), r).length ? `<button class="btn sm primary" title="Onfleet already has this driver on the route" onclick="confirmOnfleet(route('${r.id}'),driver('${r.onfleetDriverId}'),false)">Confirm with ${shortName(driver(r.onfleetDriverId))}</button><button class="btn sm" onclick="openPicker('${r.id}','sms')">Other driver</button>` : r.status === 'Unassigned' ? (s && s.pick ? `<button class="btn sm primary" title="${esc(s.pick.why)}" onclick="offerRoute(route('${r.id}'),driver('${s.pick.d.id}'),'sms')">Offer to ${shortName(s.pick.d)}</button><button class="btn sm" onclick="openPicker('${r.id}','sms')">Other driver</button>` : `<button class="btn sm primary" onclick="openPicker('${r.id}','sms')">Offer</button>`) : ''}
         ${r.status === 'Offered' ? `<button class="btn sm" onclick="withdraw(route('${r.id}'))">Withdraw</button>` : ''}
         ${r.status === 'Needs attention' ? `<button class="btn sm" onclick="go('route',{id:'${r.id}'})">Decide</button>` : ''}
-        ${onfleetTag(r) ? `<span style="margin-left:auto" onclick="go('onfleet')">${onfleetTag(r)}</span>` : ''}
       </div></div>`;
   };
   const group = (s, rs) => rs.length ? `<div class="group-title"><h3>${s}</h3><span class="n">${rs.length}</span></div><div class="cards">${rs.map(card).join('')}</div>` : '';
@@ -1786,9 +1644,9 @@ function vRoute() {
   if (['Accepted', 'Needs attention'].includes(r.status)) actions.push(`<button class="btn danger" onclick="openRelease('${r.id}')">Release driver</button>`);
   if (r.status === 'Needs attention' && o && o.pending) actions.push(`<button class="btn primary" onclick="confirmedByPhone(route('${r.id}'))">Confirmed by phone</button>`);
   if (r.status === 'Needs attention' && r.attention === 'Order changed after acceptance') actions.push(`<button class="btn primary" onclick="retext(route('${r.id}'))">Re-text driver</button>`, `<button class="btn" onclick="clearAttention(route('${r.id}'))">Keep as is</button>`);
-  if (r.status === 'Needs attention' && ['Driver deactivated in Airtable', 'Driver on hold'].includes(r.attention)) actions.push(`<button class="btn" onclick="openRelease('${r.id}','Dispatcher')">Reassign</button>`);
-  if (r.attention && r.attention.startsWith('Onfleet shows') && r.driverId) { actions.push(`<button class="btn primary" onclick="markOnfleetFixed('${r.id}')">Keep ${shortName(driver(r.driverId))}, I fixed Onfleet</button>`); if (r.onfleetDriverId && canSwitch(r)) actions.push(`<button class="btn" onclick="switchToOnfleet('${r.id}')">Switch to ${shortName(driver(r.onfleetDriverId))}</button>`); }
+  if (r.status === 'Needs attention' && r.attention === 'Driver deactivated in Airtable') actions.push(`<button class="btn" onclick="openRelease('${r.id}','Dispatcher')">Reassign</button>`);
   if (r.status === 'Unassigned' && r.onfleetDriverId && !eligibility(driver(r.onfleetDriverId), r).length) actions.unshift(`<button class="btn primary" onclick="confirmOnfleet(route('${r.id}'),driver('${r.onfleetDriverId}'),false)">Confirm with ${shortName(driver(r.onfleetDriverId))}</button>`);
+  if (canAdjust(r)) actions.push(`<button class="btn" onclick="openAdj('${r.id}')">Adjust route</button>`);
   if (r.attention === 'Order not in latest file' && r.status !== 'Needs attention') actions.push(`<button class="btn" onclick="route('${r.id}').attention=null;render()">Keep order</button>`);
   const sim = ['Accepted'].includes(r.status) && o && !o.pending ? `<div class="panel"><h3>Confirmation checks</h3><p class="small muted" style="margin:0 0 8px">Scheduled by the job runner in the hub's time zone: heads-up ${48}h before, reconfirm ${S.settings.reconfirmHours}h before, final ${S.settings.finalHours}h before. Fire one now for the demo.</p><div class="row">
     <button class="btn sm" onclick="sendHeadsUp(route('${r.id}'))">Send heads-up</button><button class="btn sm" onclick="sendCheck(route('${r.id}'),'reconfirm')">Send reconfirm</button><button class="btn sm" onclick="sendCheck(route('${r.id}'),'final')">Send final confirm</button></div></div>` : '';
@@ -1802,19 +1660,20 @@ function vRoute() {
     <div class="stack">
       <div class="panel"><h3>Driver</h3>${d ? `<div class="row" style="margin-bottom:8px">${driverLine(r)}<span class="mono small muted">${phoneFmt(d.phone)}</span></div>
 ` : `<p class="muted small" style="margin:0">No driver. ${r.status === 'Unassigned' ? 'Offer the route or assign by phone.' : ''}</p>`}
-        ${(() => { const st = onfleetState(r); const line = r.fromOnfleet ? `Onfleet driver: <b>${r.onfleetWorker ? esc(r.onfleetWorker) : 'none'}</b>${r.onfleetWorker && !r.onfleetDriverId ? ' (not in Airtable)' : ''} <span class="muted">from ${r.importId}, ${fmtDT(r.onfleetAt)}</span>` : ''; return line || st ? `<div class="small" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">${line}${st ? `<div class="row" style="margin-top:4px">${onfleetTag(r) || '<span class="ofc">Onfleet</span>'}<span class="${st.k === 'bad' ? '' : 'muted'}" style="${st.k === 'bad' ? 'color:var(--crit)' : ''}">${esc(st.t)}</span>${['bad', 'todo'].includes(st.k) ? `<button class="btn sm" onclick="markOnfleetFixed('${r.id}')">${st.k === 'todo' ? 'Done in Onfleet' : 'I updated Onfleet'}</button>` : ''}</div>` : ''}</div>` : ''; })()}
+        ${r.fromOnfleet ? `<div class="small" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">Onfleet driver: <b>${r.onfleetWorker ? esc(r.onfleetWorker) : 'none'}</b>${r.onfleetWorker && !r.onfleetDriverId ? ' (not in Airtable)' : ''} <span class="muted">from ${r.importId}, ${fmtDT(r.onfleetAt)}</span></div>` : ''}${d && ['Accepted', 'Needs attention', 'Completed'].includes(r.status) ? `<label class="row small" style="margin-top:8px"><input type="checkbox" ${r.onfleet ? 'checked' : ''} onchange="route('${r.id}').onfleet=this.checked;render()"> Assigned to ${shortName(d)} in Onfleet</label>` : ''}
         ${r.status === 'Offered' && o ? `<p class="small" style="margin:8px 0 0">Open offer, <span class="countdown" data-countdown="${o.id}">${Math.ceil((o.expiresAt - now.getTime()) / 60000)} min left</span>. The driver replies on the phone panel.</p>` : ''}</div>
       ${ciPanel}
       ${sim}
-      <div class="panel"><h3>Orders <span class="muted small">${activeStops(r)} active</span></h3><div class="tbl"><table><thead><tr><th>Order</th><th>Address</th><th>Customer</th><th class="r">Pkgs</th><th></th></tr></thead><tbody>
+      <div class="panel"><h3>Orders <span class="muted small">${activeStops(r)} active${adjStops(r) ? `, ${adjStops(r) > 0 ? '+' : ''}${adjStops(r)} by adjustment` : ''}</span></h3><div class="tbl"><table><thead><tr><th>Order</th><th>Address</th><th>Customer</th><th class="r">Pkgs</th><th></th></tr></thead><tbody>
         ${r.orders.slice().sort((p, q) => (p.seq || 0) - (q.seq || 0)).map(x => `<tr${x.status === 'cancelled' ? ' style="opacity:.5"' : ''}><td class="mono">${x.id}</td><td>${esc(x.addr)}${x.type === 'b2b' ? ' <span class="pill completed">B2B</span>' : ''}</td><td>${esc(x.name)}</td><td class="r num">${x.pkgs}</td><td class="small">${x.status === 'cancelled' ? '<span class="pill cancelled">Cancelled</span>' : ''}${!x.inLatest && x.status === 'active' ? '<span class="pill attention">Not in latest file</span>' : ''}${x.history.length ? `<span class="muted" title="${esc(x.history.map(h => `${h.field}: ${h.old} → ${h.new} (${h.batch})`).join('\n'))}">changed ×${x.history.length}</span>` : ''}</td></tr>`).join('')}
       </tbody></table></div></div>
       <div class="panel"><h3>Message thread</h3>${msgs.length ? `<div class="thread">${msgs.map(m => `<div class="msg ${m.dir} ${m.status === 'failed' ? 'failed' : ''}">${esc(m.body)}<span class="mt">${fmtDT(m.time)} · ${m.dir === 'out' ? (m.status === 'failed' ? 'Failed: ' + m.error : 'Delivered') : 'From ' + (driver(m.driverId)?.name || m.phone)} · ${m.sid}</span></div>`).join('')}</div>` : '<p class="muted small" style="margin:0">No texts yet on this route.</p>'}</div>
     </div>
     <div class="stack">
+      ${adjPanel(r)}
       ${lanePanel(r)}
-      <div class="panel"><h3>Pay <span class="muted small">${market(a.market).name} pricing</span></h3>${(() => { const pr = price(r), lk = r.lockedPay != null && Math.abs(r.lockedPay - pr.pay) > 0.004; return `<div class="pay">${pr.lines.map(l => `<span class="small">${l[0]}</span><span class="num small">${l[1] < 0 ? '−' + money(-l[1]) : money(l[1])}</span>`).join('')}${lk ? `<span class="small">Locked at offer (current parameters say ${money(pr.pay)})</span><span class="num small">${money(r.lockedPay - pr.pay)}</span>` : ''}</div>${pr.hours ? `<p class="small muted" style="margin:6px 0 8px">About ${Math.round(pr.miles)} road miles, first stop ${Math.round(pr.first)} mi from the hub, ${pr.hours.toFixed(1)} h, ${money(payout(r) / pr.hours)}/hr${pricingAccess() !== 'none' ? `. Client revenue ${money(pr.revenue)}, margin ${pct((pr.revenue - payout(r)) / pr.revenue)} (target ${pr.m.p.targetMargin}%)` : ''}. ${r.window ? 'Delivery window ' + r.window.replace('-', ' to ') + '.' : ''}</p>` : pricingAccess() !== 'none' ? `<p class="small muted" style="margin:6px 0 8px">Client revenue ${money(pr.revenue)}, margin ${pct((pr.revenue - payout(r)) / pr.revenue)}. No coordinates in this file, so no miles or hours.</p>` : ''}`; })()}<div class="pay"><span>Driver pay${r.lockedPay != null ? ' (texted to driver)' : ''}</span><span class="num">${money(payout(r))}</span><span>Route fee (greater of ${money(S.settings.feeMin)} or ${S.settings.feePct}%)</span><span class="num">−${money(fee(r))}</span><span>Adjustments</span><span class="num">${money(adjTotal(r))}</span><span class="tot">Net payout</span><span class="tot num">${money(net(r))}</span></div>
-        ${r.approved ? `<p class="small muted" style="margin:8px 0 0">Locked. Approved by ${r.approved.by}, ${fmtDT(r.approved.at)}.</p>` : `<p class="small muted" style="margin:8px 0 0">${r.lockedPay != null ? 'Locked at the amount texted to the driver. If Onfleet changes the stops, it re-prices and the driver gets a change text.' : 'Follows the market parameters until an offer goes out.'}</p>`}</div>
+      <div class="panel"><h3>Pay <span class="muted small">${market(a.market).name} pricing</span></h3>${(() => { const pr = price(r), lk = r.lockedPay != null && Math.abs(r.lockedPay - pr.pay) > 0.004; return `<div class="pay">${pr.lines.map(l => `<span class="small">${l[0]}</span><span class="num small">${l[1] < 0 ? '−' + money(-l[1]) : money(l[1])}</span>`).join('')}${lk ? `<span class="small">Locked at offer (current parameters say ${money(pr.pay)})</span><span class="num small">${money(r.lockedPay - pr.pay)}</span>` : ''}</div>${pr.hours ? `<p class="small muted" style="margin:6px 0 8px">About ${Math.round(pr.miles)} road miles, first stop ${Math.round(pr.first)} mi from the hub, ${pr.hours.toFixed(1)} h, ${money(payout(r) / pr.hours)}/hr${canSeePricing() ? `. Client revenue ${money(pr.revenue)}, margin ${pct((pr.revenue - payout(r)) / pr.revenue)} (target ${pr.m.p.targetMargin}%)` : ''}. ${r.window ? 'Delivery window ' + r.window.replace('-', ' to ') + '.' : ''}</p>` : canSeePricing() ? `<p class="small muted" style="margin:6px 0 8px">Client revenue ${money(pr.revenue)}, margin ${pct((pr.revenue - payout(r)) / pr.revenue)}. No coordinates in this file, so no miles or hours.</p>` : ''}`; })()}<div class="pay"><span>Driver pay${r.lockedPay != null ? ' (texted to driver)' : ''}</span><span class="num">${money(payout(r))}</span><span>Route fee (greater of ${money(S.settings.feeMin)} or ${S.settings.feePct}%)</span><span class="num">−${money(fee(r))}</span><span>Adjustments</span><span class="num">${money(adjTotal(r))}</span><span class="tot">Net payout</span><span class="tot num">${money(net(r))}</span></div>
+        ${r.approved ? `<p class="small muted" style="margin:8px 0 0">Locked. Signed off ready to pay by ${r.approved.by}, ${fmtDT(r.approved.at)}.</p>` : `<p class="small muted" style="margin:8px 0 0">${r.lockedPay != null ? 'Locked at the amount texted to the driver. Changes made in Onfleet afterward go in as adjustments.' : 'Follows the market parameters until an offer goes out.'}</p>`}</div>
       <div class="panel"><h3>Pickup</h3><dl class="kv"><dt>Hub</dt><dd>${a.hub}</dd><dt>Address</dt><dd>${a.address}</dd><dt>Time</dt><dd class="mono">${hhmm(r.start)}</dd><dt>Instructions</dt><dd>${a.instr}</dd></dl></div>
       <div class="panel"><h3>Offer history <span class="muted small">ledger</span></h3>${hist.length ? hist.map(x => { const dd = driver(x.driverId); const evs = S.events.filter(e => e.offerId === x.id).sort((p, q) => p.time - q.time); return `<div style="margin-bottom:12px"><div class="row" style="margin-bottom:4px"><span class="avatar">${initials(dd.name)}</span><b>${dd.name}</b><span class="mono small muted">${x.id} · ${x.channel}</span>${x.outcome ? `<span class="pill ${x.outcome === 'Completed' ? 'accepted' : ['Late bail', 'No-show'].includes(x.outcome) ? 'rescue' : 'unassigned'}">${x.outcome}</span>` : x.open ? '<span class="pill offered">Open</span>' : '<span class="pill accepted">Active</span>'}${x.rescueCover ? '<span class="pill completed">Rescue cover</span>' : ''}</div><ul class="timeline">${evs.map(e => `<li><span class="t">${fmtTime(e.time)}</span><span><b>${e.type}</b> <span class="muted">${e.actor}${e.details ? ' · ' + e.details : ''}</span></span></li>`).join('')}</ul></div>`; }).join('') : '<p class="muted small" style="margin:0">No offers yet.</p>'}</div>
     </div></div>`;
@@ -1863,21 +1722,12 @@ function closeModal() { $('#modalRoot').innerHTML = ''; }
 function vUpload() {
   const p = S.importPreview;
   if (p && p.kind === 'onfleet') return vUploadOnfleet(p);
-  const head = `<div class="page-head"><div><h1>Upload and review</h1><p>Drop the Onfleet export. Merge key is the order ID; an upload never deletes an order or undoes work on a route.</p></div></div>`;
-  if (!p) return head + `<div class="drop" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');handleFile(event.dataTransfer.files[0])"><div><b>Drop an Onfleet task export here</b> or <label class="btn sm" style="display:inline-flex;cursor:pointer">choose a file<input type="file" accept=".csv" style="display:none" onchange="handleFile(this.files[0])"></label></div><div class="small muted" style="margin-top:6px">Any export with Driver Number, workerName and destinationAddress works, including your own. It is read in this tab only.</div>
-    <div class="files" style="margin-top:12px"><span class="small muted">Samples:</span><button class="btn primary" onclick="loadSample('indy')">CookUnity Indianapolis, Fri Nov 20${S.uploadsDone['onfleet_export_2026-11-16T124548.csv'] ? ' (again)' : ''}</button>${S.uploadsDone['onfleet_export_2026-11-16T124548.csv'] ? `<button class="btn" onclick="loadSample('indy2')">Indianapolis re-export, Thu 6:02 AM</button>` : ''}<button class="btn" onclick="S.importPreview=buildPreview('weekend');render()">Austin, Wed and Thu${S.uploadsDone.weekend ? ' (again)' : ''}</button></div><div class="small muted" style="margin-top:10px">Columns mapped for Onfleet task exports. You only map again if Onfleet changes its columns.</div></div>
-    <div class="group-title"><h3>Import history</h3></div><div class="panel"><div class="tbl"><table><thead><tr><th>Batch</th><th>File</th><th>By</th><th>When</th><th class="r">New</th><th class="r">Changed</th><th class="r">Unchanged</th><th class="r">Missing</th><th class="r">Rejected</th></tr></thead><tbody>${S.imports.map(b => `<tr><td class="mono">${b.id}</td><td class="mono small">${b.file}</td><td>${b.by}</td><td class="small">${fmtDT(b.time)}</td><td class="r num">${b.counts.new}</td><td class="r num">${b.counts.changed}</td><td class="r num">${b.counts.unchanged}</td><td class="r num">${b.counts.missing}</td><td class="r num">${b.counts.rejected}</td></tr>`).join('')}</tbody></table></div></div>`;
-  const flag = st => ['Offered', 'Accepted', 'Needs attention'].includes(st) ? '<span class="pill attention">Will flag Needs attention</span>' : '<span class="muted small">Route recalculates</span>';
-  return head + `<div class="panel" style="margin-bottom:12px"><div class="row" style="justify-content:space-between"><div><b class="mono">${p.file}</b> <span class="muted small">· ${p.rows} rows · parsed with the saved Logiscal mapping</span></div><div class="row"><button class="btn" onclick="S.importPreview=null;render()">Discard</button><button class="btn primary" onclick="applyImport(S.importPreview);S.importPreview=null;go('board')">Confirm import</button></div></div></div>
-  ${p.repeat ? `<div class="notice ok"><div>This file matches the last import exactly. Confirming saves a batch with 0 changes and nothing else happens.</div></div>` : ''}
-  <div class="counts"><div class="cnt new"><div class="v">${p.new.length}</div><div class="k">New</div></div><div class="cnt changed"><div class="v">${p.changed.length}</div><div class="k">Changed</div></div><div class="cnt"><div class="v">${p.unchanged}</div><div class="k">Unchanged</div></div><div class="cnt missing"><div class="v">${p.missing.length}</div><div class="k">Missing</div></div><div class="cnt rejected"><div class="v">${p.rejected.length}</div><div class="k">Rejected</div></div></div>
-  ${(p.routes || []).length ? (() => { const rows = p.routes.map(x => { const tmp = Object.assign({ id: x.name, status: 'Unassigned', laneId: null, laneMatch: null, laneManual: false, history: false, driverId: null, offerId: null, start: area(x.area).pickup }, x); relink(tmp); return { x, tmp, s: laneSuggestion(tmp) }; }); return `<div class="group-title"><h3>New routes in this file</h3><span class="n">matched against lane history</span></div><div class="panel"><div class="tbl"><table><thead><tr><th>Route</th><th class="r">Stops</th><th>Lane</th><th>Suggested driver</th><th>On import</th></tr></thead><tbody>${rows.map(({ x, tmp, s }) => `<tr><td class="mono">${x.name}</td><td class="r num">${x.orders.length}</td><td>${tmp.laneId ? `<span class="lane"><span class="ico">↻</span>${esc(lane(tmp.laneId).name)} <span class="muted">${Math.round(tmp.laneMatch.pct * 100)}%, ${tmp.laneMatch.seen} of ${tmp.laneMatch.total} stops</span></span>` : '<span class="muted">No match</span>'}</td><td>${s && s.pick ? `${s.pick.d.name} <span class="muted small">${s.pick.why}</span>` : s ? '<span class="muted">none available</span>' : '<span class="muted">–</span>'}</td><td>${S.settings.laneAuto === 'auto' && s && s.pick ? '<span class="pill offered">Offer text goes out</span>' : s && s.pick && S.settings.laneAuto !== 'off' ? '<span class="pill accepted">One-click offer ready</span>' : '<span class="pill unassigned">Unassigned</span>'}</td></tr>`).join('')}</tbody></table></div></div>`; })() : ''}
-  ${p.new.length ? `<div class="group-title"><h3>New orders</h3><span class="n">${p.new.length}, forming route RR-0420 (Austin North, Wed Nov 18)</span></div><div class="panel"><div class="tbl"><table><thead><tr><th>Order</th><th>Route</th><th>Address</th><th>Customer</th></tr></thead><tbody>${p.new.slice(0, 5).map(x => `<tr><td class="mono">${x.order.id}</td><td class="mono">${x.routeName}</td><td>${esc(x.order.addr)}</td><td>${x.order.name}</td></tr>`).join('')}${p.new.length > 5 ? `<tr><td colspan="4" class="muted small">and ${p.new.length - 5} more</td></tr>` : ''}</tbody></table></div></div>` : ''}
-  ${p.changed.length ? `<div class="group-title"><h3>Changed orders</h3></div><div class="panel"><div class="tbl"><table><thead><tr><th>Order</th><th>Route</th><th>Field</th><th>Old → new</th><th>Effect</th></tr></thead><tbody>${p.changed.map(c => `<tr><td class="mono">${c.order ? c.order.id : c.added.map(o => o.id).join(', ')}</td><td class="mono">${c.routeName} <span class="pill ${c.routeStatus === 'Unassigned' ? 'unassigned' : 'accepted'}">${c.routeStatus}</span></td><td>${c.field}</td><td class="diff"><span class="old">${esc(c.old)}</span><br><span class="new">${esc(c.new)}</span></td><td>${flag(c.routeStatus)}</td></tr>`).join('')}</tbody></table></div></div>` : ''}
-  ${p.missing.length ? `<div class="group-title"><h3>In the system but missing from this file</h3></div><div class="panel"><div class="tbl"><table><thead><tr><th>Order</th><th>Route</th><th>Address</th><th>Decision</th></tr></thead><tbody>${p.missing.map((m, i) => `<tr><td class="mono">${m.order.id}</td><td class="mono">${m.routeName} <span class="pill unassigned">${m.routeStatus}</span></td><td>${esc(m.order.addr)}</td><td><select onchange="S.importPreview.missing[${i}].decision=this.value"><option value="keep" ${m.decision === 'keep' ? 'selected' : ''}>Keep, mark "Not in latest file"</option><option value="cancel">Cancel the order</option></select></td></tr>`).join('')}</tbody></table></div><p class="small muted" style="margin:8px 0 0">Never auto-deleted. Kept orders show a flag on the route until you decide.</p></div>` : ''}
-  ${p.rejected.length ? `<div class="group-title"><h3>Rejected rows</h3><span class="n">the rest of the file still imports</span></div><div class="panel"><div class="tbl"><table><thead><tr><th>Row</th><th>Order ID</th><th>Reason</th></tr></thead><tbody>${p.rejected.map(x => `<tr><td class="num">${x.row}</td><td class="mono">${x.id}</td><td style="color:var(--crit)">${x.reason}</td></tr>`).join('')}</tbody></table></div></div>` : ''}`;
+  const head = `<div class="page-head"><div><h1>Upload and review</h1><p>Drop the Onfleet export. New routes are added and priced. Routes already in the app are skipped, so a second upload can't double anything; changes to those go in with Adjust route.</p></div></div>`;
+  const did = S.uploadsDone['onfleet_export_2026-11-16T124548.csv'] || S.imports.some(b => b.file.includes('2026-11-20'));
+  return head + `<div class="drop" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');handleFile(event.dataTransfer.files[0])"><div><b>Drop an Onfleet task export here</b> or <label class="btn sm" style="display:inline-flex;cursor:pointer">choose a file<input type="file" accept=".csv" style="display:none" onchange="handleFile(this.files[0]);this.value=''"></label></div><div class="small muted" style="margin-top:6px">Any export with Driver Number, workerName and destinationAddress works, including your own. It is read in this tab only.</div>
+    <div class="files" style="margin-top:12px"><span class="small muted">Samples:</span><button class="btn primary" onclick="loadSample('indy')">CookUnity Indianapolis, Fri Nov 20${did ? ' (again)' : ''}</button>${did ? `<button class="btn" onclick="loadSample('indy2')">Indianapolis re-export, Thu 6:02 AM</button>` : ''}</div><div class="small muted" style="margin-top:10px">Columns mapped for Onfleet task exports. You only map again if Onfleet changes its columns.</div></div>
+    <div class="group-title"><h3>Import history</h3></div><div class="panel"><div class="tbl"><table><thead><tr><th>Batch</th><th>File</th><th>By</th><th>When</th><th class="r">New routes</th><th class="r">Orders</th><th class="r">Skipped</th><th class="r">Rejected</th></tr></thead><tbody>${S.imports.map(b => `<tr><td class="mono">${b.id}</td><td class="mono small">${b.file}</td><td>${b.by}</td><td class="small">${fmtDT(b.time)}</td><td class="r num">${b.counts.routes}</td><td class="r num">${b.counts.new}</td><td class="r num">${b.counts.skipped}</td><td class="r num">${b.counts.rejected}</td></tr>`).join('')}</tbody></table></div></div>`;
 }
-
 function vCheckin() {
   const rs = checkinRoutes();
   const n = k => rs.filter(r => r.checkin && r.checkin.status === k).length;
@@ -1894,40 +1744,56 @@ function vCheckin() {
 function vAttention() {
   const rs = S.routes.filter(r => (r.status === 'Needs attention' || r.attention) && r.status !== 'Cancelled').sort((a, b) => routeStart(a) - routeStart(b));
   return `<div class="page-head"><div><h1>Needs attention</h1><p>Every route waiting on a dispatcher decision, and why. The driver stays attached until you act.</p></div></div>
-  ${holdSuggestionsHtml()}
-  ${rs.length ? `<div class="panel"><div class="tbl"><table><thead><tr><th>Route</th><th>Starts</th><th>Driver</th><th>Why</th><th>Status</th><th></th></tr></thead><tbody>${rs.map(r => `<tr class="clickable" onclick="go('route',{id:'${r.id}'})"><td><b class="mono">${r.name}</b><div class="small muted">${area(r.area).hub}</div></td><td class="small">${fmtDate(routeDate(r))} ${hhmm(r.start)}<div class="muted">in ${dur(routeStart(r) - now.getTime())}</div></td><td><div class="row">${driverLine(r)}</div></td><td style="color:var(--warn)">${r.attention}</td><td>${statusPill(r)}</td><td><button class="btn sm primary" onclick="event.stopPropagation();go('route',{id:'${r.id}'})">Decide</button></td></tr>`).join('')}</tbody></table></div></div>` : S.holdSuggestions.length ? '' : '<div class="notice ok"><div>Nothing waiting on you.</div></div>'}`;
-}
-
-function vInbox() {
-  const ms = S.messages.filter(m => (m.dir === 'in' && (!m.driverId || m.kind)) || m.status === 'failed').sort((a, b) => b.time - a.time);
-  const kindLabel = m => m.status === 'failed' ? '<span class="pill rescue">Failed send</span>' : !m.driverId ? '<span class="pill attention">Unmatched number</span>' : m.kind === 'optout' ? '<span class="pill attention">STOP</span>' : m.kind === 'optin' ? '<span class="pill accepted">START</span>' : m.kind === 'late' ? '<span class="pill unassigned">Reply with no open offer</span>' : '<span class="pill unassigned">No matching action</span>';
-  return `<div class="page-head"><div><h1>Messages inbox</h1><p>Inbound texts that did not match an action, texts from unknown numbers, and failed sends. Everything else lives on its route.</p></div></div>
-  <div class="panel"><div class="tbl"><table><thead><tr><th>When</th><th>From / to</th><th>Message</th><th>Type</th><th></th></tr></thead><tbody>${ms.map(m => { const d = driver(m.driverId); return `<tr><td class="small mono">${fmtDT(m.time)}</td><td>${d ? `<div>${d.name}</div><div class="mono small muted">${phoneFmt(d.phone)}</div>` : `<div class="mono">${phoneFmt(m.phone)}</div><div class="small muted">no driver on file</div>`}</td><td>${esc(m.body)}${m.error ? `<div class="small" style="color:var(--crit)">${m.error}</div>` : ''}</td><td>${kindLabel(m)}</td><td>${m.status === 'failed' ? `<button class="btn sm" onclick="this.closest('tr').remove();toast('Resent. Delivered.')">Retry</button>` : m.routeId ? `<button class="btn sm" onclick="go('route',{id:'${m.routeId}'})">Route</button>` : d ? `<button class="btn sm" onclick="S.phoneDriver='${d.id}';go('driver',{id:'${d.id}'})">Driver</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div></div>`;
+  ${rs.length ? `<div class="panel"><div class="tbl"><table><thead><tr><th>Route</th><th>Starts</th><th>Driver</th><th>Why</th><th>Status</th><th></th></tr></thead><tbody>${rs.map(r => `<tr class="clickable" onclick="go('route',{id:'${r.id}'})"><td><b class="mono">${r.name}</b><div class="small muted">${area(r.area).hub}</div></td><td class="small">${fmtDate(routeDate(r))} ${hhmm(r.start)}<div class="muted">in ${dur(routeStart(r) - now.getTime())}</div></td><td><div class="row">${driverLine(r)}</div></td><td style="color:var(--warn)">${r.attention}</td><td>${statusPill(r)}</td><td><button class="btn sm primary" onclick="event.stopPropagation();go('route',{id:'${r.id}'})">Decide</button></td></tr>`).join('')}</tbody></table></div></div>` : '<div class="notice ok"><div>Nothing waiting on you.</div></div>'}`;
 }
 
 function vCloseout() {
-  const rs = closeoutRoutes().sort((a, b) => routeStart(a) - routeStart(b));
-  const canApprove = S.role !== 'dispatcher', canExport = S.role === 'ops';
-  const approved = rs.filter(r => r.approved && !r.exportId);
-  const done = { 1: rs.every(r => r.outcome), 3: rs.length && rs.every(r => r.approved), 4: rs.length && rs.every(r => r.exportId), 5: rs.length === 0 };
-  return `<div class="page-head"><div><h1>Closeout and pay</h1><p>No route is paid without an outcome and an approval. Reliability stats and pay come from the same step.</p></div><div class="row small muted">Approve: client admin · Export and mark paid: Gigee ops</div></div>
-  <div class="steps">${[['1', 'Mark the result', 'Dispatcher'], ['2', 'Adjust', 'Dispatcher'], ['3', 'Approve', 'Client admin'], ['4', 'Export', 'Gigee ops'], ['5', 'Mark paid', 'Gigee ops']].map(([n, t, w]) => `<div class="step ${done[n] ? 'done' : ''}"><b>${n}. ${t}</b><span class="muted">${w}</span></div>`).join('')}</div>
-  ${rs.length ? `<div class="panel"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h3>Routes awaiting closeout <span class="muted small">${rs.length}</span></h3><div class="row"><button class="btn sm" onclick="closeoutRoutes().filter(r=>!r.outcome).forEach(r=>setOutcome(r,'Completed'));render()">Mark all Completed</button>${canApprove ? `<button class="btn sm" onclick="closeoutRoutes().filter(r=>r.outcome&&!r.approved).forEach(approve);render();toast('Approved. Payouts locked.')">Approve all with outcomes</button>` : ''}${canExport ? `<button class="btn sm primary" ${approved.length ? '' : 'disabled'} onclick="showExport(exportPay(closeoutRoutes().filter(r=>r.approved&&!r.exportId)))">Export ${approved.length} for pay</button>` : ''}</div></div>
-  <div class="tbl"><table><thead><tr><th>Route</th><th>Date</th><th>Driver</th><th class="r">Stops</th><th class="r">Payout</th><th class="r">Fee</th><th class="r">Adj</th><th class="r">Net</th><th>Outcome</th><th>Approval</th><th>Export</th></tr></thead><tbody>
-  ${rs.map(r => { const d = driver(r.driverId), o = offer(r.offerId); return `<tr><td><b class="mono">${r.name}</b>${o && o.rescueCover ? '<div><span class="pill completed">Rescue cover</span></div>' : ''}</td><td class="small">${fmtDate(routeDate(r))}</td><td>${d.name}</td><td class="r num">${activeStops(r)}</td><td class="r num">${money(payout(r))}</td><td class="r num">−${money(fee(r))}</td><td class="r num">${money(adjTotal(r))} ${r.approved ? '' : `<button class="btn sm ghost" onclick="openAdj('${r.id}')">+</button>`}</td><td class="r num"><b>${money(net(r))}</b></td>
+  const days = closeoutDays(); if (!days.includes(S.coDay)) S.coDay = days[0] || null;
+  const canExport = S.role === 'ops';
+  const rs = closeoutRoutes().filter(r => r.date === S.coDay).sort((a, b) => routeStart(a) - routeStart(b));
+  const signed = rs.filter(r => r.approved && !r.exportId), waiting = rs.filter(r => !r.approved);
+  const done = { 1: rs.length && rs.every(r => r.outcome), 3: rs.length && rs.every(r => r.approved), 4: rs.length && rs.every(r => r.exportId), 5: false };
+  const dayTab = dt => { const n = closeoutRoutes().filter(r => r.date === dt && !r.approved).length; return `<button class="${S.coDay === dt ? 'active' : ''}" onclick="S.coDay='${dt}';render()">${fmtDate(new Date(dt + 'T00:00:00'))}${n ? `<span class="n">${n} to sign off</span>` : '<span class="n">signed off</span>'}</button>`; };
+  const unpaid = S.exports.filter(x => x.status !== 'paid');
+  return `<div class="page-head"><div><h1>Daily closeout</h1><p>Drivers are paid daily. A dispatcher signs off each route as complete and ready to pay; that sign-off locks the pay and feeds the reliability stats. Gigee ops then exports the day's pay.</p></div><div class="row small muted">Sign off: dispatcher · Export and mark paid: Gigee ops</div></div>
+  <div class="steps">${[['1', 'Mark the result', 'Dispatcher'], ['2', 'Adjust if needed', 'Dispatcher'], ['3', 'Sign off ready to pay', 'Dispatcher'], ['4', "Export the day's pay", 'Gigee ops'], ['5', 'Mark paid', 'Gigee ops']].map(([n, t, w]) => `<div class="step ${done[n] ? 'done' : ''}"><b>${n}. ${t}</b><span class="muted">${w}</span></div>`).join('')}</div>
+  ${days.length ? `<div class="tabs">${days.map(dayTab).join('')}</div>` : ''}
+  ${rs.length ? `<div class="panel"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h3>${fmtDate(new Date(S.coDay + 'T00:00:00'))} <span class="muted small">${rs.length} route${rs.length > 1 ? 's' : ''} · ${money(rs.reduce((t, r) => t + net(r), 0))} net</span></h3><div class="row"><button class="btn sm" ${rs.some(r => !r.outcome) ? '' : 'disabled'} onclick="closeoutRoutes().filter(r=>r.date===S.coDay&&!r.outcome).forEach(r=>setOutcome(r,'Completed'));render()">Mark the rest Completed</button><button class="btn sm primary" ${rs.some(r => r.outcome && !r.approved) ? '' : 'disabled'} onclick="const n=closeoutRoutes().filter(r=>r.date===S.coDay&&r.outcome&&!r.approved);n.forEach(signOff);render();toast('Signed off '+n.length+' route'+(n.length>1?'s':'')+'. Pay locked.')">Sign off ${rs.filter(r => r.outcome && !r.approved).length || ''} ready to pay</button>${canExport ? `<button class="btn sm primary" ${signed.length ? '' : 'disabled'} onclick="showExport(exportPay(closeoutRoutes().filter(r=>r.date===S.coDay&&r.approved&&!r.exportId)))">Export ${signed.length} for pay</button>` : ''}</div></div>
+  <div class="tbl"><table><thead><tr><th>Route</th><th>Driver</th><th class="r">Stops</th><th class="r">Payout</th><th class="r">Fee</th><th class="r">Adj</th><th class="r">Net</th><th>Outcome</th><th>Sign-off</th><th>Export</th></tr></thead><tbody>
+  ${rs.map(r => { const d = driver(r.driverId), o = offer(r.offerId); return `<tr><td><b class="mono" style="cursor:pointer" onclick="go('route',{id:'${r.id}'})">${r.name}</b><div class="small muted">${hhmm(r.start)} · ${area(r.area).hub}</div>${o && o.rescueCover ? '<div><span class="pill completed">Rescue cover</span></div>' : ''}</td><td>${d.name}</td><td class="r num">${routeStops(r)}</td><td class="r num">${money(payout(r))}</td><td class="r num">−${money(fee(r))}</td><td class="r num">${money(adjTotal(r))} ${r.approved ? '' : `<button class="btn sm ghost" title="Adjust stops or pay" onclick="openAdj('${r.id}')">+</button>`}</td><td class="r num"><b>${money(net(r))}</b></td>
     <td>${r.approved ? `<span class="pill ${r.outcome === 'Completed' ? 'accepted' : 'rescue'}">${r.outcome}</span>` : `<select onchange="setOutcome(route('${r.id}'),this.value);render()"><option value="" ${!r.outcome ? 'selected' : ''}>Choose</option>${['Completed', 'Incomplete', 'No-show'].map(x => `<option ${r.outcome === x ? 'selected' : ''}>${x}</option>`).join('')}</select>`}</td>
-    <td class="small">${r.approved ? `<span class="pill accepted">Locked</span><div class="muted">${r.approved.by}</div>` : canApprove ? `<button class="btn sm" ${r.outcome ? '' : 'disabled'} onclick="approve(route('${r.id}'));render()">Approve</button>` : '<span class="muted">Needs admin</span>'}</td>
-    <td class="small mono">${r.exportId || '–'}</td></tr>`; }).join('')}</tbody></table></div></div>` : '<div class="notice ok"><div>All routes closed out and paid.</div></div>'}
-  ${S.exports.length ? `<div class="group-title"><h3>Pay exports</h3></div><div class="panel"><div class="tbl"><table><thead><tr><th>Batch</th><th>Range</th><th class="r">Routes</th><th class="r">Total net</th><th>By</th><th>Status</th><th></th></tr></thead><tbody>${S.exports.map(x => `<tr><td class="mono">${x.id}</td><td>${x.range}</td><td class="r num">${x.routeIds.length}</td><td class="r num">${money(x.routeIds.reduce((s, id) => s + net(route(id)), 0))}</td><td>${x.by}</td><td>${x.status === 'paid' ? '<span class="pill accepted">Paid</span>' : '<span class="pill offered">Exported</span>'}</td><td><button class="btn sm" onclick="showExport(S.exports.find(e=>e.id==='${x.id}'))">View</button> ${x.status !== 'paid' && canExport ? `<button class="btn sm primary" onclick="markPaid(S.exports.find(e=>e.id==='${x.id}'));render();toast('Batch marked paid. Stats written back to Airtable.')">Mark paid</button>` : ''}</td></tr>`).join('')}</tbody></table></div></div>` : ''}`;
+    <td class="small">${r.approved ? `<span class="pill accepted">Signed off</span><div class="muted">${r.approved.by}, ${fmtTime(r.approved.at)}</div>` : `<button class="btn sm" ${r.outcome ? '' : 'disabled'} onclick="signOff(route('${r.id}'));render()">Sign off</button>`}</td>
+    <td class="small mono">${r.exportId || '–'}</td></tr>`; }).join('')}</tbody></table></div>
+  ${waiting.length ? `<p class="small muted" style="margin:8px 0 0">${waiting.length} still need a result and a sign-off. Signing off locks the route: no more adjustments after it.</p>` : ''}</div>` : '<div class="notice ok"><div>Nothing waiting. Every route that has started is signed off and paid.</div></div>'}
+  ${S.exports.length ? `<div class="group-title"><h3>Daily pay exports</h3>${unpaid.length ? `<span class="n">${unpaid.length} not marked paid</span>` : ''}</div><div class="panel"><div class="tbl"><table><thead><tr><th>Batch</th><th>Service day</th><th class="r">Routes</th><th class="r">Total net</th><th>By</th><th>Status</th><th></th></tr></thead><tbody>${S.exports.slice().reverse().map(x => `<tr><td class="mono">${x.id}</td><td>${x.range}</td><td class="r num">${x.routeIds.length}</td><td class="r num">${money(x.routeIds.reduce((t, id) => t + net(route(id)), 0))}</td><td>${x.by}</td><td>${x.status === 'paid' ? '<span class="pill accepted">Paid</span>' : '<span class="pill offered">Exported</span>'}</td><td><button class="btn sm" onclick="showExport(S.exports.find(e=>e.id==='${x.id}'))">View</button> ${x.status !== 'paid' && canExport ? `<button class="btn sm primary" onclick="markPaid(S.exports.find(e=>e.id==='${x.id}'));render();toast('Marked paid. Stats written back to Airtable.')">Mark paid</button>` : ''}</td></tr>`).join('')}</tbody></table></div></div>` : ''}`;
 }
-function openAdj(rid) {
-  const r = route(rid);
-  modal(`<div class="mh"><h2>Adjustment on ${r.name}</h2><button class="btn ghost sm" onclick="closeModal()">Close</button></div><p class="small muted" style="margin:0">Adjustments are their own records. The base payout is never edited.</p>
-  <div class="form"><label>Amount (plus or minus)<input id="adjAmt" type="number" step="0.01" value="12.00"></label><label>Reason<select id="adjReason"><option>Extra stops</option><option>Wait time</option><option>Damage</option><option>Other</option></select></label><label style="grid-column:1/-1">Note<input id="adjNote" placeholder="Hub held the driver 40 minutes at pickup"></label></div>
-  <div class="mf"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="S.adjustments.push({routeId:'${rid}',amount:Number(document.getElementById('adjAmt').value)||0,reason:document.getElementById('adjReason').value,note:document.getElementById('adjNote').value,by:actorName()});closeModal();render();toast('Adjustment added.')">Add</button></div>`);
+function adjSuggest(r, n) { return Math.round(n * area(r.area).ppd * 100) / 100; }
+function openAdj(rid, stopsPreset) {
+  const r = route(rid), d = driver(r.driverId), n = stopsPreset || 0;
+  const canText = d && ['Offered', 'Accepted', 'Needs attention'].includes(r.status);
+  modal(`<div class="mh"><div><h2>Adjust ${r.name}</h2><p class="small muted" style="margin:2px 0 0">For changes made in Onfleet after the route came in. The route itself is not re-imported; the change is recorded here and added to the pay.</p></div><button class="btn ghost sm" onclick="closeModal()">Close</button></div>
+  <div class="form"><label>Stops (plus or minus)<input id="adjStops" type="number" step="1" value="${n}" oninput="const v=Number(this.value)||0;document.getElementById('adjAmt').value=(Math.round(v*${area(r.area).ppd}*100)/100).toFixed(2)"></label><label>Pay change ($, plus or minus)<input id="adjAmt" type="number" step="0.01" value="${adjSuggest(r, n).toFixed(2)}"></label>
+  <label>Reason<select id="adjReason"><option ${n > 0 ? 'selected' : ''}>Stops added in Onfleet</option><option ${n < 0 ? 'selected' : ''}>Stops removed in Onfleet</option><option>Wait time</option><option>Other</option></select></label><label>Note<input id="adjNote" placeholder="Added 4 late orders in Greenwood"></label></div>
+  <p class="small muted" style="margin:8px 0 0">Suggested pay is ${money(area(r.area).ppd)} per stop, the ${area(r.area).name} base per drop. Change it if the stops are farther out. Now: ${routeStops(r)} stops, ${money(driverPay(r))}.</p>
+  ${canText ? `<label class="row small" style="margin-top:10px"><input type="checkbox" id="adjText" checked> Text ${d.name} the change</label>` : ''}
+  <div class="mf"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveAdj('${rid}')">Save adjustment</button></div>`);
+}
+function saveAdj(rid) {
+  const r = route(rid), d = driver(r.driverId), v = id => document.getElementById(id);
+  const a = { id: 'ADJ-' + (S.adjustments.length + 401), routeId: rid, stops: Math.round(Number(v('adjStops').value) || 0), amount: Math.round((Number(v('adjAmt').value) || 0) * 100) / 100, reason: v('adjReason').value, note: v('adjNote').value, by: actorName(), at: now.getTime(), texted: !!(v('adjText') && v('adjText').checked) };
+  if (!a.stops && !a.amount) { toast('Enter a stop change or a pay change.'); return; }
+  S.adjustments.push(a);
+  const what = `${a.stops ? `${a.stops > 0 ? '+' : ''}${a.stops} stop${Math.abs(a.stops) === 1 ? '' : 's'}, ` : ''}${a.amount >= 0 ? '+' : ''}${money(a.amount)}`;
+  if (r.offerId) ev(r.offerId, 'Route adjusted', a.by, `${what} · ${a.reason}`);
+  if (a.texted && d) sendSms(d, `Update to ${r.name} on ${fmtDate(routeDate(r))}: ${a.stops ? `${Math.abs(a.stops)} stop${Math.abs(a.stops) === 1 ? '' : 's'} ${a.stops > 0 ? 'added' : 'removed'}. ` : ''}Pay is now $${driverPay(r).toFixed(2)}. Reply HELP with questions.`, r, offer(r.offerId));
+  closeModal(); toast(`${r.name} adjusted: ${what}.${a.texted ? ` ${d.name} was texted.` : ''}`); render();
+}
+function adjPanel(r) {
+  const xs = adjs(r); if (!xs.length && !canAdjust(r)) return '';
+  return `<div class="panel"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h3 style="margin:0">Adjustments</h3>${canAdjust(r) ? `<button class="btn sm" onclick="openAdj('${r.id}')">Adjust route</button>` : ''}</div>${xs.length ? `<div class="tbl"><table><thead><tr><th>When</th><th>Who</th><th class="r">Stops</th><th class="r">Pay</th><th>Reason</th></tr></thead><tbody>${xs.map(a => `<tr><td class="small mono">${a.at ? fmtDT(a.at) : ''}</td><td class="small">${a.by}</td><td class="r num">${a.stops ? (a.stops > 0 ? '+' : '') + a.stops : '–'}</td><td class="r num">${money(a.amount)}</td><td class="small">${esc(a.reason)}${a.note ? `<div class="muted">${esc(a.note)}</div>` : ''}${a.texted ? '<div class="muted">Driver texted</div>' : ''}</td></tr>`).join('')}</tbody></table></div>` : '<p class="small muted" style="margin:0">Added stops or pay in Onfleet after this route came in? Record it here instead of uploading another file.</p>'}</div>`;
 }
 function showExport(x) {
-  const rows = x.routeIds.map(id => { const r = route(id), d = driver(r.driverId); return [d.gid, d.name, r.name, r.date, activeStops(r), payout(r).toFixed(2), fee(r).toFixed(2), adjTotal(r).toFixed(2), net(r).toFixed(2)]; });
+  const rows = x.routeIds.map(id => { const r = route(id), d = driver(r.driverId); return [d.gid, d.name, r.name, r.date, routeStops(r), payout(r).toFixed(2), fee(r).toFixed(2), adjTotal(r).toFixed(2), net(r).toFixed(2)]; });
   const csv = ['gigee_id,driver_name,route,service_date,stops,proposed_payout,route_fee,adjustments_total,net_payout', ...rows.map(r => r.join(','))].join('\n');
   modal(`<div class="mh"><div><h2>${x.id}</h2><p class="small muted" style="margin:2px 0 0">One row per driver per route. Format to match the existing Gigee payout process (open question in the spec).</p></div><button class="btn ghost sm" onclick="closeModal()">Close</button></div>
   <div class="tbl"><table><thead><tr><th>Gigee ID</th><th>Driver</th><th>Route</th><th>Date</th><th class="r">Stops</th><th class="r">Payout</th><th class="r">Fee</th><th class="r">Adj</th><th class="r">Net</th></tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td class="${i >= 4 ? 'r num' : i < 3 ? 'mono' : ''}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
@@ -1937,7 +1803,6 @@ function showExport(x) {
 function vDrivers() {
   const rows = S.drivers.map(d => ({ d, s: stats(d) })).sort((a, b) => b.s.score - a.s.score);
   return `<div class="page-head"><div><h1>Drivers</h1><p>Profile data is read-only from the Gigee driver table in Airtable. Stats are a rolling 90 days, computed from the offer ledger and written back after each closeout.</p></div><button class="btn" onclick="toast('Airtable sync requested. Up to date.')">Sync now</button></div>
-  ${holdSuggestionsHtml()}${holdsPanelHtml()}
   <div class="panel"><div class="tbl"><table><thead><tr><th>Driver</th><th>Area</th><th>Status</th><th class="r">Score</th><th class="r">Offers</th><th class="r">Accept</th><th class="r">Completion</th><th class="r">Late bails</th><th class="r">No-shows</th><th class="r">Confirm</th><th class="r">Rescues</th><th class="r">Avg reply</th><th class="r">Last route</th></tr></thead><tbody>
   ${rows.map(({ d, s }) => `<tr class="clickable" onclick="go('driver',{id:'${d.id}'})"><td><div class="row"><span class="avatar">${initials(d.name)}</span><div><div>${d.name}</div><div class="mono small muted">${d.gid}${d.tier ? ' · Tier ' + d.tier : ''}</div></div></div></td><td class="small">${area(d.area).name}</td><td>${lblHtml(d)}</td><td class="r score">${s.label === 'New' ? '–' : s.score}</td><td class="r num">${s.offers}</td><td class="r num">${Math.round(s.acc * 100)}%</td><td class="r num">${s.committed ? Math.round(s.comp * 100) + '%' : '–'}</td><td class="r num">${s.late}</td><td class="r num">${s.noshow}</td><td class="r num">${s.confSent ? Math.round(s.conf * 100) + '%' : '–'}</td><td class="r num">${s.rescues}</td><td class="r num">${s.respMin} min</td><td class="r num">${s.days === null ? '–' : s.days + ' d'}</td></tr>`).join('')}</tbody></table></div></div>`;
 }
@@ -1946,9 +1811,7 @@ function vDriver() {
   const ofs = S.offers.filter(o => o.driverId === d.id && o.sentAt).sort((a, b) => b.sentAt - a.sentAt);
   const m = (k, v) => `<div class="cnt"><div class="v num">${v}</div><div class="k">${k}</div></div>`;
   return `<button class="btn ghost sm" onclick="go('drivers')">← Drivers</button>
-  <div class="page-head" style="margin-top:8px"><div><h1>${d.name} ${lblHtml(d)}</h1><p class="mono">${d.gid} · ${phoneFmt(d.phone)} · ${area(d.area).name}${d.tier ? ' · Manual Tier ' + d.tier : ''} · Airtable ${d.rec}</p></div><div class="row"><button class="btn" onclick="S.phoneDriver='${d.id}';document.getElementById('phone').classList.add('open');renderPhone()">Open phone</button>${d.optOut ? `<span class="notice crit small">Texted STOP. Blocked from offers until they text START.</span>` : ''}${!d.active ? `<span class="notice crit small">Inactive in Airtable. Cannot be offered work.</span>` : ''}${d.active ? (onHold(d) ? `<button class="btn" onclick="removeHold('${d.id}')">Remove hold</button>` : `<input id="dHoldReason" placeholder="Reason for a hold" style="min-width:200px"><button class="btn" onclick="putOnHold('${d.id}',$('#dHoldReason').value)">Put on hold</button>`) : ''}</div></div>
-  ${onHold(d) ? `<div class="notice crit" style="margin-bottom:12px"><div><b>On hold</b> since ${fmtDT(onHold(d).at)}, set by ${onHold(d).by}: ${esc(onHold(d).reason)}. Skipped in every offer until removed.</div></div>` : ''}
-  ${S.holdSuggestions.filter(x => x.driverId === d.id).map(x => `<div class="notice warn" style="margin-bottom:12px"><div><b>Suggested hold:</b> ${esc(x.reason)}. <button class="btn sm primary" style="margin-left:8px" onclick="putOnHold('${d.id}',S.holdSuggestions.find(h=>h.id==='${x.id}').reason,'${x.id}')">Confirm hold</button> <button class="btn sm" onclick="dismissSuggestion('${x.id}')">Dismiss</button></div></div>`).join('')}
+  <div class="page-head" style="margin-top:8px"><div><h1>${d.name} ${lblHtml(d)}</h1><p class="mono">${d.gid} · ${phoneFmt(d.phone)} · ${area(d.area).name}${d.tier ? ' · Manual Tier ' + d.tier : ''} · Airtable ${d.rec}</p></div><div class="row"><button class="btn" onclick="S.phoneDriver='${d.id}';document.getElementById('phone').classList.add('open');renderPhone()">Open phone</button>${d.optOut ? `<span class="notice crit small">Texted STOP. Blocked from offers until they text START.</span>` : ''}${!d.active ? `<span class="notice crit small">Inactive in Airtable. Cannot be offered work.</span>` : ''}</div></div>
   <div class="counts" style="margin-bottom:14px">${m('Score', s.label === 'New' ? '–' : s.score)}${m('Offers (90 d)', s.offers)}${m('Response', Math.round(s.resp * 100) + '%')}${m('Acceptance', Math.round(s.acc * 100) + '%')}${m('Completion', s.committed ? Math.round(s.comp * 100) + '%' : '–')}${m('On-time confirm', s.confSent ? Math.round(s.conf * 100) + '%' : '–')}${m('Late bails', s.late)}${m('No-shows', s.noshow)}${m('Rescues', s.rescues)}${m('Days since route', s.days ?? '–')}</div>
   <div class="two"><div class="panel"><h3>Offer history</h3>${ofs.length ? `<div class="tbl"><table><thead><tr><th>Sent</th><th>Route</th><th>Reply</th><th>Channel</th><th>Outcome</th></tr></thead><tbody>${ofs.map(o => { const r = route(o.routeId); return `<tr class="clickable" onclick="go('route',{id:'${r.id}'})"><td class="small mono">${fmtDT(o.sentAt)}</td><td class="mono">${r.name} <span class="muted small">${fmtDate(routeDate(r))}</span></td><td>${o.reply || (o.open ? '<span class="countdown">waiting</span>' : '–')}</td><td class="small">${o.channel}</td><td>${o.outcome ? `<span class="pill ${o.outcome === 'Completed' ? 'accepted' : ['Late bail', 'No-show'].includes(o.outcome) ? 'rescue' : 'unassigned'}">${o.outcome}</span>` : o.open ? '<span class="pill offered">Open</span>' : '<span class="pill accepted">Active</span>'}</td></tr>`; }).join('')}</tbody></table></div><p class="small muted" style="margin:8px 0 0">Earlier offers in the 90-day window are in the base counts above; the Airtable migration question decides whether July history comes over.</p>` : '<p class="muted small">No offers yet.</p>'}</div>
   <div class="stack">
@@ -1998,13 +1861,13 @@ function vSettings() {
       <label><input type="radio" name="laneAuto" value="auto" ${t.laneAuto === 'auto' ? 'checked' : ''} onchange="S.settings.laneAuto='auto';render()"><span><b>Auto-offer the last driver on import</b><br><span class="small muted">The moment an import creates a recognized route, the offer text goes to the suggested driver. If they decline or let it expire, the route returns to Unassigned for the dispatcher (an automatic next-best queue is Phase 3). Never texts during quiet hours; waits for 7:00 AM.</span></span></label>
     </div>
     <div class="form" style="margin-top:14px"><label>Match threshold (% of a route's stops seen on the lane)<input type="number" min="1" max="100" value="${t.laneThreshold}" onchange="S.settings.laneThreshold=Number(this.value);relinkAll();render();toast('Routes re-matched.')"></label><label>History window (runs per lane)<input type="number" min="1" value="${t.laneWindow}" onchange="S.settings.laneWindow=Number(this.value);relinkAll();render()"></label><label>Drivers on Watch<select onchange="S.settings.laneSkipWatch=this.value==='1';render()"><option value="1" ${t.laneSkipWatch ? 'selected' : ''}>Skip, fall back to the next driver</option><option value="0" ${t.laneSkipWatch ? '' : 'selected'}>Suggest them anyway</option></select></label></div>
-    <p class="small muted" style="margin:12px 0 0">Suggestion order: the lane's preferred driver if one is set, then the driver of the most recent run, then the one before, and so on. A driver is skipped when inactive in Airtable, opted out, on hold, booked that day, holding an open offer, or when they bailed or passed on this same route. A route that matches nothing becomes a new lane the first time it completes; a dispatcher can also link or unlink any route by hand, and later matches learn from that.</p></div>`;
+    <p class="small muted" style="margin:12px 0 0">Suggestion order: the lane's preferred driver if one is set, then the driver of the most recent run, then the one before, and so on. A driver is skipped when inactive in Airtable, opted out, booked that day, holding an open offer, or when they bailed or passed on this same route. A route that matches nothing becomes a new lane the first time it completes; a dispatcher can also link or unlink any route by hand, and later matches learn from that.</p></div>`;
   if (S.setTab === 'areas') body = `<div class="panel"><p class="small muted" style="margin:0 0 10px">Pay rates and pricing parameters moved to <a style="cursor:pointer" onclick="go('markets')">Markets and pricing</a>.</p><div class="tbl"><table><thead><tr><th>Area</th><th>Hub</th><th>Market</th><th>Pickup time</th><th>Pickup address</th><th>Driver instructions</th></tr></thead><tbody>${S.areas.map(a => `<tr><td><b>${a.name}</b></td><td>${a.hub}</td><td>${market(a.market).name}${a.facility ? `<div class="small muted mono">facility ${a.facility}</div>` : ''}</td><td><input type="time" value="${a.pickup}" onchange="area('${a.id}').pickup=this.value;render()"></td><td class="small">${a.address}</td><td class="small">${a.instr}</td></tr>`).join('')}</tbody></table></div><p class="small muted" style="margin:8px 0 0">Route fee: greater of <input type="number" value="${t.feeMin}" style="width:60px" onchange="S.settings.feeMin=Number(this.value);render()"> dollars or <input type="number" value="${t.feePct}" style="width:50px" onchange="S.settings.feePct=Number(this.value);render()">% of proposed payout. A setting, not code.</p></div>`;
   if (S.setTab === 'templates') body = `<div class="panel"><p class="small muted" style="margin:0 0 10px">Offer texts show a stop range, never an exact count or a per-drop rate. Range width <input type="number" min="1" value="${t.stopRange}" style="width:56px" onchange="S.settings.stopRange=Number(this.value);toast('Range saved. Next offer reads About '+stopRange(13)+' stops for a 13-stop route.')"> stops. Merge fields: {date} {start_time} {hub} {stop_range} {route_detail} {stops} {payout} {expiry} {route_name} {pickup_address} {instructions} {support_contact}. Edits apply to the next text sent.</p><div class="stack">${Object.entries(t.templates).map(([k, v]) => `<label class="small muted" style="display:flex;flex-direction:column;gap:4px"><span class="eyebrow">${k}</span><textarea rows="2" class="mono" style="color:var(--fg)" onchange="S.settings.templates['${k}']=this.value;toast('Template saved.')">${esc(v)}</textarea></label>`).join('')}</div></div>`;
   if (S.setTab === 'timing') body = `<div class="panel"><div class="form"><label>Offer expiry (min)<input type="number" value="${t.expiry}" onchange="S.settings.expiry=Number(this.value);toast('Expiry saved.')"></label><label>Reconfirm (hours before start)<input type="number" value="${t.reconfirmHours}" onchange="S.settings.reconfirmHours=Number(this.value)"></label><label>Reconfirm reply window (min)<input type="number" value="${t.reconfirmWindow}" onchange="S.settings.reconfirmWindow=Number(this.value)"></label><label>Final confirm (hours before start)<input type="number" value="${t.finalHours}" onchange="S.settings.finalHours=Number(this.value)"></label><label>Final reply window (min)<input type="number" value="${t.finalWindow}" onchange="S.settings.finalWindow=Number(this.value)"></label><label>Quiet hours<input value="${t.quietStart} to ${t.quietEnd}"></label><label>Late bail threshold (hours)<input type="number" value="24"></label><label>Support contact<input value="${t.support}" onchange="S.settings.support=this.value"></label><label>Staffing bench (% over routes)<input type="number" value="${t.benchPct}" onchange="S.settings.benchPct=Number(this.value);render()"></label><label>When a site marks a no-show<select onchange="S.settings.noShowRescue=this.value"><option value="auto" ${t.noShowRescue === 'auto' ? 'selected' : ''}>Flag Rescue and offer to the next best driver</option><option value="flag" ${t.noShowRescue === 'flag' ? 'selected' : ''}>Flag Rescue only, dispatcher offers</option></select></label></div><p class="small muted" style="margin:10px 0 0">Starts before 8:00 AM get their final confirm at 6:00 PM the evening before. All times in the hub's time zone (America/Chicago).</p></div>`;
   if (S.setTab === 'weights') body = `<div class="panel"><p class="small muted" style="margin:0 0 10px">Score = completion × ${w.completion} + acceptance × ${w.acceptance} + on-time confirm × ${w.confirm} + ${w.perRoute} per completed route (max ${w.perRouteMax}) + ${w.perRescue} per rescue (max ${w.perRescueMax}) ${w.early} per early release ${w.late} per late bail ${w.noshow} per no-show + tier bump (A +${w.tierA}, B +${w.tierB}). Changing a weight recomputes every driver.</p><div class="form">${Object.entries(w).map(([k, v]) => `<label>${k}<input type="number" value="${v}" onchange="S.settings.weights['${k}']=Number(this.value);render();toast('Scores recomputed.')"></label>`).join('')}</div><p class="small muted" style="margin:10px 0 0">Labels: New under 5 offers · No routes yet · Watch (2+ no-shows, 3+ late bails, or completion under 85%) · Solid 85 to 94% · Reliable 95% and up.</p></div>`;
   if (S.setTab === 'mapping') body = `<div class="panel"><p class="small muted" style="margin:0 0 10px">Mapped from the Onfleet task export (Oct 15 CookUnity file). Mapped again only when the columns change.</p><div class="tbl"><table><thead><tr><th>App field</th><th>Onfleet column</th><th>Required</th></tr></thead><tbody>${[['Route (one per Onfleet driver slot)', 'Driver Number', 'Yes'], ['Order ID', 'orderId, else shortId', 'Yes'], ['Delivery address', 'destinationAddress', 'Yes'], ['Hub and market', 'facilityId, else workerName suffix (INDY_LOGISCAL)', 'Yes'], ['Service date', 'shippingDate, else completeAfterTime', 'Yes'], ['Driver already in Onfleet', 'workerName', 'No'], ['Stop order', 'Task Number', 'No'], ['Coordinates (miles and hours)', 'destinationLonLat', 'No'], ['Delivery window', 'completeAfterTime to completeBeforeTime', 'No'], ['Order type (B2B extra)', 'orderType', 'No'], ['Customer name', 'recipientsNames', 'No'], ['Package count', 'quantity', 'No'], ['Skipped', 'rows where taskType is not dropoff (hub start)', '']].map(r => `<tr><td>${r[0]}</td><td class="mono">${r[1]}</td><td class="small">${r[2]}</td></tr>`).join('')}</tbody></table></div></div>`;
-  if (S.setTab === 'users') body = `<div class="panel"><div class="tbl"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Client</th><th>Pricing</th></tr></thead><tbody>${S.users.map(u => `<tr><td>${u.name}</td><td class="mono small">${u.email}</td><td>${u.role}</td><td>${u.client}</td><td class="small">${{ edit: 'Edit', view: 'View', none: 'None' }[u.pricing]}</td></tr>`).join('')}</tbody></table></div><p class="small muted" style="margin:8px 0 0">Every query is scoped to the user's client. Gigee ops sees all clients.</p></div>`;
+  if (S.setTab === 'users') body = `<div class="panel"><div class="tbl"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Client</th><th>Pricing</th></tr></thead><tbody>${S.users.map(u => `<tr><td>${u.name}</td><td class="mono small">${u.email}</td><td>${u.role}</td><td>${u.client}</td><td class="small">${['Client admin', 'Gigee ops'].includes(u.role) ? 'Sees pricing' : 'No'}</td></tr>`).join('')}</tbody></table></div><p class="small muted" style="margin:8px 0 0">Every query is scoped to the user's client. Gigee ops sees all clients.</p></div>`;
   return `<div class="page-head"><div><h1>Settings</h1><p>Entered once, reused everywhere. Client admin and Gigee ops only.</p></div></div><div class="tabs">${tabs.map(([id, n]) => `<button class="${S.setTab === id ? 'active' : ''}" onclick="S.setTab='${id}';render()">${n}</button>`).join('')}</div>${body}`;
 }
 

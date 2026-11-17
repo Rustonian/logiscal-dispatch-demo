@@ -359,6 +359,18 @@ When a route arrives with a `workerName`, that driver is the preferred driver. I
 ### Onfleet check
 Each upload records the driver Onfleet has on each route. The Onfleet check screen lists routes for today through 3 days out as Matches, Waiting on driver, Set in Onfleet (accepted in the app, no driver in Onfleet) or Out of sync (Onfleet and the app disagree). A later file that moves an accepted route to a different driver flags it Needs attention, with "Keep current driver, I fixed Onfleet" or "Switch to Onfleet's driver". Writing the assignment back through the Onfleet API is a later phase.
 
+## Round 3 changes (Nov 16, 2026)
+
+These supersede the sections above where they differ.
+
+- **Uploads only add routes.** A route already in the app is never re-imported or changed by a later file. Uploading the same file twice imports nothing and says so. The preview lists routes already in the app with their stop count in the app and in the file.
+- **Adjust route.** When stops or pay change in Onfleet after a route is in the app, the dispatcher records an adjustment on the route: stops (plus or minus), pay change (suggested at the hub's base per drop), reason, note, and an optional text to the driver. Adjustments are logged on the route and the offer ledger, add to the stop count and pay, and stop once the route is signed off. This replaces re-importing changed orders, missing-order decisions and the Onfleet check screen.
+- **Onfleet check screen removed.** The route page keeps the Onfleet driver from the file and an "Assigned in Onfleet" tick.
+- **Markets and pricing is admin only** (client admin and Gigee ops). Dispatchers do not see the page, client rates or margin. Per-user pricing access and the Regional Lead role are removed from the demo.
+- **Pay is daily.** Daily closeout replaces the weekly Closeout and pay: per service day, the dispatcher marks each route's result and signs it off as complete and ready to pay. Sign-off locks the pay. Gigee ops exports that day's pay and marks it paid. No separate client admin approval.
+- **Holds removed** for now: no manual or suggested holds.
+- **Messages inbox removed** for now. Each route keeps its own text history.
+
 ## Open questions
 
 - [ ] **Onfleet export:** get a real sample file. Confirm the exact columns for order ID, Onfleet route ID, order status (for cancellations), and area or hub.
