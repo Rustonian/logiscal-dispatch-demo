@@ -1040,6 +1040,7 @@ function fmtDT(ms) { return `${fmtDate(ms)} ${fmtTime(ms)}`; }
 function hhmm(s) { const [h, m] = s.split(':').map(Number); return fmtTime(new Date(2026, 0, 1, h, m)); }
 function routeDate(r) { return new Date(r.date + 'T00:00:00'); }
 function routeStart(r) { const [h, m] = r.start.split(':').map(Number); const d = routeDate(r); d.setHours(h, m); return d.getTime(); }
+function boardTabOf(r) { const o = dayOffset(r); return o < 0 ? -1 : Math.min(4, o); }
 function dayOffset(r) { return Math.round((routeDate(r) - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / DAY); }
 function phoneFmt(p) { return p ? `(${p.slice(2, 5)}) ${p.slice(5, 8)}-${p.slice(8)}` : ''; }
 function initials(n) { return n.split(' ').map(x => x[0]).join('').slice(0, 2); }
@@ -1563,7 +1564,7 @@ function vUploadOnfleet(p) {
   const diffs = p.skipped.filter(x => x.fileStops !== x.appStops);
   return `<div class="page-head"><div><h1>Upload routes</h1><p>Onfleet task export. Each Driver Number is one route. Only routes not already in the app are added; a route that is already here is never re-imported or changed by a file.</p></div></div>
   ${p.dupOf ? `<div class="notice warn" style="margin-bottom:12px"><div><b>This file was already imported</b> as ${p.dupOf.id} by ${p.dupOf.by}, ${fmtDT(p.dupOf.time)}. Nothing new to add.</div></div>` : nothing && p.skipped.length ? `<div class="notice info" style="margin-bottom:12px"><div><b>Nothing new in this file.</b> All ${p.skipped.length} routes are already in the app. If Onfleet changed a route since, adjust it below instead of re-importing.</div></div>` : ''}
-  <div class="panel" style="margin-bottom:12px"><div class="row" style="justify-content:space-between"><div><b class="mono">${esc(p.file)}</b> <span class="muted small">· ${p.rows} rows · ${p.clients.join(', ') || 'client not named'} · ${p.hub} hub rows skipped</span></div><div class="row"><button class="btn" onclick="S.importPreview=null;render()">${nothing ? 'Close' : 'Discard'}</button><button class="btn primary" ${nothing ? 'disabled' : ''} onclick="applyOnfleetImport(S.importPreview);S.importPreview=null;S.boardTab=${p.routes[0] ? Math.min(4, dayOffset(p.routes[0])) : 'S.boardTab'};go('board')">${nothing ? 'Nothing to import' : p.routes.length && conf && auto ? `Import ${p.routes.length} routes and text ${conf} Onfleet driver${conf > 1 ? 's' : ''}` : `Import ${p.routes.length} route${p.routes.length > 1 ? 's' : ''}`}</button></div></div>
+  <div class="panel" style="margin-bottom:12px"><div class="row" style="justify-content:space-between"><div><b class="mono">${esc(p.file)}</b> <span class="muted small">· ${p.rows} rows · ${p.clients.join(', ') || 'client not named'} · ${p.hub} hub rows skipped</span></div><div class="row"><button class="btn" onclick="S.importPreview=null;render()">${nothing ? 'Close' : 'Discard'}</button><button class="btn primary" ${nothing ? 'disabled' : ''} onclick="applyOnfleetImport(S.importPreview);S.importPreview=null;S.boardTab=${p.routes[0] ? boardTabOf(p.routes[0]) : 'S.boardTab'};go('board')">${nothing ? 'Nothing to import' : p.routes.length && conf && auto ? `Import ${p.routes.length} routes and text ${conf} Onfleet driver${conf > 1 ? 's' : ''}` : `Import ${p.routes.length} route${p.routes.length > 1 ? 's' : ''}`}</button></div></div>
   ${p.sample ? '<p class="small muted" style="margin:6px 0 0">Scrubbed copy of the Oct 15 CookUnity export, dates moved to Fri Nov 20: real stop order, cities and coordinates, made-up house numbers, customers and drivers.</p>' : '<p class="small muted" style="margin:6px 0 0">Customer names, phones and addresses stay in this browser tab. Nothing in the demo is sent anywhere.</p>'}</div>
   <div class="counts"><div class="cnt new"><div class="v">${p.routes.length}</div><div class="k">New routes</div></div><div class="cnt new"><div class="v">${p.newOrders}</div><div class="k">New orders</div></div><div class="cnt"><div class="v">${p.skipped.length}</div><div class="k">Already in app, skipped</div></div><div class="cnt ${diffs.length ? 'changed' : ''}"><div class="v">${diffs.length}</div><div class="k">Stops differ</div></div><div class="cnt rejected"><div class="v">${p.rejected.length}</div><div class="k">Rejected</div></div></div>
   ${(p.unknownHubs || []).length ? p.unknownHubs.map(u => `<div class="notice warn" style="margin-top:12px"><div><b>${u.rows} order${u.rows > 1 ? 's are' : ' is'} from a hub the app doesn't know</b> (facility ${esc(u.fac || 'blank')}${u.worker ? `, Onfleet worker ${esc(u.worker)}` : ''}). They can't be priced until the hub exists. <button class="btn sm" onclick="addHubFromFile('${esc(u.fac)}')">Add this hub</button></div></div>`).join('') : ''}
@@ -1629,8 +1630,10 @@ function guide() {
 }
 
 function vBoard() {
-  const tabs = [['Today', 0], ['Tomorrow', 1], ['2 days', 2], ['3 days', 3], ['Later', 4]];
-  const inTab = r => { const o = dayOffset(r); return S.boardTab === 4 ? o >= 4 : o === S.boardTab; };
+  const tabCount = i => S.routes.filter(r => !r.history && boardTabOf(r) === i).length;
+  const dl = i => { const d = new Date(now.getTime() + i * DAY); return `${DOW[d.getDay()]} ${d.getDate()}`; };
+  const tabs = [...(tabCount(-1) || S.boardTab === -1 ? [['Earlier', -1]] : []), ['Today', 0], ['Tomorrow', 1], [dl(2), 2], [dl(3), 3], ['Later', 4]];
+  const inTab = r => boardTabOf(r) === S.boardTab;
   const all = S.routes.filter(r => inTab(r) && (S.areaFilter === 'all' || r.area === S.areaFilter));
   const counts = {}; ['Needs attention', 'Unassigned', 'Offered', 'Accepted', 'Completed', 'Cancelled'].forEach(s => counts[s] = all.filter(r => r.status === s).length);
   const rescue = all.filter(r => r.rescue && ['Unassigned', 'Offered', 'Needs attention'].includes(r.status));
@@ -1640,7 +1643,7 @@ function vBoard() {
     const s = suggest && r.status === 'Unassigned' && r.laneId ? laneSuggestion(r) : null;
     return `<div class="card ${r.rescue && !['Accepted', 'Completed', 'Cancelled'].includes(r.status) ? 'rescue' : r.status === 'Needs attention' ? 'attention' : ''}" onclick="go('route',{id:'${r.id}'})">
       <div class="title"><span class="rn">${r.name}</span>${statusPill(r)}</div>
-      <div class="meta"><span>${area(r.area).hub}</span><span><b>${hhmm(r.start)}</b></span><span><b>${routeStops(r)}</b> stops${adjStops(r) ? ` <span class="muted">(${adjStops(r) > 0 ? '+' : ''}${adjStops(r)} adj)</span>` : ''}</span><span><b>${money(driverPay(r))}</b></span>${geoStats(r) ? (() => { const pr = price(r); return `<span>${Math.round(pr.miles)} mi · ${pr.hours.toFixed(1)} h</span>`; })() : `<span>${r.vehicle}</span>`}</div>
+      <div class="meta"><span>${area(r.area).hub}</span><span><b>${[-1, 4].includes(S.boardTab) ? fmtDate(routeDate(r)) + ' ' : ''}${hhmm(r.start)}</b></span><span><b>${routeStops(r)}</b> stops${adjStops(r) ? ` <span class="muted">(${adjStops(r) > 0 ? '+' : ''}${adjStops(r)} adj)</span>` : ''}</span><span><b>${money(driverPay(r))}</b></span>${geoStats(r) ? (() => { const pr = price(r); return `<span>${Math.round(pr.miles)} mi · ${pr.hours.toFixed(1)} h</span>`; })() : `<span>${r.vehicle}</span>`}</div>
       ${laneLine(r)}
       ${r.rescue && !['Accepted', 'Completed', 'Cancelled'].includes(r.status) ? `<div class="pickup-in" data-pickup="${r.id}">Pickup in ${dur(routeStart(r) - now.getTime())}</div>` : ''}
       ${r.attention ? `<div class="small" style="color:var(--warn)">${r.attention}</div>` : ''}
@@ -1653,7 +1656,6 @@ function vBoard() {
       </div></div>`;
   };
   const group = (s, rs) => rs.length ? `<div class="group-title"><h3>${s}</h3><span class="n">${rs.length}</span></div><div class="cards">${rs.map(card).join('')}</div>` : '';
-  const tabCount = i => S.routes.filter(r => { const o = dayOffset(r); return (i === 4 ? o >= 4 : o === i); }).length;
   const autoable = suggest ? all.filter(r => r.status === 'Unassigned' && r.laneId && laneSuggestion(r).pick) : [];
   return guide() + `<div class="page-head"><div><h1>Dispatch board</h1><p>${fmtDate(now)}. Routes are built in Onfleet and arrive with the CSV upload.</p></div>
     <div class="row"><select id="areaFilter" onchange="S.areaFilter=this.value;render()"><option value="all" ${S.areaFilter === 'all' ? 'selected' : ''}>All areas</option>${S.areas.map(a => `<option value="${a.id}" ${S.areaFilter === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}</select>${autoable.length ? `<button class="btn" title="Offer each recognized route to its last driver" onclick="runAutoOffer(${JSON.stringify(autoable.map(r => r.id)).replace(/"/g, "'")})">↻ Offer ${autoable.length} to last drivers</button>` : ''}<button class="btn" onclick="go('upload')">Upload CSV</button></div></div>

@@ -14,6 +14,7 @@ Screens: Dispatch board, Coverage (routes vs active drivers plus bench, per area
 
 - The app starts empty: no routes, drivers, lanes or history. Markets, hubs, settings and users are kept. Upload an Onfleet task export to fill it. Drivers on the file are added from the upload preview, and a hub the app doesn't know (new facilityId) can be added from the preview too, under a new market with pricing copied for now.
 - The clock starts at the real current time and runs one demo minute per real second, so a 15 minute offer expires in 15 seconds.
+- Board tabs: Earlier (any route dated before today, shown only when there is one), Today, Tomorrow, the next two days by weekday, and Later. Earlier and Later cards show the route date.
 - Refresh the page to reset everything.
 - The role switcher in the header toggles Dispatcher, Client admin and Gigee ops. Markets and pricing is visible to admins only (client admin and Gigee ops).
 
