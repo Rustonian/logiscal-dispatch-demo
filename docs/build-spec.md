@@ -293,7 +293,7 @@ Nine screens. The Dispatch board is home, and everything a dispatcher does daily
 | Screen | Who | What it does |
 | --- | --- | --- |
 | Dispatch board | Dispatcher | Tabs by day (Today, Tomorrow, 2 days, 3 days, Later). Route cards grouped by status, Rescue routes pinned on top with time to pickup. Counts per status. Filter by area |
-| Upload and review | Dispatcher | Drop a CSV, map columns, preview new / changed / missing / rejected rows, confirm |
+| Upload routes | Dispatcher | Drop a CSV, map columns, preview new / changed / missing / rejected rows, confirm |
 | Route detail | Dispatcher | Orders on the route, payout, offer history, message thread with the driver, Offer / Withdraw / Release / Confirmed by phone / Assign by phone actions, Assigned in Onfleet tick |
 | Driver picker | Dispatcher | Eligible drivers ranked by reliability, with status label, score, completion rate, days since last route, opt-out flag |
 | Needs attention | Dispatcher | Every route needing a decision and why: silent on confirm, order changed after acceptance, driver deactivated, order not in latest file |
