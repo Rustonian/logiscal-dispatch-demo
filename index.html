@@ -846,7 +846,7 @@ Driver Number,Task Number,shortId,status,creatorOrganization,workerName,destinat
 const DAY = 86400000;
 // Demo day: Tue Nov 17, 2026. Seed data is written as October day numbers and shifted forward by SHIFT days.
 const SHIFT = 32;
-const START_NOW = new Date(2026, 9, 16 + SHIFT, 14, 40);
+let START_NOW = new Date(2026, 9, 16 + SHIFT, 14, 40);
 let now = new Date(START_NOW);
 const T = (d, h, m) => new Date(2026, 9, d + SHIFT, h, m).getTime();
 const ymd = d => { const x = new Date(2026, 9, d + SHIFT); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
@@ -1383,14 +1383,15 @@ function readOnfleet(text) {
   const h = rows[0].map(x => x.trim()); const col = k => h.indexOf(k);
   if (!['workerName', 'destinationAddress', 'Driver Number'].every(k => col(k) >= 0)) return { error: 'These columns do not look like an Onfleet task export. Expected Driver Number, workerName and destinationAddress.' };
   const get = (r, k) => { const i = col(k); return i >= 0 ? (r[i] || '').trim() : ''; };
-  const out = { rows: rows.length - 1, hub: 0, rejected: [], groups: {}, clients: new Set() }, seen = {};
+  const out = { rows: rows.length - 1, hub: 0, rejected: [], groups: {}, clients: new Set(), hubRows: {}, unknownHubs: {} }, seen = {};
   rows.slice(1).forEach((r, i) => {
     const line = i + 2, type = get(r, 'taskType'), worker = get(r, 'workerName');
-    if (type && type !== 'dropoff') { out.hub++; return; }
+    if (type && type !== 'dropoff') { out.hub++; const k = get(r, 'facilityId') || 'w:' + workerCode(worker); if (!out.hubRows[k]) out.hubRows[k] = { addr: get(r, 'destinationAddress'), ll: get(r, 'destinationLonLat'), worker }; return; }
     const id = get(r, 'orderId') || get(r, 'shortId'), addr = get(r, 'destinationAddress'), dn = get(r, 'Driver Number');
     const date = parseDay(get(r, 'shippingDate')) || parseDay(get(r, 'completeAfterTime'));
     const a = areaFor(get(r, 'facilityId'), worker);
-    let reason = !addr ? 'No delivery address' : !dn ? 'No Onfleet route (Driver Number is blank)' : !date ? 'No service date' : !a ? `Unknown hub (facility ${get(r, 'facilityId') || 'blank'}). Add it on Markets and pricing.` : seen[id] ? `Duplicate order ID (rows ${seen[id]} and ${line})` : '';
+    let reason = !addr ? 'No delivery address' : !dn ? 'No Onfleet route (Driver Number is blank)' : !date ? 'No service date' : !a ? `Unknown hub (facility ${get(r, 'facilityId') || 'blank'}). Add it from this preview.` : seen[id] ? `Duplicate order ID (rows ${seen[id]} and ${line})` : '';
+    if (!a && addr && dn && date) { const f = get(r, 'facilityId') || ''; const u = out.unknownHubs[f] = out.unknownHubs[f] || { fac: f, worker, rows: 0, pts: [], time: '' }; u.rows++; const ll = get(r, 'destinationLonLat').replace(/'/g, '').split(',').map(Number); if (ll.length === 2 && !isNaN(ll[1])) u.pts.push(ll); if (!u.time) u.time = get(r, 'completeAfterTime'); }
     if (reason) { out.rejected.push({ row: line, id: id || '–', reason }); return; }
     seen[id] = line; out.clients.add(get(r, 'creatorOrganization') || get(r, 'merchantOrganization'));
     const name = `${a.code}-${date.slice(5, 7)}${date.slice(8, 10)}-${dn.padStart(2, '0')}`;
@@ -1425,18 +1426,41 @@ function buildOnfleetPreview(text, file, sample) {
     p.skipped.push({ route: ex, fileStops: g.orders.length, appStops: routeStops(ex), worker: nw, workerDiffers: !!(nw && ex.onfleetWorker !== nw) });
   }
   p.unknown = [...new Set(p.routes.filter(r => r.onfleetWorker && !r.onfleetDriverId).map(r => r.onfleetWorker))];
+  p.unknownHubs = Object.values(x.unknownHubs).map(u => Object.assign(u, { hubRow: x.hubRows[u.fac] || x.hubRows['w:' + workerCode(u.worker)] || null }));
   return p;
 }
 function addUnknownDrivers() {
   const p = S.importPreview; let n = 0;
   p.unknown.forEach(name => { const r = p.routes.find(x => x.onfleetWorker === name); const id = 'd' + (100 + S.drivers.length); const num = String(5550200 + S.drivers.length).slice(-7);
-    S.drivers.push({ id, gid: 'GG-' + (2000 + S.drivers.length), name, phone: '+1317' + num, area: r ? r.area : 'A3', tier: '', active: true, optOut: false, rec: 'rec' + id, base: { offers: 6, answered: 6, accepted: 5, committed: 5, completed: 5, late: 0, early: 0, noshow: 0, confSent: 8, confOnTime: 8, rescues: 0, resp: 6 }, last: T(11, 10, 0), addedFromFile: true }); n++; });
+    S.drivers.push({ id, gid: 'GG-' + (2000 + S.drivers.length), name, phone: '+1317' + num, area: r ? r.area : 'A3', tier: '', active: true, optOut: false, rec: 'rec' + id, base: BLANK ? { offers: 0, answered: 0, accepted: 0, committed: 0, completed: 0, late: 0, early: 0, noshow: 0, confSent: 0, confOnTime: 0, rescues: 0, resp: 0 } : { offers: 6, answered: 6, accepted: 5, committed: 5, completed: 5, late: 0, early: 0, noshow: 0, confSent: 8, confOnTime: 8, rescues: 0, resp: 6 }, last: BLANK ? null : T(11, 10, 0), addedFromFile: true }); n++; });
   S.importPreview = buildOnfleetPreview(p.text, p.file, p.sample); S.importPreview.text = p.text;
   toast(`${n} driver${n === 1 ? '' : 's'} added to the demo roster. In the real app they must exist in Airtable first.`); render();
 }
+// A file from a hub the app doesn't know: add the hub (and its market, if the Onfleet worker code is new) from what the file says.
+function addHubFromFile(fac) {
+  const p = S.importPreview, u = p.unknownHubs.find(x => x.fac === fac); if (!u) return;
+  const code = workerCode(u.worker);
+  let m = code ? S.markets.find(x => x.codes.includes(code)) : null; const newM = !m;
+  if (!m) {
+    const tpl = S.markets[S.markets.length - 1];
+    m = { id: 'M' + (S.markets.length + 1), name: code || `Facility ${fac}`, client: p.clients[0] || 'Logiscal clients', region: '', lead: 'Mike Patel', areas: [], codes: code ? [code] : [], rateSource: 'Copied from ' + tpl.name + ' until real rates are set', log: [], p: Object.assign({}, tpl.p) };
+    S.markets.push(m);
+  }
+  const hr = u.hubRow, hll = hr && hr.ll ? hr.ll.replace(/'/g, '').split(',').map(Number) : null;
+  let lat = null, lon = null;
+  if (hll && hll.length === 2 && !isNaN(hll[1])) { lon = hll[0]; lat = hll[1]; } else if (u.pts.length) { lon = u.pts.reduce((s, x) => s + x[0], 0) / u.pts.length; lat = u.pts.reduce((s, x) => s + x[1], 0) / u.pts.length; }
+  const addr = hr && hr.addr ? hr.addr : '', city = addr ? splitAddr(addr).city : '';
+  let ac = (code || 'H' + fac).replace(/[^A-Z0-9]/gi, '').slice(0, 2).toUpperCase() || 'HB'; let n = 2; while (S.areas.some(x => x.code === ac)) ac = ac.slice(0, 2) + (n++);
+  const t = (u.time.split(' ')[1] || '').slice(0, 5);
+  const sib = m.areas.length ? area(m.areas[0]) : S.areas[S.areas.length - 1];
+  const a = { id: 'A' + (S.areas.length + 1), name: `${m.name}${city ? ' ' + city : ''}`, hub: city ? `${city} Hub` : `Facility ${fac} Hub`, ppd: sib.ppd, market: m.id, code: ac, facility: fac || null, pickup: /^\d\d:\d\d$/.test(t) ? t : '10:00', address: addr || 'Hub address not in file', instr: '', lat, lon };
+  S.areas.push(a); m.areas.push(a.id);
+  S.importPreview = buildOnfleetPreview(p.text, p.file, p.sample); S.importPreview.text = p.text;
+  toast(`${a.hub} added under ${m.name}${newM ? `, a new market with pricing copied from ${S.markets[S.markets.length - 2].name} for now` : ''}. Check it on Markets and pricing.`); render();
+}
 function applyOnfleetImport(p) {
   if (!p.routes.length) { toast('Nothing new in this file. Routes already in the app are never re-imported.'); return null; }
-  const batch = { id: 'IMP-' + (119 + S.imports.length - 2), file: p.file, hash: p.hash, by: actorName(), time: now.getTime(), counts: { routes: p.routes.length, new: p.newOrders, skipped: p.skipped.length, rejected: p.rejected.length } };
+  const batch = { id: 'IMP-' + (BLANK ? String(S.imports.length + 1).padStart(3, '0') : 119 + S.imports.length - 2), file: p.file, hash: p.hash, by: actorName(), time: now.getTime(), counts: { routes: p.routes.length, new: p.newOrders, skipped: p.skipped.length, rejected: p.rejected.length } };
   S.imports.unshift(batch);
   const texted = [], waiting = [];
   for (const t of p.routes) { t.onfleetAt = now.getTime(); t.importId = batch.id; S.routes.push(t); relink(t); }
@@ -1488,6 +1512,19 @@ function confirmOnfleet(r, d, silent) { offerRoute(r, d, 'sms', { silent, actor:
   // Drivers keep the pay they were texted: lock every seeded route that already has a driver.
   S.routes.filter(r => r.driverId && r.lockedPay == null).forEach(r => r.lockedPay = price(r).pay);
 })();
+
+/* ---------------- Blank slate: no sample routes, drivers, lanes or history. Markets, hubs, settings and users stay. ---------------- */
+const BLANK = (() => { try { return /[?&]blank\b/.test(location.search) || localStorage.getItem('ld-blank') === '1'; } catch (e) { return /[?&]blank\b/.test(location.search); } })();
+if (BLANK) {
+  Object.assign(S, { routes: [], offers: [], messages: [], events: [], imports: [], exports: [], adjustments: [], recruitRequests: [], sim: [], lanes: [], drivers: [], uploadsDone: {}, importPreview: null, phoneDriver: null, boardTab: 0 });
+  S.markets.forEach(m => m.log = []);
+  // The clock starts at the real time so a real export lands on the right day tabs. It still runs one minute per second.
+  START_NOW = new Date(); START_NOW.setSeconds(0, 0); now = new Date(START_NOW);
+}
+function setBlank(on) {
+  try { if (on) localStorage.setItem('ld-blank', '1'); else localStorage.removeItem('ld-blank'); } catch (e) { }
+  location.href = location.pathname + (on ? '?blank' : '');
+}
 // A second Indianapolis export, as if pulled Thursday morning: Onfleet moved IN-1120-06 to Ben, and IN-1120-13 lost one order and gained two (net +1 stop). Every route is already in the app, so nothing imports; the preview points the dispatcher to Adjust route.
 function sampleIndyReexport() {
   const lines = document.getElementById('sampleIndy').textContent.trim().split('\n'); const out = [lines[0]]; let drop = true;
@@ -1530,6 +1567,7 @@ function vUploadOnfleet(p) {
   <div class="panel" style="margin-bottom:12px"><div class="row" style="justify-content:space-between"><div><b class="mono">${esc(p.file)}</b> <span class="muted small">· ${p.rows} rows · ${p.clients.join(', ') || 'client not named'} · ${p.hub} hub rows skipped</span></div><div class="row"><button class="btn" onclick="S.importPreview=null;render()">${nothing ? 'Close' : 'Discard'}</button><button class="btn primary" ${nothing ? 'disabled' : ''} onclick="applyOnfleetImport(S.importPreview);S.importPreview=null;S.boardTab=${p.routes[0] ? Math.min(4, dayOffset(p.routes[0])) : 'S.boardTab'};go('board')">${nothing ? 'Nothing to import' : p.routes.length && conf && auto ? `Import ${p.routes.length} routes and text ${conf} Onfleet driver${conf > 1 ? 's' : ''}` : `Import ${p.routes.length} route${p.routes.length > 1 ? 's' : ''}`}</button></div></div>
   ${p.sample ? '<p class="small muted" style="margin:6px 0 0">Scrubbed copy of the Oct 15 CookUnity export, dates moved to Fri Nov 20: real stop order, cities and coordinates, made-up house numbers, customers and drivers.</p>' : '<p class="small muted" style="margin:6px 0 0">Customer names, phones and addresses stay in this browser tab. Nothing in the demo is sent anywhere.</p>'}</div>
   <div class="counts"><div class="cnt new"><div class="v">${p.routes.length}</div><div class="k">New routes</div></div><div class="cnt new"><div class="v">${p.newOrders}</div><div class="k">New orders</div></div><div class="cnt"><div class="v">${p.skipped.length}</div><div class="k">Already in app, skipped</div></div><div class="cnt ${diffs.length ? 'changed' : ''}"><div class="v">${diffs.length}</div><div class="k">Stops differ</div></div><div class="cnt rejected"><div class="v">${p.rejected.length}</div><div class="k">Rejected</div></div></div>
+  ${(p.unknownHubs || []).length ? p.unknownHubs.map(u => `<div class="notice warn" style="margin-top:12px"><div><b>${u.rows} order${u.rows > 1 ? 's are' : ' is'} from a hub the app doesn't know</b> (facility ${esc(u.fac || 'blank')}${u.worker ? `, Onfleet worker ${esc(u.worker)}` : ''}). They can't be priced until the hub exists. <button class="btn sm" onclick="addHubFromFile('${esc(u.fac)}')">Add this hub</button></div></div>`).join('') : ''}
   ${p.unknown.length ? `<div class="notice warn" style="margin-top:12px"><div><b>${p.unknown.length} Onfleet driver${p.unknown.length > 1 ? 's are' : ' is'} not in Airtable:</b> ${p.unknown.map(esc).join(', ')}. Their routes fall back to lane history or stay Unassigned. <button class="btn sm" style="margin-left:6px" onclick="addUnknownDrivers()">Add to the demo roster</button></div></div>` : ''}
   ${p.routes.length ? `<div class="group-title"><h3>New routes, priced</h3><span class="n">${Object.entries(byM).map(([m, t]) => `${market(m).name}: ${money(t.pay)} driver pay${acc !== 'none' ? ` on ${money(t.rev)}, ${pct((t.rev - t.pay) / t.rev)} margin vs ${market(m).p.targetMargin}% target` : ''}`).join(' · ')}</span></div>
   <div class="panel"><div class="tbl"><table><thead><tr><th>Route</th><th>Cities</th><th class="r">Stops</th><th class="r">Miles</th><th class="r">Pay</th>${acc !== 'none' ? '<th class="r">Margin</th>' : ''}<th>Recognized as</th><th>Onfleet driver</th><th>On import</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>
@@ -1583,10 +1621,14 @@ function statusPill(r) { const cls = { 'Unassigned': 'unassigned', 'Offered': 'o
 function driverLine(r) { const d = driver(r.driverId); if (!d) return `<span class="muted small">No driver</span>`; return `<span class="avatar">${initials(d.name)}</span><span>${d.name} <span class="muted small mono">${d.gid}</span></span>${lblHtml(d)}`; }
 
 function guide() {
+  if (BLANK) return `<div class="guide"><div><b>Blank slate.</b> No sample routes, drivers, lanes or history. Markets, hubs, settings and users are kept. The clock starts at the real time and runs at one minute per second.
+  <ol><li>Go to <b>Upload and review</b> and drop an Onfleet task export.</li><li>If the file uses a hub the app doesn't know, add it from the preview. If its drivers aren't on the roster, add them from the preview too.</li><li>Import. Routes land on the day tabs. Lanes build up as routes are closed out as completed.</li></ol>
+  <div class="row" style="margin-top:6px"><button class="btn sm primary" onclick="go('upload')">Upload a file</button><button class="btn sm" onclick="setBlank(false)">Restore sample data</button></div></div></div>`;
   let hidden = false; try { hidden = localStorage.getItem('ld-guide6') === '1'; } catch (e) { }
   if (hidden) return '';
   return `<div class="guide"><div><b>Clickable demo.</b> Everything is simulated in the page, and the clock runs at one minute per second so offers expire in 15 seconds.
   <ol><li><b>Upload.</b> On <b>Upload and review</b>, drop the Fri Nov 20 CookUnity Onfleet export (or load the <b>CookUnity Indianapolis</b> sample, the same file). Its 16 routes land on the <b>3 days</b> tab, each priced, matched to last Friday's runs, and showing the driver Onfleet already has on it. Dev Kapoor is not in Airtable, so IN-1120-08 falls back to Darius, who ran it last week.</li><li><b>Confirm texts.</b> Import: 14 Onfleet drivers get a confirm text with exact pay, a stop range, cities, miles and hours. Grace's text is open on the phone: reply YES. Over the next few minutes most drivers reply YES, Victor passes and Kevin stays silent.</li><li><b>No double uploads.</b> Drop the same file again: the app says it was already imported and there is nothing to add. Then load the <b>Indianapolis re-export</b>: every route is already here, so nothing imports, but IN-1120-13 now has 1 more stop in Onfleet. Click <b>Adjust route</b>: +1 stop, the pay change is suggested, and the driver gets a text.</li><li><b>Pricing is admin only.</b> Dana does not see <b>Markets and pricing</b>. Switch the header to <b>Mike Patel · Client admin</b>, open it, and raise the Indianapolis floor or per-mile rate. Open routes re-price; routes already texted keep the pay the driver saw.</li><li><b>Austin today.</b> Back as Dana, on <b>Tomorrow</b> offer RR-0417 to Marcus, and on <b>Site check-in</b> mark Omar a <b>No-show</b> on RR-0412.</li><li><b>Daily closeout.</b> On <b>Daily closeout</b>, mark yesterday's 4 Austin routes Completed and <b>Sign off</b> each one as ready to pay. Switch to <b>Ruston · Gigee ops</b> to export the day's pay and mark it paid.</li></ol></div>
+  <div class="small" style="margin-top:6px">Want to try your own file with nothing else in the way? <a style="cursor:pointer" onclick="setBlank(true)">Start with a blank slate</a>.</div>
   <button class="btn sm ghost x" onclick="try{localStorage.setItem('ld-guide6','1')}catch(e){};render()">Hide</button></div>`;
 }
 
@@ -1725,8 +1767,8 @@ function vUpload() {
   const head = `<div class="page-head"><div><h1>Upload and review</h1><p>Drop the Onfleet export. New routes are added and priced. Routes already in the app are skipped, so a second upload can't double anything; changes to those go in with Adjust route.</p></div></div>`;
   const did = S.uploadsDone['onfleet_export_2026-11-16T124548.csv'] || S.imports.some(b => b.file.includes('2026-11-20'));
   return head + `<div class="drop" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');handleFile(event.dataTransfer.files[0])"><div><b>Drop an Onfleet task export here</b> or <label class="btn sm" style="display:inline-flex;cursor:pointer">choose a file<input type="file" accept=".csv" style="display:none" onchange="handleFile(this.files[0]);this.value=''"></label></div><div class="small muted" style="margin-top:6px">Any export with Driver Number, workerName and destinationAddress works, including your own. It is read in this tab only.</div>
-    <div class="files" style="margin-top:12px"><span class="small muted">Samples:</span><button class="btn primary" onclick="loadSample('indy')">CookUnity Indianapolis, Fri Nov 20${did ? ' (again)' : ''}</button>${did ? `<button class="btn" onclick="loadSample('indy2')">Indianapolis re-export, Thu 6:02 AM</button>` : ''}</div><div class="small muted" style="margin-top:10px">Columns mapped for Onfleet task exports. You only map again if Onfleet changes its columns.</div></div>
-    <div class="group-title"><h3>Import history</h3></div><div class="panel"><div class="tbl"><table><thead><tr><th>Batch</th><th>File</th><th>By</th><th>When</th><th class="r">New routes</th><th class="r">Orders</th><th class="r">Skipped</th><th class="r">Rejected</th></tr></thead><tbody>${S.imports.map(b => `<tr><td class="mono">${b.id}</td><td class="mono small">${b.file}</td><td>${b.by}</td><td class="small">${fmtDT(b.time)}</td><td class="r num">${b.counts.routes}</td><td class="r num">${b.counts.new}</td><td class="r num">${b.counts.skipped}</td><td class="r num">${b.counts.rejected}</td></tr>`).join('')}</tbody></table></div></div>`;
+    ${BLANK ? `<div class="small muted" style="margin-top:12px">Blank slate: nothing in the app yet. <a style="cursor:pointer" onclick="setBlank(false)">Restore sample data</a></div>` : `<div class="files" style="margin-top:12px"><span class="small muted">Samples:</span><button class="btn primary" onclick="loadSample('indy')">CookUnity Indianapolis, Fri Nov 20${did ? ' (again)' : ''}</button>${did ? `<button class="btn" onclick="loadSample('indy2')">Indianapolis re-export, Thu 6:02 AM</button>` : ''}</div>`}<div class="small muted" style="margin-top:10px">Columns mapped for Onfleet task exports. You only map again if Onfleet changes its columns.</div></div>
+    <div class="group-title"><h3>Import history</h3></div><div class="panel"><div class="tbl"><table><thead><tr><th>Batch</th><th>File</th><th>By</th><th>When</th><th class="r">New routes</th><th class="r">Orders</th><th class="r">Skipped</th><th class="r">Rejected</th></tr></thead><tbody>${S.imports.length ? '' : '<tr><td colspan="8" class="muted small">No imports yet.</td></tr>'}${S.imports.map(b => `<tr><td class="mono">${b.id}</td><td class="mono small">${b.file}</td><td>${b.by}</td><td class="small">${fmtDT(b.time)}</td><td class="r num">${b.counts.routes}</td><td class="r num">${b.counts.new}</td><td class="r num">${b.counts.skipped}</td><td class="r num">${b.counts.rejected}</td></tr>`).join('')}</tbody></table></div></div>`;
 }
 function vCheckin() {
   const rs = checkinRoutes();
@@ -1868,12 +1910,13 @@ function vSettings() {
   if (S.setTab === 'weights') body = `<div class="panel"><p class="small muted" style="margin:0 0 10px">Score = completion × ${w.completion} + acceptance × ${w.acceptance} + on-time confirm × ${w.confirm} + ${w.perRoute} per completed route (max ${w.perRouteMax}) + ${w.perRescue} per rescue (max ${w.perRescueMax}) ${w.early} per early release ${w.late} per late bail ${w.noshow} per no-show + tier bump (A +${w.tierA}, B +${w.tierB}). Changing a weight recomputes every driver.</p><div class="form">${Object.entries(w).map(([k, v]) => `<label>${k}<input type="number" value="${v}" onchange="S.settings.weights['${k}']=Number(this.value);render();toast('Scores recomputed.')"></label>`).join('')}</div><p class="small muted" style="margin:10px 0 0">Labels: New under 5 offers · No routes yet · Watch (2+ no-shows, 3+ late bails, or completion under 85%) · Solid 85 to 94% · Reliable 95% and up.</p></div>`;
   if (S.setTab === 'mapping') body = `<div class="panel"><p class="small muted" style="margin:0 0 10px">Mapped from the Onfleet task export (Oct 15 CookUnity file). Mapped again only when the columns change.</p><div class="tbl"><table><thead><tr><th>App field</th><th>Onfleet column</th><th>Required</th></tr></thead><tbody>${[['Route (one per Onfleet driver slot)', 'Driver Number', 'Yes'], ['Order ID', 'orderId, else shortId', 'Yes'], ['Delivery address', 'destinationAddress', 'Yes'], ['Hub and market', 'facilityId, else workerName suffix (INDY_LOGISCAL)', 'Yes'], ['Service date', 'shippingDate, else completeAfterTime', 'Yes'], ['Driver already in Onfleet', 'workerName', 'No'], ['Stop order', 'Task Number', 'No'], ['Coordinates (miles and hours)', 'destinationLonLat', 'No'], ['Delivery window', 'completeAfterTime to completeBeforeTime', 'No'], ['Order type (B2B extra)', 'orderType', 'No'], ['Customer name', 'recipientsNames', 'No'], ['Package count', 'quantity', 'No'], ['Skipped', 'rows where taskType is not dropoff (hub start)', '']].map(r => `<tr><td>${r[0]}</td><td class="mono">${r[1]}</td><td class="small">${r[2]}</td></tr>`).join('')}</tbody></table></div></div>`;
   if (S.setTab === 'users') body = `<div class="panel"><div class="tbl"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Client</th><th>Pricing</th></tr></thead><tbody>${S.users.map(u => `<tr><td>${u.name}</td><td class="mono small">${u.email}</td><td>${u.role}</td><td>${u.client}</td><td class="small">${['Client admin', 'Gigee ops'].includes(u.role) ? 'Sees pricing' : 'No'}</td></tr>`).join('')}</tbody></table></div><p class="small muted" style="margin:8px 0 0">Every query is scoped to the user's client. Gigee ops sees all clients.</p></div>`;
-  return `<div class="page-head"><div><h1>Settings</h1><p>Entered once, reused everywhere. Client admin and Gigee ops only.</p></div></div><div class="tabs">${tabs.map(([id, n]) => `<button class="${S.setTab === id ? 'active' : ''}" onclick="S.setTab='${id}';render()">${n}</button>`).join('')}</div>${body}`;
+  return `<div class="page-head"><div><h1>Settings</h1><p>Entered once, reused everywhere. Client admin and Gigee ops only.</p></div><div class="row">${BLANK ? `<button class="btn sm" onclick="setBlank(false)">Restore sample data</button>` : `<button class="btn sm" onclick="setBlank(true)">Clear sample data</button>`}</div></div><div class="tabs">${tabs.map(([id, n]) => `<button class="${S.setTab === id ? 'active' : ''}" onclick="S.setTab='${id}';render()">${n}</button>`).join('')}</div>${body}`;
 }
 
 /* ---------------- Phone ---------------- */
 function renderPhone() {
   const d = driver(S.phoneDriver) || S.drivers[0];
+  if (!d) { $('#phone').innerHTML = `<div class="phone-head"><div class="row" style="justify-content:space-between"><span class="eyebrow">Driver phone · simulator</span><button class="btn sm ghost menu-btn" style="color:var(--phone-fg)" onclick="document.getElementById('phone').classList.remove('open')">Close</button></div></div><div class="phone-thread"><div class="sys">No drivers yet. Add the drivers on your file from the upload preview, then their texts show here.</div></div>`; return; }
   const ms = S.messages.filter(m => m.driverId === d.id).sort((a, b) => a.time - b.time);
   const open = S.offers.find(o => o.driverId === d.id && o.open);
   const pend = S.offers.find(o => o.driverId === d.id && o.pending);

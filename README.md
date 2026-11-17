@@ -16,6 +16,7 @@ Screens: Dispatch board (with Staffing health), Site check-in, Upload and review
 - Refresh the page to reset everything.
 - The role switcher in the header toggles Dispatcher, Client admin and Gigee ops. Markets and pricing is visible to admins only (client admin and Gigee ops).
 - The guide at the top of the board lists the walkthrough steps.
+- Blank slate: open the page with `?blank`, or use "Start with a blank slate" in the guide or "Clear sample data" in Settings. It drops every sample route, driver, lane, offer, text and import, keeps markets, hubs, settings and users, and starts the clock at the real time. It stays blank across refreshes in that browser until you click "Restore sample data". Drivers on your file are added from the upload preview, and a hub the app doesn't know (new facilityId) can be added from the preview too, under a new market with pricing copied for now.
 
 ## Editing
 
