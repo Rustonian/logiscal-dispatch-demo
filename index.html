@@ -857,16 +857,16 @@ const S = {
   settings: {
     expiry: 15, reconfirmHours: 26, reconfirmWindow: 60, finalHours: 2, finalWindow: 30, quietStart: '9:00 PM', quietEnd: '7:00 AM',
     feeMin: 10, feePct: 5, support: '(512) 555-0100', stopRange: 4, benchPct: 20, noShowRescue: 'auto',
-    laneThreshold: 60, laneWindow: 10, laneAuto: 'suggest', laneSkipWatch: true, laneKey: 'addr', preConfirm: 'auto', preConfirmWindow: 120,
+    laneThreshold: 60, laneWindow: 10, laneAuto: 'suggest', laneSkipWatch: true, laneKey: 'addr', preConfirm: 'click', preConfirmWindow: 120,
     weights: { completion: 50, acceptance: 20, confirm: 10, perRoute: 1, perRouteMax: 10, perRescue: 3, perRescueMax: 9, early: -5, late: -15, noshow: -25, tierA: 15, tierB: 5 },
     templates: {
-      offer: 'Gigee route offer: {date}, start {start_time} at {hub}. About {stop_range} stops{route_detail}, pays ${payout}. Reply YES to accept or NO to pass. Expires in {expiry} min.',
-      preassigned: 'Gigee route for you: {date}, pickup {start_time} at {hub}, {pickup_address}. About {stop_range} stops{route_detail}. Pays ${payout}. Onfleet has you as the driver. Reply YES to confirm or NO to pass.',
+      offer: 'Logiscal route offer: {date}, start {start_time} at {hub}. About {stop_range} stops{route_detail}, pays ${payout}. Reply YES to accept or NO to pass. Expires in {expiry} min.',
+      preassigned: 'Logiscal route for you: {date}, pickup {start_time} at {hub}, {pickup_address}. About {stop_range} stops{route_detail}. Pays ${payout}. Onfleet has you as the driver. Reply YES to confirm or NO to pass.',
       accepted: "You're confirmed for {route_name} on {date}. Pickup {start_time} at {pickup_address}. {instructions}",
       declined: 'Got it, thanks for letting us know.',
       expired: "That route offer has closed. We'll text you with the next one.",
       help: 'Reply YES or NO to your latest route offer. Questions? Contact {support_contact}.',
-      headsup: 'Heads up: your Gigee route {route_name} is {date} at {start_time}, {hub}. No reply needed.',
+      headsup: 'Heads up: your Logiscal route {route_name} is {date} at {start_time}, {hub}. No reply needed.',
       reconfirm: 'Reconfirm: are you still good for {route_name} on {date} at {start_time}? Reply YES within 60 min, or NO if you need to release it.',
       final: 'Final check for {route_name}: pickup {start_time} today at {pickup_address}. Reply YES within 30 min.',
       released: "You've been released from {route_name}. Thanks for letting us know.",
@@ -1002,7 +1002,7 @@ addRoute('BD-0215', 22, 'A2', 10, { lane: 'L3', skip: 3 });
   // BD-0196 late bail by d3 at 1:52 PM today
   const bail = mkOffer({ routeId: 'BD-0196', driverId: 'd3', sentAt: T(14, 15, 0), respondedAt: T(14, 15, 6), reply: 'Yes', acceptedAt: T(14, 15, 6), reconfirmSentAt: T(15, 14, 30), reconfirmedAt: T(15, 14, 44), releasedAt: T(16, 13, 52), releasedBy: 'Driver', hoursBefore: 2.6, outcome: 'Late bail', outcomeBy: 'System' });
   ev(bail.id, 'Offer sent', 'Dana Ruiz', 'SMS', bail.sentAt); ev(bail.id, 'Reply YES', 'Driver', '', bail.respondedAt); ev(bail.id, 'Accepted', 'System', '', bail.acceptedAt); ev(bail.id, 'Released', 'Dana Ruiz', 'Driver-initiated, 2.6 h before start', bail.releasedAt); ev(bail.id, 'Outcome set', 'System', 'Late bail', bail.releasedAt);
-  mkMsg({ dir: 'out', driverId: 'd3', routeId: 'BD-0196', offerId: bail.id, body: 'Gigee route offer: Tue Nov 17, start 4:30 PM at Buda Hub. About 8 to 12 stops, pays $72.00. Reply YES to accept or NO to pass. Expires in 15 min.', time: bail.sentAt });
+  mkMsg({ dir: 'out', driverId: 'd3', routeId: 'BD-0196', offerId: bail.id, body: 'Logiscal route offer: Tue Nov 17, start 4:30 PM at Buda Hub. About 8 to 12 stops, pays $72.00. Reply YES to accept or NO to pass. Expires in 15 min.', time: bail.sentAt });
   mkMsg({ dir: 'in', driverId: 'd3', routeId: 'BD-0196', offerId: bail.id, body: 'Yes', time: bail.respondedAt });
   mkMsg({ dir: 'out', driverId: 'd3', routeId: 'BD-0196', offerId: bail.id, body: "You're confirmed for BD-0196 on Tue Nov 17. Pickup 4:30 PM at 325 Old San Antonio Rd, Buda, TX 78610. Park in the east lot and ask for Marco.", time: bail.acceptedAt });
   mkMsg({ dir: 'in', driverId: 'd3', routeId: 'BD-0196', offerId: bail.id, body: 'car trouble, cant make 4:30 today sorry', time: T(16, 13, 48) });
@@ -1010,7 +1010,7 @@ addRoute('BD-0215', 22, 'A2', 10, { lane: 'L3', skip: 3 });
   // RR-0418 open offer to d2, sent 4 min ago
   const op = mkOffer({ routeId: 'RR-0418', driverId: 'd2', sentAt: now.getTime() - 4 * 60000, open: true, expiresAt: now.getTime() + 11 * 60000 });
   byId('RR-0418').offerId = op.id; ev(op.id, 'Offer sent', 'Dana Ruiz', 'SMS', op.sentAt);
-  mkMsg({ dir: 'out', driverId: 'd2', routeId: 'RR-0418', offerId: op.id, body: 'Gigee route offer: Wed Nov 18, start 7:30 AM at Round Rock Hub. About 16 to 20 stops, pays $152.00. Reply YES to accept or NO to pass. Expires in 15 min.', time: op.sentAt });
+  mkMsg({ dir: 'out', driverId: 'd2', routeId: 'RR-0418', offerId: op.id, body: 'Logiscal route offer: Wed Nov 18, start 7:30 AM at Round Rock Hub. About 16 to 20 stops, pays $152.00. Reply YES to accept or NO to pass. Expires in 15 min.', time: op.sentAt });
   // RR-0419 accepted by d9 (now deactivated)
   const d9o = acc('RR-0419', 'd9', 14, 11, { reconfirmSentAt: null, reconfirmedAt: null, finalSentAt: null, finalConfirmedAt: null });
   ev(d9o.id, 'Driver deactivated', 'Airtable sync', 'Logiscal Status changed to Inactive', T(16, 14, 10));
@@ -1021,7 +1021,7 @@ addRoute('BD-0215', 22, 'A2', 10, { lane: 'L3', skip: 3 });
   // BD-0206 accepted by d1
   acc('BD-0206', 'd5', 15, 10, { reconfirmSentAt: null, reconfirmedAt: null, finalSentAt: null, finalConfirmedAt: null });
   // inbox seeds
-  mkMsg({ dir: 'out', driverId: 'd7', routeId: 'RR-0417', body: 'Gigee route offer: Wed Nov 18, start 7:30 AM at Round Rock Hub. About 12 to 16 stops, pays $123.50. Reply YES to accept or NO to pass. Expires in 15 min.', status: 'failed', error: 'Twilio 30003: unreachable destination handset', time: T(16, 13, 5) });
+  mkMsg({ dir: 'out', driverId: 'd7', routeId: 'RR-0417', body: 'Logiscal route offer: Wed Nov 18, start 7:30 AM at Round Rock Hub. About 12 to 16 stops, pays $123.50. Reply YES to accept or NO to pass. Expires in 15 min.', status: 'failed', error: 'Twilio 30003: unreachable destination handset', time: T(16, 13, 5) });
   mkMsg({ dir: 'in', driverId: 'd3', body: 'can I start at 5 instead of 430 on the next one', time: T(16, 14, 2) });
   mkMsg({ dir: 'out', driverId: 'd3', body: 'Reply YES or NO to your latest route offer. Questions? Contact (512) 555-0100.', time: T(16, 14, 2) });
   mkMsg({ dir: 'in', driverId: 'd8', body: 'STOP', time: T(14, 19, 40) });
@@ -1205,7 +1205,7 @@ function inbound(d, text) {
   const t = text.trim(); const up = t.toUpperCase();
   const m = mkMsg({ dir: 'in', driverId: d.id, body: t });
   if (up === 'STOP') { d.optOut = true; m.kind = 'optout'; toast(`${d.name} opted out. Blocked from offers until START.`); render(); return; }
-  if (up === 'START') { d.optOut = false; m.kind = 'optin'; sendSms(d, 'You are opted back in to Gigee route texts.', null, null); toast(`${d.name} opted back in.`); render(); return; }
+  if (up === 'START') { d.optOut = false; m.kind = 'optin'; sendSms(d, 'You are opted back in to Logiscal route texts.', null, null); toast(`${d.name} opted back in.`); render(); return; }
   if (up === 'HELP') { sendSms(d, fill(S.settings.templates.help, S.routes[0], d), null, null); render(); return; }
   const yes = ['YES', 'Y', 'ACCEPT'].includes(up), no = ['NO', 'N', 'DECLINE'].includes(up);
   const open = S.offers.find(o => o.driverId === d.id && o.open);
@@ -1953,7 +1953,7 @@ function vSettings() {
   const tabs = [['areas', 'Areas and hubs'], ['lanes', 'Lanes'], ['templates', 'Message templates'], ['timing', 'Timing rules'], ['weights', 'Score weights'], ['mapping', 'Column mapping'], ['users', 'Users']];
   let body = '';
   if (S.setTab === 'lanes') body = `<div class="panel" style="margin-bottom:12px"><h3>Driver already set in Onfleet</h3><p class="small muted" style="margin:0 0 10px">When a route arrives with a driver on it in Onfleet, that driver is the preferred driver. The app still texts them to confirm.</p>
-    <div class="radio" style="max-width:600px"><label><input type="radio" name="pre" ${t.preConfirm === 'auto' ? 'checked' : ''} onchange="S.settings.preConfirm='auto';render()"><span><b>Text them to confirm on import</b><br><span class="small muted">Confirm text with exact pay, stop range, cities, miles and hours. Never during quiet hours.</span></span></label><label><input type="radio" name="pre" ${t.preConfirm === 'click' ? 'checked' : ''} onchange="S.settings.preConfirm='click';render()"><span><b>One-click confirm</b><br><span class="small muted">The dispatcher sends each confirm from the board.</span></span></label></div>
+    <div class="radio" style="max-width:600px"><label><input type="radio" name="pre" ${t.preConfirm === 'click' ? 'checked' : ''} onchange="S.settings.preConfirm='click';render()"><span><b>One-click confirm (default)</b><br><span class="small muted">Nothing is texted on upload. The dispatcher sends each confirm from the board.</span></span></label><label><input type="radio" name="pre" ${t.preConfirm === 'auto' ? 'checked' : ''} onchange="S.settings.preConfirm='auto';render()"><span><b>Text them to confirm on import</b><br><span class="small muted">Confirm text with exact pay, stop range, cities, miles and hours. Never during quiet hours.</span></span></label></div>
     <div class="form" style="margin-top:12px"><label>Confirm reply window (min)<input type="number" value="${t.preConfirmWindow}" onchange="S.settings.preConfirmWindow=Number(this.value)"></label><label>Recognize old routes by<select onchange="S.settings.laneKey=this.value;relinkAll();render();toast('Routes re-matched.')"><option value="addr" ${t.laneKey === 'addr' ? 'selected' : ''}>Delivery address</option><option value="name" ${t.laneKey === 'name' ? 'selected' : ''}>Address or customer name</option></select></label></div><p class="small muted" style="margin:10px 0 0">Address matching ignores the apartment number. Customer name helps when a subscriber moves within the same area.</p></div><div class="panel"><h3>Lane rule</h3><p class="small muted" style="margin:0 0 10px">What the app does when an imported route matches a lane it has seen before.</p>
     <div class="radio" style="max-width:600px">
       <label><input type="radio" name="laneAuto" value="off" ${t.laneAuto === 'off' ? 'checked' : ''} onchange="S.settings.laneAuto='off';render()"><span><b>Off</b><br><span class="small muted">Match lanes and show history, but suggest no one.</span></span></label>
@@ -1981,7 +1981,7 @@ function renderPhone() {
   const el = $('#phone');
   el.innerHTML = `<div class="phone-head"><div class="row" style="justify-content:space-between"><span class="eyebrow">Driver phone · simulator</span><button class="btn sm ghost menu-btn" style="color:var(--phone-fg)" onclick="document.getElementById('phone').classList.remove('open')">Close</button></div>
     <select aria-label="Which driver's phone" onchange="S.phoneDriver=this.value;renderPhone()">${S.drivers.map(x => `<option value="${x.id}" ${x.id === d.id ? 'selected' : ''}>${x.name} · ${phoneFmt(x.phone)}</option>`).join('')}</select>
-    <div class="small" style="color:#8d9aa7">Texts from Gigee (512) 555-0100${d.optOut ? ' · <span style="color:#f08a80">opted out</span>' : ''}${open ? ` · <span style="color:#8fb2f0">open offer, <span data-countdown="${open.id}">${Math.ceil((open.expiresAt - now.getTime()) / 60000)} min left</span></span>` : ''}</div></div>
+    <div class="small" style="color:#8d9aa7">Texts from Logiscal (512) 555-0100${d.optOut ? ' · <span style="color:#f08a80">opted out</span>' : ''}${open ? ` · <span style="color:#8fb2f0">open offer, <span data-countdown="${open.id}">${Math.ceil((open.expiresAt - now.getTime()) / 60000)} min left</span></span>` : ''}</div></div>
     <div class="phone-thread" id="thread">${ms.length ? ms.map(m => `<div class="bubble ${m.dir}">${esc(m.body)}<span class="mt">${fmtTime(m.time)}${m.status === 'failed' ? ' · not delivered' : ''}</span></div>`).join('') : '<div class="sys">No texts yet</div>'}</div>
     <div class="phone-reply"><div class="quick">
       <button class="yes" onclick="inbound(driver('${d.id}'),'YES')">YES</button><button onclick="inbound(driver('${d.id}'),'NO')">NO</button><button onclick="inbound(driver('${d.id}'),'what time is pickup?')">Something else</button><button onclick="inbound(driver('${d.id}'),'${d.optOut ? 'START' : 'STOP'}')">${d.optOut ? 'START' : 'STOP'}</button>
