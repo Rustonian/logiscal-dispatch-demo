@@ -345,6 +345,20 @@ Scope: heads-up, reconfirm and final confirm texts; Needs attention; release wit
 
 Candidates, each to be scoped separately: Onfleet API assignment, automatic offer queue (offer the next best driver when one declines or expires), client-facing reports, Onfleet API instead of CSV.
 
+## Round 2 additions (Nov 16, 2026)
+
+### Onfleet task export
+The real export is one row per task. Each `Driver Number` is one route. Rows whose `taskType` is not `dropoff` are the hub start and are skipped. The market and hub come from `facilityId`, falling back to the `workerName` suffix (for example `INDY_LOGISCAL`). Order ID is `orderId`, else `shortId`. Service date is `shippingDate`, else the date in `completeAfterTime`. `destinationLonLat` and `Task Number` give stop order, road miles and the first leg. App route names are hub code, month and day, and Driver Number (for example `IN-1018-02`). Rows are rejected for a missing address, a blank Driver Number, no service date, an unknown hub or a duplicate order ID; the rest of the file still imports.
+
+### Pricing by market
+Each market (a client in a city) holds its own parameters: client rate per drop and per B2B drop; driver base per drop per hub; extra per B2B drop and per apartment or unit stop; included route miles and a per-mile rate over that; included first-leg miles and a rate over that; an hourly floor; a target margin; a glide limit; rounding; and the speed, minutes per stop and load time used to estimate hours. Pay = base + extras + mileage + first leg, topped up to the floor for the estimated hours, with per-stop pay held within the glide limit of the lane's last run, then rounded. Margin = (client revenue − driver pay) ÷ client revenue; routes under target are flagged. Pay locks when the offer or confirm text goes out; parameter changes re-price only routes nobody has been texted about. Every change is logged with who and when. Pricing access is per user: edit, view (sees rates, revenue, margin) or none (sees only driver pay).
+
+### Driver already set in Onfleet
+When a route arrives with a `workerName`, that driver is the preferred driver. If they are in Airtable and eligible, the app texts them a confirm (setting: on import, or one click) with exact pay, a stop range, cities, miles and hours. If they are not in Airtable or not eligible, the route falls back to lane history and shows the reason. Recognition of old routes matches delivery addresses without the unit number, optionally also customer names (setting).
+
+### Onfleet check
+Each upload records the driver Onfleet has on each route. The Onfleet check screen lists routes for today through 3 days out as Matches, Waiting on driver, Set in Onfleet (accepted in the app, no driver in Onfleet) or Out of sync (Onfleet and the app disagree). A later file that moves an accepted route to a different driver flags it Needs attention, with "Keep current driver, I fixed Onfleet" or "Switch to Onfleet's driver". Writing the assignment back through the Onfleet API is a later phase.
+
 ## Open questions
 
 - [ ] **Onfleet export:** get a real sample file. Confirm the exact columns for order ID, Onfleet route ID, order status (for cancellations), and area or hub.
