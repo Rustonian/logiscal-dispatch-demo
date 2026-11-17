@@ -152,6 +152,7 @@ td.r,th.r{text-align:right}
 .timeline .t{font-family:var(--mono);color:var(--muted)}
 .notice{border-radius:var(--radius);padding:10px 12px;font-size:13px;display:flex;gap:10px;align-items:flex-start}
 .notice.warn{background:var(--warn-bg);color:var(--warn)}
+.mk-tbl td.flag{background:var(--warn-bg);color:var(--warn);font-weight:600}.mk-tbl td.bad{background:var(--crit-bg);color:var(--crit);font-weight:600}.mk-tbl tr{cursor:pointer}.mk-tbl tr:hover td{background:var(--surface-2)}.mk-tbl tr:hover td.flag{background:var(--warn-bg)}.mk-tbl tr:hover td.bad{background:var(--crit-bg)}.mk-tbl th,.mk-tbl td{white-space:nowrap;padding-left:8px;padding-right:8px}.mk-tbl th:first-child,.mk-tbl td:first-child{position:sticky;left:0;background:var(--surface);z-index:1}
 .notice.crit{background:var(--crit-bg);color:var(--crit)}
 .notice.info{background:var(--info-bg);color:var(--info)}
 .notice.ok{background:var(--ok-bg);color:var(--ok)}
@@ -1337,19 +1338,76 @@ function setParam(mid, key, val, isArea) {
 function pct(x) { return x == null ? '–' : Math.round(x * 100) + '%'; }
 function marginCell(pr) { if (pr.margin == null) return '–'; return `<span style="color:${pr.below ? 'var(--warn)' : 'var(--ok)'}">${pct(pr.margin)}</span>`; }
 
+// Overview columns: [key, label, unit, getter]. Base per drop is per hub, so the market shows its hubs' average.
+const MCOLS = [
+  ['clientRate', 'Client rate', '$', m => m.p.clientRate],
+  ['clientRateB2B', 'B2B rate', '$', m => m.p.clientRateB2B],
+  ['base', 'Base per drop', '$', m => m.areas.length ? m.areas.reduce((s, id) => s + area(id).ppd, 0) / m.areas.length : null],
+  ['b2bBonus', 'B2B extra', '$', m => m.p.b2bBonus],
+  ['aptBonus', 'Apt extra', '$', m => m.p.aptBonus],
+  ['mileRate', 'Per mile', '$', m => m.p.mileRate],
+  ['floor', 'Hourly floor', '$/hr', m => m.p.floor],
+  ['targetMargin', 'Target margin', '%', m => m.p.targetMargin],
+  ['minPerStop', 'Min per stop', 'min', m => m.p.minPerStop],
+];
+const FLAG_PCT = 35; // flag a value this far from the median of all markets
+function median(xs) { const v = xs.filter(x => x != null && !isNaN(x)).sort((a, b) => a - b); if (!v.length) return null; const h = v.length >> 1; return v.length % 2 ? v[h] : (v[h - 1] + v[h]) / 2; }
+function marketStats(m) {
+  const rs = marketRoutes(m.id); let rev = 0, pay = 0, hrs = 0;
+  rs.forEach(r => { const pr = price(r); rev += pr.revenue; pay += payout(r); hrs += pr.hours || 0; });
+  return { n: rs.length, margin: rev ? (rev - pay) / rev : null, perHour: hrs ? pay / hrs : null };
+}
+// Per market: cells far from the median of all markets, plus hard checks that are wrong whatever the other markets say.
+function marketFlags(m) {
+  const out = [];
+  if (S.markets.length >= 3) MCOLS.forEach(([k, l, u, g]) => {
+    const v = g(m), md = median(S.markets.map(g)); if (v == null || !md) return;
+    const d = (v - md) / md * 100; if (Math.abs(d) >= FLAG_PCT) out.push({ k, sev: 'flag', msg: `${l} ${fmtVal(v, u)} is ${Math.round(Math.abs(d))}% ${d > 0 ? 'above' : 'below'} the ${fmtVal(md, u)} median` });
+  });
+  const base = MCOLS[2][3](m);
+  if (base != null && base >= m.p.clientRate) out.push({ k: 'base', sev: 'bad', msg: `Base per drop ${fmtVal(base, '$')} is not below the client rate ${fmtVal(m.p.clientRate, '$')}` });
+  if (m.p.clientRateB2B < m.p.clientRate) out.push({ k: 'clientRateB2B', sev: 'bad', msg: `B2B rate is below the regular client rate` });
+  if (m.p.targetMargin < 10 || m.p.targetMargin > 60) out.push({ k: 'targetMargin', sev: 'bad', msg: `Target margin ${m.p.targetMargin}% is outside 10 to 60%` });
+  const st = marketStats(m);
+  if (st.margin != null && st.margin * 100 < m.p.targetMargin) out.push({ k: 'margin', sev: 'bad', msg: `Open routes run ${pct(st.margin)} margin, under the ${m.p.targetMargin}% target` });
+  return out;
+}
+function fmtVal(v, u) { return u === '$' ? money(v) : u === '$/hr' ? money(v) + '/hr' : u === '%' ? Math.round(v * 10) / 10 + '%' : (Math.round(v * 100) / 100) + (u ? ' ' + u : ''); }
+function marketsOverview() {
+  const only = !!S.mkFlagged, q = (S.mkQ || '').toLowerCase();
+  const all = [...S.markets].sort((a, b) => a.name.localeCompare(b.name));
+  const withFlags = all.map(m => ({ m, f: marketFlags(m), st: marketStats(m) }));
+  const shown = withFlags.filter(x => (!only || x.f.length) && (!q || (x.m.name + ' ' + x.m.client + ' ' + (x.m.region || '')).toLowerCase().includes(q)));
+  const nFlag = withFlags.filter(x => x.f.length).length;
+  const med = Object.fromEntries(MCOLS.map(([k, , , g]) => [k, median(S.markets.map(g))]));
+  const cell = (x, k, v, u) => { const f = x.f.filter(y => y.k === k); const cls = f.some(y => y.sev === 'bad') ? 'bad' : f.length ? 'flag' : ''; return `<td class="r num ${cls}" ${f.length ? `title="${esc(f.map(y => y.msg).join('; '))}"` : ''}>${v == null ? '–' : fmtVal(v, u).replace(/ (min|mi)$/, '')}</td>`; };
+  return `<div class="counts" style="margin-bottom:12px"><div class="cnt"><div class="v num">${S.markets.length}</div><div class="k">Markets</div></div><div class="cnt"><div class="v num">${S.areas.length}</div><div class="k">Hubs</div></div><div class="cnt ${nFlag ? 'missing' : 'new'}"><div class="v num">${nFlag}</div><div class="k">Markets to check</div></div><div class="cnt"><div class="v num">${withFlags.reduce((s, x) => s + x.st.n, 0)}</div><div class="k">Open routes</div></div></div>
+  <div class="row" style="margin-bottom:10px;gap:14px"><input placeholder="Find a market, client or region" value="${esc(S.mkQ || '')}" oninput="S.mkQ=this.value;clearTimeout(window._mkq);window._mkq=setTimeout(()=>{render();const i=document.querySelector('#main input[placeholder^=Find]');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)" style="min-width:260px"><label class="small" style="display:flex;gap:6px;align-items:center"><input type="checkbox" ${only ? 'checked' : ''} onchange="S.mkFlagged=this.checked;render()"> Only markets with something to check</label></div>
+  <div class="panel"><div class="tbl"><table class="mk-tbl"><thead><tr><th>Market</th><th>Check</th><th>Region</th><th class="r">Hubs</th>${MCOLS.map(([, l, u]) => `<th class="r">${l}</th>`).join('')}<th class="r">Open routes</th><th class="r">Avg $/hr</th><th class="r">Margin</th></tr></thead><tbody>
+  ${shown.map(x => `<tr onclick="S.mkt='${x.m.id}';render();$('#main').scrollTop=0"><td><b>${esc(x.m.name)}</b><div class="small muted">${esc(x.m.client)}</div></td><td>${x.f.length ? `<span class="pill ${x.f.some(y => y.sev === 'bad') ? 'rescue' : 'attention'}" title="${esc(x.f.map(y => y.msg).join('; '))}">${x.f.length} to check</span>` : '<span class="pill accepted">OK</span>'}</td><td class="small">${esc(x.m.region || '')}</td><td class="r num">${x.m.areas.length}</td>${MCOLS.map(([k, , u, g]) => cell(x, k, g(x.m), u)).join('')}<td class="r num">${x.st.n}</td><td class="r num">${x.st.perHour != null ? money(x.st.perHour) : '–'}</td>${cell(x, 'margin', x.st.margin != null ? x.st.margin * 100 : null, '%')}</tr>`).join('') || `<tr><td colspan="${MCOLS.length + 7}" class="muted small">No markets match.</td></tr>`}
+  </tbody><tfoot><tr><td class="small muted">Median</td><td></td><td></td><td></td>${MCOLS.map(([k, , u]) => `<td class="r num small muted">${med[k] == null ? '–' : fmtVal(med[k], u).replace(/ (min|mi)$/, '')}</td>`).join('')}<td colspan="4"></td></tr></tfoot></table></div></div>
+  <p class="small muted" style="margin:8px 0 0">Amber: more than ${FLAG_PCT}% away from the median of all markets${S.markets.length < 3 ? ' (needs 3 or more markets)' : ''}. Red: wrong on its own, such as base pay at or above the client rate, a B2B rate under the regular rate, or open routes under the target margin. Hover a highlighted cell for the reason; click a row to open the market.</p>`;
+}
 function vMarkets() {
   const acc = canSeePricing() ? 'edit' : 'none';
   const head = `<div class="page-head"><div><h1>Markets and pricing</h1><p>One set of pricing parameters per market. Every uploaded route is priced from its market, and that price is what the offer text says.</p></div></div>`;
   if (acc === 'none') return head + `<div class="notice warn"><div>Markets and pricing is for admins only. Switch the header to <b>Mike Patel · Client admin</b>.</div></div>`;
-  S.mkt = S.mkt || 'M2'; const m = market(S.mkt), p = m.p, ed = acc === 'edit';
+  S.mkt = S.mkt || 'all';
+  const regions = [...new Set(S.markets.map(x => x.region || 'Other'))].sort();
+  const picker = `<div class="row"><select aria-label="Market" onchange="S.mkt=this.value;render()" style="min-width:260px"><option value="all" ${S.mkt === 'all' ? 'selected' : ''}>All markets: overview (${S.markets.length})</option>${regions.map(rg => `<optgroup label="${esc(rg)}">${S.markets.filter(x => (x.region || 'Other') === rg).sort((a, b) => a.name.localeCompare(b.name)).map(x => `<option value="${x.id}" ${S.mkt === x.id ? 'selected' : ''}>${esc(x.name)} · ${esc(x.client)}${marketFlags(x).length ? ` (${marketFlags(x).length} to check)` : ''}</option>`).join('')}</optgroup>`).join('')}</select></div>`;
+  const headP = head.replace('</div></div>', `</div>${picker}</div>`);
+  if (S.mkt === 'all' || !market(S.mkt)) return headP + marketsOverview();
+  const m = market(S.mkt), p = m.p, ed = acc === 'edit';
   const inp = (k, v, unit) => `<label>${PLABEL[k]} <span class="muted">(${unit})</span><input type="number" step="any" value="${v}" ${ed ? '' : 'disabled'} onchange="setParam('${m.id}','${k}',this.value)"></label>`;
   const rs = marketRoutes(m.id);
   const c = S.calc; const cr = priceCore(m, area(m.areas[0]).ppd, { n: c.n, apt: c.apt, b2b: c.b2b, miles: c.miles, first: c.first }, null);
   const tot = rs.reduce((s, r) => { const pr = price(r); s.rev += pr.revenue; s.pay += payout(r); return s; }, { rev: 0, pay: 0 });
-  return head + `<div class="tabs">${S.markets.map(x => `<button class="${S.mkt === x.id ? 'active' : ''}" onclick="S.mkt='${x.id}';render()">${x.name}<span class="n">${x.client}</span></button>`).join('')}</div>
+  const fl = marketFlags(m);
+  return headP + `<p class="small" style="margin:-4px 0 12px"><a style="cursor:pointer" onclick="S.mkt='all';render()">All markets</a> · ${esc(m.name)}</p>
+  ${fl.length ? `<div class="notice warn" style="margin-bottom:12px"><div><b>${fl.length} value${fl.length > 1 ? 's' : ''} to check:</b> ${fl.map(f => esc(f.msg)).join('; ')}.</div></div>` : ''}
   <div class="two">
     <div class="stack">
-      <div class="panel"><h3>${m.name} <span class="muted small">${m.client}</span></h3><dl class="kv"><dt>Region</dt><dd>${m.region}</dd><dt>Regional Lead</dt><dd>${m.lead}</dd><dt>Hubs</dt><dd>${m.areas.map(id => `${area(id).hub} <span class="muted small">(${area(id).name}${area(id).facility ? ', Onfleet facility ' + area(id).facility : ''})</span>`).join('<br>')}</dd><dt>Client rate source</dt><dd>${m.rateSource}</dd><dt>Recognized in files by</dt><dd class="mono small">${m.areas.map(id => area(id).facility ? 'facilityId ' + area(id).facility : '').filter(Boolean).concat(m.codes.map(x => 'workerName …' + x + '_LOGISCAL')).join(', ') || 'Austin sample only'}</dd></dl></div>
+      <div class="panel"><h3>${m.name} <span class="muted small">${m.client}</span></h3><dl class="kv"><dt>Region</dt><dd>${m.region}</dd><dt>Regional Lead</dt><dd>${m.lead}</dd><dt>Hubs</dt><dd>${m.areas.map(id => `${area(id).hub} <span class="muted small">(${area(id).name}${area(id).facility ? ', Onfleet facility ' + area(id).facility : ''})</span>`).join('<br>')}</dd><dt>Client rate source</dt><dd>${m.rateSource}</dd><dt>Recognized in files by</dt><dd class="mono small">${m.areas.map(id => area(id).facility ? 'facilityId ' + area(id).facility : '').filter(Boolean).concat(m.codes.map(x => 'workerName …' + x + '_LOGISCAL')).join(', ') || 'Not set yet: no facility ID or worker code'}</dd></dl></div>
       ${PARAMS.map(([g, ks]) => `<div class="panel"><h3>${g}</h3>${g === 'Driver pay by effort' ? `<div class="form" style="margin-bottom:10px">${m.areas.map(id => `<label>${area(id).name} base per drop <span class="muted">($)</span><input type="number" step="any" value="${area(id).ppd}" ${ed ? '' : 'disabled'} onchange="setParam('${m.id}','${id}',this.value,true)"></label>`).join('')}</div>` : ''}<div class="form">${ks.map(([k, , u]) => inp(k, p[k], u)).join('')}</div>${g === 'Guardrails' ? '<p class="small muted" style="margin:8px 0 0">The floor wins over everything: pay never goes under the floor for the estimated hours. Glide eases a lane\'s pay toward the new number over several weeks instead of jumping.</p>' : g === 'Time estimate' ? '<p class="small muted" style="margin:8px 0 0">Hours = load time + road miles ÷ speed + stops × minutes per stop. Road miles are the straight-line path through the stops in Onfleet order × 1.25.</p>' : ''}</div>`).join('')}
     </div>
     <div class="stack">
@@ -1607,7 +1665,7 @@ const NAV = [
   { id: 'markets', name: 'Markets and pricing', group: 'Reference' }, { id: 'coverage', name: 'Coverage', group: 'Reference' }, { id: 'lanes', name: 'Lanes', group: 'Reference' }, { id: 'drivers', name: 'Drivers', group: 'Reference' }, { id: 'settings', name: 'Settings', group: 'Reference' },
 ];
 function go(screen, params = {}) { S.screen = screen; S.params = params; render(); $('#main').scrollTop = 0; }
-function render() { const cm = $('#clientMarkets'); if (cm) cm.textContent = 'Client: Logiscal · ' + S.markets.map(m => m.name).join(', '); renderNav(); renderMain(); renderPhone(); }
+function render() { const cm = $('#clientMarkets'); if (cm) cm.textContent = 'Client: Logiscal · ' + (S.markets.length > 4 ? S.markets.length + ' markets' : S.markets.map(m => m.name).join(', ')); renderNav(); renderMain(); renderPhone(); }
 function renderNav() {
   const att = S.routes.filter(r => r.status === 'Needs attention' || (r.attention && r.status !== 'Cancelled')).length;
   const closeN = closeoutRoutes().filter(r => !r.approved).length;

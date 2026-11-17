@@ -8,7 +8,7 @@ A clickable, single-file prototype of the Logiscal Route Dispatch app described 
 
 Logiscal uploads its Onfleet task export (the real column layout: each Driver Number is one route, hub rows are skipped), the app prices every route from its market's parameters, recognizes routes it has seen before by their stops, and a dispatcher offers each route to one Gigee driver at a time by text. Drivers reply YES or NO on the simulated phone panel on the right. Driver records and eligibility come from Airtable; the app only reads them.
 
-Screens: Dispatch board, Coverage (routes vs active drivers plus bench, per area and day), Site check-in, Upload routes (drop a real Onfleet export), Needs attention, Daily closeout, Markets and pricing (admins only), Route detail (with Adjust route), Driver picker, Lanes, Drivers, Settings.
+Screens: Dispatch board, Coverage (routes vs active drivers plus bench, per area and day), Site check-in, Upload routes (drop a real Onfleet export), Needs attention, Daily closeout, Markets and pricing (admins only; pick a market from a dropdown, or the All markets overview table that flags values far from the median or wrong on their own), Route detail (with Adjust route), Driver picker, Lanes, Drivers, Settings.
 
 ## Demo conventions
 
