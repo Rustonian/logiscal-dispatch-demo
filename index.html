@@ -1166,7 +1166,7 @@ function noShow(r) {
   toast(msg); render();
 }
 
-/* ---------------- Staffing health ---------------- */
+/* ---------------- Coverage ---------------- */
 function staffing(dayOff, areaIds) {
   return areaIds.map(aid => {
     const rs = S.routes.filter(r => r.area === aid && !r.history && r.status !== 'Cancelled' && dayOffset(r) === dayOff);
@@ -1181,14 +1181,17 @@ function staffing(dayOff, areaIds) {
   });
 }
 function requestRecruiting(aid, date, n) { S.recruitRequests.push({ area: aid, date, n, by: actorName(), at: now.getTime() }); toast(`Recruiting request sent to Gigee ops: ${n} driver${n > 1 ? 's' : ''} for ${area(aid).name}.`); render(); }
-function healthHtml() {
-  if (S.boardTab === 4) return '';
-  const ids = S.areaFilter === 'all' ? S.areas.map(a => a.id) : [S.areaFilter];
-  const rows = staffing(S.boardTab, ids).filter(x => x.routes);
-  if (!rows.length) return '';
-  return `<div class="panel health" style="margin-bottom:14px"><h3>Staffing health <span class="muted small">routes vs active drivers + ${S.settings.benchPct}% bench</span></h3><div class="tbl"><table><thead><tr><th>Area</th><th class="r">Routes</th><th class="r">Target (+${S.settings.benchPct}%)</th><th class="r">Active drivers</th><th class="r">Booked</th><th class="r">Bench free</th><th class="r">Open routes</th><th>Coverage</th></tr></thead><tbody>
-  ${rows.map(x => `<tr><td>${x.a.name}</td><td class="r num">${x.routes}</td><td class="r num">${x.target}</td><td class="r num">${x.active}</td><td class="r num">${x.booked}</td><td class="r num">${x.bench}</td><td class="r num">${x.open}</td><td class="st">${x.short ? `<span class="pill attention">Short ${x.short}</span> ${x.req ? `<span class="small muted">Recruiting asked ${fmtTime(x.req.at)}</span>` : `<button class="btn sm" onclick="requestRecruiting('${x.a.id}','${x.date}',${x.short})">Ask Gigee to recruit</button>`}` : '<span class="pill accepted">Healthy</span>'}</td></tr>`).join('')}
-  </tbody></table></div><p class="small muted" style="margin:6px 0 0">Active means active in Airtable and not opted out. Gigee recruits only when an area drops below target.</p></div>`;
+function vCoverage() {
+  const sel = S.covTab || 0;
+  const ids = S.areas.map(a => a.id);
+  const days = [0, 1, 2, 3, 4, 5, 6].map(i => { const d = new Date(now.getTime() + i * DAY); const rows = staffing(i, ids).filter(x => x.routes); return { i, label: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : `${DOW[d.getDay()]} ${d.getDate()}`, rows, short: rows.filter(x => x.short).length }; });
+  const cur = days[sel];
+  const head = `<div class="page-head"><div><h1>Coverage</h1><p>Routes vs active drivers for each area, with a ${S.settings.benchPct}% bench on top. Active means active in Airtable and not opted out. Gigee recruits only when an area drops below target.</p></div></div>`;
+  const tabs = `<div class="tabs">${days.map(d => `<button class="${d.i === sel ? 'active' : ''}" onclick="S.covTab=${d.i};render()">${d.label}<span class="n">${d.short ? `${d.short} short` : d.rows.length ? 'ok' : '0'}</span></button>`).join('')}</div>`;
+  if (!cur.rows.length) return head + tabs + `<p class="muted">No routes on this day yet. Coverage shows once routes are uploaded.</p>`;
+  return head + tabs + `<div class="panel health"><div class="tbl"><table><thead><tr><th>Area</th><th class="r">Routes</th><th class="r">Target (+${S.settings.benchPct}%)</th><th class="r">Active drivers</th><th class="r">Booked</th><th class="r">Bench free</th><th class="r">Open routes</th><th>Coverage</th></tr></thead><tbody>
+  ${cur.rows.map(x => `<tr><td>${x.a.name}<div class="small muted">${esc(x.a.hub)}</div></td><td class="r num">${x.routes}</td><td class="r num">${x.target}</td><td class="r num">${x.active}</td><td class="r num">${x.booked}</td><td class="r num">${x.bench}</td><td class="r num">${x.open}</td><td class="st">${x.short ? `<span class="pill attention">Short ${x.short}</span><div style="margin-top:6px">${x.req ? `<span class="small muted">Recruiting asked ${fmtTime(x.req.at)}</span>` : `<button class="btn sm" onclick="requestRecruiting('${x.a.id}','${x.date}',${x.short})">Ask Gigee to recruit</button>`}</div>` : '<span class="pill accepted">Healthy</span>'}</td></tr>`).join('')}
+  </tbody></table></div></div><p class="small muted" style="margin:8px 0 0">Bench % is set in Settings, Timing rules.</p>`;
 }
 
 function actorName() { return { dispatcher: 'Dana Ruiz', admin: 'Mike Patel', lead: 'Terri Lang', ops: 'Ruston' }[S.role]; }
@@ -1597,7 +1600,7 @@ setInterval(() => {
 /* ---------------- Rendering ---------------- */
 const NAV = [
   { id: 'upload', name: 'Upload routes', group: 'Daily' }, { id: 'board', name: 'Dispatch board', group: 'Daily' }, { id: 'attention', name: 'Needs attention', group: 'Daily' }, { id: 'checkin', name: 'Site check-in', group: 'Daily' }, { id: 'closeout', name: 'Daily closeout', group: 'Daily' },
-  { id: 'markets', name: 'Markets and pricing', group: 'Reference' }, { id: 'lanes', name: 'Lanes', group: 'Reference' }, { id: 'drivers', name: 'Drivers', group: 'Reference' }, { id: 'settings', name: 'Settings', group: 'Reference' },
+  { id: 'markets', name: 'Markets and pricing', group: 'Reference' }, { id: 'coverage', name: 'Coverage', group: 'Reference' }, { id: 'lanes', name: 'Lanes', group: 'Reference' }, { id: 'drivers', name: 'Drivers', group: 'Reference' }, { id: 'settings', name: 'Settings', group: 'Reference' },
 ];
 function go(screen, params = {}) { S.screen = screen; S.params = params; render(); $('#main').scrollTop = 0; }
 function render() { renderNav(); renderMain(); renderPhone(); }
@@ -1607,7 +1610,7 @@ function renderNav() {
   const ciN = checkinRoutes().filter(r => r.driverId && r.status !== 'Offered' && !r.checkin).length; const attN = att;
   let g = ''; $('#nav').innerHTML = NAV.filter(n => n.id !== 'markets' || canSeePricing()).map(n => { const gh = n.group !== g ? `<div class="group">${n.group}</div>` : ''; g = n.group; const c = n.id === 'attention' ? attN : n.id === 'closeout' ? closeN : n.id === 'checkin' ? ciN : 0; return gh + `<button class="${S.screen === n.id || (S.screen === 'route' && n.id === 'board') || (S.screen === 'driver' && n.id === 'drivers') || (S.screen === 'lane' && n.id === 'lanes') ? 'active' : ''}" onclick="go('${n.id}')">${n.name}${c ? `<span class="count ${n.id === 'attention' ? 'warn' : ''}">${c}</span>` : ''}</button>`; }).join('');
 }
-function renderMain() { const fn = { board: vBoard, upload: vUpload, route: vRoute, attention: vAttention, closeout: vCloseout, checkin: vCheckin, drivers: vDrivers, driver: vDriver, settings: vSettings, lanes: vLanes, lane: vLane, markets: vMarkets }[S.screen]; $('#main').innerHTML = fn(); }
+function renderMain() { const fn = { board: vBoard, upload: vUpload, route: vRoute, attention: vAttention, closeout: vCloseout, checkin: vCheckin, drivers: vDrivers, driver: vDriver, settings: vSettings, lanes: vLanes, lane: vLane, markets: vMarkets, coverage: vCoverage }[S.screen]; $('#main').innerHTML = fn(); }
 function laneLine(r) {
   const l = lane(r.laneId); if (!l) return r.laneMatch && !r.history ? `<div class="lane muted"><span class="ico" style="background:var(--surface-2);color:var(--muted)">?</span>No history for these stops</div>` : '';
   const pct = laneMatchPct(r), s = laneSuggestion(r), last = s && s.runs[0];
@@ -1655,7 +1658,6 @@ function vBoard() {
   return guide() + `<div class="page-head"><div><h1>Dispatch board</h1><p>${fmtDate(now)}. Routes are built in Onfleet and arrive with the CSV upload.</p></div>
     <div class="row"><select id="areaFilter" onchange="S.areaFilter=this.value;render()"><option value="all" ${S.areaFilter === 'all' ? 'selected' : ''}>All areas</option>${S.areas.map(a => `<option value="${a.id}" ${S.areaFilter === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}</select>${autoable.length ? `<button class="btn" title="Offer each recognized route to its last driver" onclick="runAutoOffer(${JSON.stringify(autoable.map(r => r.id)).replace(/"/g, "'")})">↻ Offer ${autoable.length} to last drivers</button>` : ''}<button class="btn" onclick="go('upload')">Upload CSV</button></div></div>
     <div class="tabs">${tabs.map(([n, i]) => `<button class="${S.boardTab === i ? 'active' : ''}" onclick="S.boardTab=${i};render()">${n}<span class="n">${tabCount(i)}</span></button>`).join('')}</div>
-    ${healthHtml()}
     <div class="chips">${Object.entries(counts).filter(([k, v]) => v || k !== 'Cancelled').map(([k, v]) => `<span class="chip">${k} <b>${v}</b></span>`).join('')}${rescue.length ? `<span class="chip" style="border-color:var(--crit);color:var(--crit)">Rescue <b>${rescue.length}</b></span>` : ''}</div>
     ${rescue.length ? `<div class="group-title"><h3 style="color:var(--crit)">Rescue</h3><span class="n">pinned</span></div><div class="cards">${rescue.map(card).join('')}</div>` : ''}
     ${group('Needs attention', all.filter(r => r.status === 'Needs attention' && !rescue.includes(r)))}
