@@ -127,6 +127,10 @@ main{overflow:auto;padding-block:18px 40px;padding-left:max(16px,env(safe-area-i
 .card .driver{display:flex;align-items:center;gap:8px;font-size:13px}
 .avatar{width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:12px;flex:none}
 .card .actions{display:flex;gap:6px;justify-content:flex-end;margin-top:2px}
+.card .cline{font-size:12px;color:var(--muted)}
+.card .cline.ok{color:var(--ok)}
+.card .cline.warn{color:var(--warn)}
+.card .cline.crit{color:var(--crit);font-weight:500}
 .card .onf-tick{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;padding:3px 8px;border:1px solid var(--line);border-radius:6px;user-select:none}
 .card .onf-tick:hover{border-color:var(--accent);color:var(--fg)}
 .card .onf-tick.on{color:var(--ok);border-color:var(--ok)}
@@ -1590,6 +1594,77 @@ if (BLANK) {
   // The clock starts at the real time so a real export lands on the right day tabs. It still runs one minute per second.
   START_NOW = new Date(); START_NOW.setSeconds(0, 0); now = new Date(START_NOW);
 }
+/* ---------------- Example routes: one per offer and confirm state, timed from the current clock ---------------- */
+const EX_DRIVERS = [['Andre Wallace', 'A1'], ['Brianna Cole', 'A1'], ['Carlos Mendez', 'A1'], ['Danielle Price', 'A2'], ['Eli Turner', 'A1'], ['Fiona Grant', 'A2'], ['Gabe Ortiz', 'A1'], ['Hana Kim', 'A2'], ['Isaiah Ross', 'A1'], ['Jade Moreno', 'A2'], ['Kyle Bennett', 'A1'], ['Lena Fox', 'A2'], ['Miles Carter', 'A1']];
+function loadExamples() {
+  if (S.routes.some(r => r.example)) { toast('Example routes are already on the board.'); return; }
+  const real = now.getTime(), at = min => { now = new Date(real + min * 60000); };
+  const q15 = ms => { const d = new Date(ms); d.setMinutes(Math.round(d.getMinutes() / 15) * 15, 0, 0); return d; };
+  const ds = S.drivers.length;
+  const drv = EX_DRIVERS.map(([name, a], i) => { const d = { id: 'dx' + (ds + i), gid: 'GG-' + (3000 + i), name, phone: '+1512555' + String(300 + i).padStart(4, '0'), area: a, tier: '', active: true, optOut: false, rec: 'recEX' + i, base: { offers: 8, answered: 8, accepted: 7, committed: 7, completed: 7, late: 0, early: 0, noshow: 0, confSent: 12, confOnTime: 11, rescues: 0, resp: 5 }, last: real - 3 * DAY, example: true }; S.drivers.push(d); return d; });
+  const mk = (name, area, startMs, stops, extra = {}) => { const s = q15(startMs), date = `${s.getFullYear()}-${String(s.getMonth() + 1).padStart(2, '0')}-${String(s.getDate()).padStart(2, '0')}`;
+    const r = Object.assign({ id: name, name, date, start: `${String(s.getHours()).padStart(2, '0')}:${String(s.getMinutes()).padStart(2, '0')}`, area, vehicle: stops > 13 ? 'Van' : 'SUV', status: 'Unassigned', rescue: false, driverId: null, offerId: null, onfleet: false, outcome: null, approved: null, exportId: null, paid: false, attention: null, laneId: null, laneMatch: null, laneManual: false, history: false, example: true, orders: mkOrders(area, stops, date) }, extra);
+    S.routes.push(r); return r; };
+  const H = h => real + h * 3600000;
+  // accepted earlier: offer sent and taken `ago` minutes back
+  const take = (r, d, ago) => { at(-ago); offerRoute(r, d, 'sms', { silent: true }); at(-ago + 6); acceptOffer(offer(r.offerId)); return offer(r.offerId); };
+  const dayBeforeOk = (r, ago) => { at(-ago); S.phoneDriver = null; sendCheck(r, 'reconfirm'); at(-ago + 9); inbound(driver(r.driverId), 'YES'); };
+  S.quiet = true; const keepRender = render; render = () => {};
+  try {
+    // Today
+    let r = mk('EX-01', 'A1', H(2), 14); take(r, drv[0], 2 * 1440); dayBeforeOk(r, 1440 - 60); at(-42); inbound(drv[0], 'car broke down, cant make it today sorry'); at(-40); release(r, 'Driver');
+    r = mk('EX-02', 'A1', H(3), 12); at(-3); offerRoute(r, drv[1], 'sms', { silent: true });
+    r = mk('EX-03', 'A2', H(1.5), 11); take(r, drv[3], 2 * 1440); dayBeforeOk(r, 1440 - 30); at(-45); sendCheck(r, 'final'); at(-15); silentOnCheck(r);
+    r = mk('EX-04', 'A1', H(2), 15); take(r, drv[2], 2 * 1440 + 60); dayBeforeOk(r, 1440); at(-8); sendCheck(r, 'final');
+    r = mk('EX-05', 'A2', H(5), 10); take(r, drv[5], 2 * 1440 + 90); dayBeforeOk(r, 1440 - 120);
+    r = mk('EX-06', 'A1', H(1), 13); take(r, drv[4], 2 * 1440 + 30); dayBeforeOk(r, 1440 + 60); at(-50); sendCheck(r, 'final'); at(-46); inbound(drv[4], 'YES'); r.onfleet = true; at(-5); checkIn(r.id, 'Arrived');
+    // Tomorrow
+    r = mk('EX-07', 'A2', H(24.5), 12); take(r, drv[7], 1440); at(-90); sendCheck(r, 'reconfirm'); at(-30); silentOnCheck(r);
+    r = mk('EX-08', 'A1', H(25.75), 16); take(r, drv[6], 1440 + 120); at(-15); sendCheck(r, 'reconfirm');
+    r = mk('EX-09', 'A1', H(20), 14); take(r, drv[8], 1440 + 200); dayBeforeOk(r, 360); r.onfleet = true;
+    r = mk('EX-10', 'A2', H(22), 9, { fromOnfleet: true, onfleetWorker: drv[9].name, onfleetDriverId: drv[9].id });
+    r = mk('EX-11', 'A1', H(23), 12); at(-60); offerRoute(r, drv[10], 'sms', { silent: true }); at(-45); expireOffer(offer(r.offerId));
+    r = mk('EX-12', 'A2', H(26), 10); at(-120); offerRoute(r, drv[11], 'sms', { silent: true }); at(-116); inbound(drv[11], 'NO');
+    // Two days out
+    r = mk('EX-13', 'A1', H(47), 13); take(r, drv[12], 600); at(-60); sendHeadsUp(r);
+  } finally { now = new Date(real); render = keepRender; S.quiet = false; }
+  S.phoneDriver = drv[2].id; S.boardTab = 0; S.screen = 'board';
+  toast('13 example routes added on Today, Tomorrow and two days out, named EX-01 to EX-13.'); render();
+}
+function removeExamples() {
+  const ids = new Set(S.routes.filter(r => r.example).map(r => r.id)), offs = new Set(S.offers.filter(o => ids.has(o.routeId)).map(o => o.id)), drs = new Set(S.drivers.filter(d => d.example).map(d => d.id));
+  S.routes = S.routes.filter(r => !ids.has(r.id)); S.offers = S.offers.filter(o => !offs.has(o.id)); S.events = S.events.filter(e => !offs.has(e.offerId));
+  S.messages = S.messages.filter(m => !drs.has(m.driverId) && !ids.has(m.routeId)); S.drivers = S.drivers.filter(d => !drs.has(d.id)); S.sim = S.sim.filter(x => !drs.has(x.driverId));
+  if (drs.has(S.phoneDriver)) S.phoneDriver = S.drivers[0] ? S.drivers[0].id : null;
+  toast('Example routes and drivers removed.'); render();
+}
+// One line on a board tile saying where the offer or the day-before / day-of confirm stands.
+function confirmLine(r) {
+  const t = ms => new Date(ms).toDateString() === now.toDateString() ? fmtTime(ms) : fmtDT(ms);
+  const line = (cls, txt) => `<div class="cline ${cls}">${txt}</div>`;
+  const o = r.offerId && offer(r.offerId), d = driver(r.driverId);
+  if (r.status === 'Unassigned') {
+    const last = S.offers.filter(x => x.routeId === r.id && !x.open).sort((a, b) => b.sentAt - a.sentAt)[0]; if (!last) return '';
+    const n = shortName(driver(last.driverId));
+    if (last.outcome === 'Expired') return line('warn', `Offer to ${n} expired with no reply`);
+    if (last.outcome === 'Declined') return line('muted', `${n} passed (replied NO ${t(last.respondedAt)})`);
+    if (last.outcome === 'Late bail') return line('crit', `${n} dropped it ${t(last.releasedAt)}, ${last.hoursBefore} h before pickup`);
+    if (last.outcome === 'Early release') return line('muted', `${n} released it ${t(last.releasedAt)}`);
+    if (last.outcome === 'Withdrawn') return line('muted', `Offer to ${n} withdrawn`);
+    return '';
+  }
+  if (!o || !d || !['Accepted', 'Needs attention'].includes(r.status)) return '';
+  const silent = r.status === 'Needs attention';
+  if (o.pending === 'change') return line('warn', 'Change notice sent, waiting for YES');
+  if (o.finalConfirmedAt) return line('ok', `✓ Confirmed for today ${t(o.finalConfirmedAt)}`);
+  if (o.pending === 'final') return silent ? line('crit', `No reply to the day-of confirm sent ${t(o.finalSentAt)}`) : line('warn', `Day-of confirm sent ${t(o.finalSentAt)}, waiting for YES`);
+  if (dayOffset(r) === 0) { const due = routeStart(r) - S.settings.finalHours * 3600000; return line('warn', `Not confirmed for today. Day-of confirm ${due > now.getTime() ? 'goes out ' + fmtTime(due) : 'is overdue'}${o.reconfirmedAt ? ' (day-before OK)' : ''}`); }
+  if (o.reconfirmedAt) return line('ok', `✓ Day-before confirmed ${t(o.reconfirmedAt)}`);
+  if (o.pending === 'reconfirm') return silent ? line('crit', `No reply to the day-before confirm sent ${t(o.reconfirmSentAt)}`) : line('warn', `Day-before confirm sent ${t(o.reconfirmSentAt)}, waiting for YES`);
+  const hu = S.events.filter(e => e.offerId === o.id && e.type === 'Heads-up sent').pop();
+  if (hu) return line('muted', `Heads-up sent ${t(hu.time)}. Day-before confirm goes out ${fmtDT(routeStart(r) - S.settings.reconfirmHours * 3600000)}`);
+  return line('muted', `Accepted ${t(o.acceptedAt)}. No checks sent yet`);
+}
 // A second Indianapolis export, as if pulled Thursday morning: Onfleet moved IN-1120-06 to Ben, and IN-1120-13 lost one order and gained two (net +1 stop). Every route is already in the app, so nothing imports; the preview points the dispatcher to Adjust route.
 function sampleIndyReexport() {
   const lines = document.getElementById('sampleIndy').textContent.trim().split('\n'); const out = [lines[0]]; let drop = true;
@@ -1711,9 +1786,10 @@ function vBoard() {
       <div class="meta"><span>${area(r.area).hub}</span><span><b>${[-1, 4].includes(S.boardTab) ? fmtDate(routeDate(r)) + ' ' : ''}${hhmm(r.start)}</b></span><span><b>${routeStops(r)}</b> stops${adjStops(r) ? ` <span class="muted">(${adjStops(r) > 0 ? '+' : ''}${adjStops(r)} adj)</span>` : ''}</span><span><b>${money(driverPay(r))}</b></span>${geoStats(r) ? (() => { const pr = price(r); return `<span>${Math.round(pr.miles)} mi · ${pr.hours.toFixed(1)} h</span>`; })() : `<span>${r.vehicle}</span>`}</div>
       ${laneLine(r)}
       ${r.rescue && !['Accepted', 'Completed', 'Cancelled'].includes(r.status) ? `<div class="pickup-in" data-pickup="${r.id}">Pickup in ${dur(routeStart(r) - now.getTime())}</div>` : ''}
-      ${r.attention ? `<div class="small" style="color:var(--warn)">${r.attention}</div>` : ''}
+      ${r.attention && !/^Silent on/.test(r.attention) ? `<div class="small" style="color:var(--warn)">${r.attention}</div>` : ''}
       ${r.noShow && !r.driverId ? `<div class="small" style="color:var(--crit)">${driver(r.noShow.driverId).name} no-show at ${fmtTime(r.noShow.at)}</div>` : ''}
       <div class="driver">${driverLine(r)}${r.status === 'Offered' && o ? `<span class="countdown" data-countdown="${o.id}" style="margin-left:auto">${Math.ceil((o.expiresAt - now.getTime()) / 60000)} min left</span>` : ''}${ciTag(r) ? `<span style="margin-left:auto">${ciTag(r)}</span>` : ''}</div>
+      ${confirmLine(r)}
       <div class="actions" onclick="event.stopPropagation()">
         ${r.status === 'Unassigned' && r.onfleetDriverId && !eligibility(driver(r.onfleetDriverId), r).length ? `<button class="btn sm primary" title="Onfleet already has this driver on the route" onclick="confirmOnfleet(route('${r.id}'),driver('${r.onfleetDriverId}'),false)">Confirm with ${shortName(driver(r.onfleetDriverId))}</button><button class="btn sm" onclick="openPicker('${r.id}','sms')">Other driver</button>` : r.status === 'Unassigned' ? (s && s.pick ? `<button class="btn sm primary" title="${esc(s.pick.why)}" onclick="offerRoute(route('${r.id}'),driver('${s.pick.d.id}'),'sms')">Offer to ${shortName(s.pick.d)}</button><button class="btn sm" onclick="openPicker('${r.id}','sms')">Other driver</button>` : `<button class="btn sm primary" onclick="openPicker('${r.id}','sms')">Offer</button>`) : ''}
         ${r.status === 'Offered' ? `<button class="btn sm" onclick="withdraw(route('${r.id}'))">Withdraw</button>` : ''}
@@ -1724,7 +1800,7 @@ function vBoard() {
   const group = (s, rs) => rs.length ? `<div class="group-title"><h3>${s}</h3><span class="n">${rs.length}</span></div><div class="cards">${rs.map(card).join('')}</div>` : '';
   const autoable = suggest ? all.filter(r => r.status === 'Unassigned' && r.laneId && laneSuggestion(r).pick) : [];
   return guide() + `<div class="page-head"><div><h1>Dispatch board</h1><p>${fmtDate(now)}. Routes are built in Onfleet and arrive with the CSV upload.</p></div>
-    <div class="row"><select id="areaFilter" onchange="S.areaFilter=this.value;render()"><option value="all" ${S.areaFilter === 'all' ? 'selected' : ''}>All areas</option>${S.areas.map(a => `<option value="${a.id}" ${S.areaFilter === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}</select>${autoable.length ? `<button class="btn" title="Offer each recognized route to its last driver" onclick="runAutoOffer(${JSON.stringify(autoable.map(r => r.id)).replace(/"/g, "'")})">↻ Offer ${autoable.length} to last drivers</button>` : ''}<button class="btn" onclick="go('upload')">Upload CSV</button></div></div>
+    <div class="row"><select id="areaFilter" onchange="S.areaFilter=this.value;render()"><option value="all" ${S.areaFilter === 'all' ? 'selected' : ''}>All areas</option>${S.areas.map(a => `<option value="${a.id}" ${S.areaFilter === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}</select>${autoable.length ? `<button class="btn" title="Offer each recognized route to its last driver" onclick="runAutoOffer(${JSON.stringify(autoable.map(r => r.id)).replace(/"/g, "'")})">↻ Offer ${autoable.length} to last drivers</button>` : ''}${S.routes.some(r => r.example) ? `<button class="btn" title="Take EX-01 to EX-13 and their example drivers off the board" onclick="removeExamples()">Remove examples</button>` : `<button class="btn" title="Adds 13 routes, one per offer and confirm state, timed from now" onclick="loadExamples()">Load example routes</button>`}<button class="btn" onclick="go('upload')">Upload CSV</button></div></div>
     <div class="tabs">${tabs.map(([n, i]) => `<button class="${S.boardTab === i ? 'active' : ''}" onclick="S.boardTab=${i};render()">${n}<span class="n">${tabCount(i)}</span></button>`).join('')}</div>
     <div class="chips">${Object.entries(counts).filter(([k, v]) => v || k !== 'Cancelled').map(([k, v]) => `<span class="chip">${k} <b>${v}</b></span>`).join('')}${rescue.length ? `<span class="chip" style="border-color:var(--crit);color:var(--crit)">Rescue <b>${rescue.length}</b></span>` : ''}</div>
     ${rescue.length ? `<div class="group-title"><h3 style="color:var(--crit)">Rescue</h3><span class="n">pinned</span></div><div class="cards">${rescue.map(card).join('')}</div>` : ''}
@@ -1734,7 +1810,7 @@ function vBoard() {
     ${group('Accepted', all.filter(r => r.status === 'Accepted'))}
     ${group('Completed', all.filter(r => r.status === 'Completed'))}
     ${group('Cancelled', all.filter(r => r.status === 'Cancelled'))}
-    ${all.length ? '' : '<p class="muted">No routes for this day yet. Upload an Onfleet file to add them.</p>'}`;
+    ${all.length ? '' : `<p class="muted">No routes for this day yet. Upload an Onfleet file to add them${S.routes.length ? '' : ', or <a href="#" onclick="loadExamples();return false">load example routes</a> to see every offer and confirm state'}.</p>`}`;
 }
 
 function vRoute() {
@@ -1987,7 +2063,7 @@ function renderPhone() {
   el.innerHTML = `<div class="phone-head"><div class="row" style="justify-content:space-between"><span class="eyebrow">Driver phone · simulator</span><button class="btn sm ghost menu-btn" style="color:var(--phone-fg)" onclick="document.getElementById('phone').classList.remove('open')">Close</button></div>
     <select aria-label="Which driver's phone" onchange="S.phoneDriver=this.value;renderPhone()">${S.drivers.map(x => `<option value="${x.id}" ${x.id === d.id ? 'selected' : ''}>${x.name} · ${phoneFmt(x.phone)}</option>`).join('')}</select>
     <div class="small" style="color:#8d9aa7">Texts from Logiscal (512) 555-0100${d.optOut ? ' · <span style="color:#f08a80">opted out</span>' : ''}${open ? ` · <span style="color:#8fb2f0">open offer, <span data-countdown="${open.id}">${Math.ceil((open.expiresAt - now.getTime()) / 60000)} min left</span></span>` : ''}</div></div>
-    <div class="phone-thread" id="thread">${ms.length ? ms.map(m => `<div class="bubble ${m.dir}">${esc(m.body)}<span class="mt">${fmtTime(m.time)}${m.status === 'failed' ? ' · not delivered' : ''}</span></div>`).join('') : '<div class="sys">No texts yet</div>'}</div>
+    <div class="phone-thread" id="thread">${ms.length ? ms.map(m => `<div class="bubble ${m.dir}">${esc(m.body)}<span class="mt">${new Date(m.time).toDateString() === now.toDateString() ? fmtTime(m.time) : fmtDT(m.time)}${m.status === 'failed' ? ' · not delivered' : ''}</span></div>`).join('') : '<div class="sys">No texts yet</div>'}</div>
     <div class="phone-reply"><div class="quick">
       <button class="yes" onclick="inbound(driver('${d.id}'),'YES')">YES</button><button onclick="inbound(driver('${d.id}'),'NO')">NO</button><button onclick="inbound(driver('${d.id}'),'what time is pickup?')">Something else</button><button onclick="inbound(driver('${d.id}'),'${d.optOut ? 'START' : 'STOP'}')">${d.optOut ? 'START' : 'STOP'}</button>
       ${open ? `<button onclick="expireOffer(offer('${open.id}'));render()">Stay silent ${Math.round((open.expiresAt - open.sentAt) / 60000)} min</button>` : ''}

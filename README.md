@@ -13,6 +13,7 @@ Screens: Dispatch board, Coverage (routes vs active drivers plus bench, per area
 ## Demo conventions
 
 - The app starts empty: no routes, drivers, lanes or history. Markets, hubs, settings and users are kept. Upload an Onfleet task export to fill it. Drivers on the file are added from the upload preview, and a hub the app doesn't know (new facilityId) can be added from the preview too, under a new market with pricing copied for now.
+- Load example routes (Dispatch board header) adds EX-01 to EX-13 in Austin with their own example drivers, timed from the current clock, one per offer and confirm state: today a late bail on Rescue, an open offer, silent on the day-of confirm, waiting on the day-of confirm, not yet confirmed for today, fully confirmed and arrived; tomorrow silent on the day-before confirm, waiting on it, day-before confirmed, an Onfleet driver ready to confirm with one click, an expired offer, a driver who passed; two days out a heads-up sent. Remove examples takes them and their drivers off again. Each tile shows a one-line confirm status.
 - The clock starts at the real current time and runs one demo minute per real second, so a 15 minute offer expires in 15 seconds.
 - Board tabs: Earlier (any route dated before today, shown only when there is one), Today, Tomorrow, the next two days by weekday, and Later. Earlier and Later cards show the route date.
 - Refresh the page to reset everything.
