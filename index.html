@@ -1514,7 +1514,7 @@ function confirmOnfleet(r, d, silent) { offerRoute(r, d, 'sms', { silent, actor:
 })();
 
 /* ---------------- Blank slate: no sample routes, drivers, lanes or history. Markets, hubs, settings and users stay. ---------------- */
-const BLANK = (() => { try { return /[?&]blank\b/.test(location.search) || localStorage.getItem('ld-blank') === '1'; } catch (e) { return /[?&]blank\b/.test(location.search); } })();
+const BLANK = (() => { const url = location.hash === '#blank' || /[?&]blank\b/.test(location.search); try { return url || localStorage.getItem('ld-blank') === '1'; } catch (e) { return url; } })();
 if (BLANK) {
   Object.assign(S, { routes: [], offers: [], messages: [], events: [], imports: [], exports: [], adjustments: [], recruitRequests: [], sim: [], lanes: [], drivers: [], uploadsDone: {}, importPreview: null, phoneDriver: null, boardTab: 0 });
   S.markets.forEach(m => m.log = []);
@@ -1523,7 +1523,9 @@ if (BLANK) {
 }
 function setBlank(on) {
   try { if (on) localStorage.setItem('ld-blank', '1'); else localStorage.removeItem('ld-blank'); } catch (e) { }
-  location.href = location.pathname + (on ? '?blank' : '');
+  try { if (on) location.hash = 'blank'; else if (location.hash === '#blank') history.replaceState(null, '', location.pathname + location.search.replace(/[?&]blank\b/, '')); } catch (e) { }
+  if (!on && /[?&]blank\b/.test(location.search)) { location.href = location.pathname; return; }
+  location.reload();
 }
 // A second Indianapolis export, as if pulled Thursday morning: Onfleet moved IN-1120-06 to Ben, and IN-1120-13 lost one order and gained two (net +1 stop). Every route is already in the app, so nothing imports; the preview points the dispatcher to Adjust route.
 function sampleIndyReexport() {
