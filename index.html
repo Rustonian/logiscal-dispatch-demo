@@ -387,6 +387,7 @@ td.r,th.r{text-align:right}
   .cap-acts .btn{padding:11px 4px}
 }
 @media (prefers-reduced-motion:reduce){.phone-dock{transition:none}}
+body.r-dispatcher [onclick*="go('lane'"] { pointer-events: none; cursor: default; color: inherit; text-decoration: none; }
 </style>
 </head>
 <body>
@@ -1605,6 +1606,8 @@ function market(id) { return S.markets.find(m => m.id === id); }
 function areaMarket(aid) { return market(area(aid).market); }
 function me() { return S.users.find(u => u.key === S.role) || S.users[0]; }
 function canSeePricing() { return ['admin', 'ops'].includes(S.role); } // Markets and pricing: admins only
+const DISPATCHER_HIDDEN = ['coverage', 'lanes', 'lane', 'settings', 'flow']; // Round 12: kept off the dispatcher view
+function canSeeScreen(id) { if (id === 'markets') return canSeePricing(); return !(S.role === 'dispatcher' && DISPATCHER_HIDDEN.includes(id)); }
 function hv(a, b) { const R = 3958.8, r = x => x * Math.PI / 180; const dLa = r(b[0] - a[0]), dLo = r(b[1] - a[1]); const x = Math.sin(dLa / 2) ** 2 + Math.cos(r(a[0])) * Math.cos(r(b[0])) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); }
 function geoStats(r) {
   const a = area(r.area); const os = r.orders.filter(o => o.status === 'active' && o.lat != null).sort((x, y) => (x.seq || 0) - (y.seq || 0));
@@ -2070,7 +2073,7 @@ const NAV = [
   { id: 'upload', name: 'Upload routes', group: 'Daily' }, { id: 'board', name: 'Dispatch board', group: 'Daily' }, { id: 'attention', name: 'Needs attention', group: 'Daily' }, { id: 'checkin', name: 'Site check-in', group: 'Daily' }, { id: 'closeout', name: 'Daily closeout', group: 'Daily' },
   { id: 'markets', name: 'Markets and pricing', group: 'Reference' }, { id: 'coverage', name: 'Coverage', group: 'Reference' }, { id: 'lanes', name: 'Lanes', group: 'Reference' }, { id: 'drivers', name: 'Drivers', group: 'Reference' }, { id: 'settings', name: 'Settings', group: 'Reference' }, { id: 'flow', name: 'How it works', group: 'Reference' },
 ];
-function go(screen, params = {}) { S.screen = screen; S.params = params; render(); $('#main').scrollTop = 0; }
+function go(screen, params = {}) { if (S.role !== 'captain' && !canSeeScreen(screen)) return; S.screen = screen; S.params = params; render(); $('#main').scrollTop = 0; }
 function render() { const ro = $('#role'); if (ro && ro.options[3]) ro.options[3].textContent = `${capUser().name} · Site captain`; const cm = $('#clientMarkets'); if (cm) cm.textContent = 'Client: Logiscal · ' + (S.markets.length > 4 ? S.markets.length + ' markets' : S.markets.map(m => m.name).join(', ')); renderNav(); renderMain(); renderPhone(); }
 function renderNav() {
   if (S.role === 'captain') {
@@ -2081,9 +2084,9 @@ function renderNav() {
   const att = S.routes.filter(r => r.status === 'Needs attention' || (r.attention && r.status !== 'Cancelled')).length;
   const closeN = closeoutRoutes().filter(r => !r.approved).length;
   const ciN = checkinRoutes().filter(r => r.driverId && r.status !== 'Offered' && !r.checkin).length; const attN = att;
-  let g = ''; $('#nav').innerHTML = NAV.filter(n => n.id !== 'markets' || canSeePricing()).map(n => { const gh = n.group !== g ? `<div class="group">${n.group}</div>` : ''; g = n.group; const c = n.id === 'attention' ? attN : n.id === 'closeout' ? closeN : n.id === 'checkin' ? ciN : 0; return gh + `<button class="${S.screen === n.id || (S.screen === 'route' && n.id === 'board') || (S.screen === 'driver' && n.id === 'drivers') || (S.screen === 'lane' && n.id === 'lanes') ? 'active' : ''}" onclick="go('${n.id}')">${n.name}${c ? `<span class="count ${n.id === 'attention' ? 'warn' : ''}">${c}</span>` : ''}</button>`; }).join('');
+  let g = ''; $('#nav').innerHTML = NAV.filter(n => canSeeScreen(n.id)).map(n => { const gh = n.group !== g ? `<div class="group">${n.group}</div>` : ''; g = n.group; const c = n.id === 'attention' ? attN : n.id === 'closeout' ? closeN : n.id === 'checkin' ? ciN : 0; return gh + `<button class="${S.screen === n.id || (S.screen === 'route' && n.id === 'board') || (S.screen === 'driver' && n.id === 'drivers') || (S.screen === 'lane' && n.id === 'lanes') ? 'active' : ''}" onclick="go('${n.id}')">${n.name}${c ? `<span class="count ${n.id === 'attention' ? 'warn' : ''}">${c}</span>` : ''}</button>`; }).join('');
 }
-function renderMain() { if (S.role === 'captain' && !CAP_SCREENS.includes(S.screen)) S.screen = 'captain'; if (S.role !== 'captain' && CAP_SCREENS.includes(S.screen)) S.screen = 'checkin'; const fn = { captain: vCaptain, hubqr: vHubQr, board: vBoard, upload: vUpload, route: vRoute, attention: vAttention, closeout: vCloseout, checkin: vCheckin, drivers: vDrivers, driver: vDriver, settings: vSettings, flow: vFlow, lanes: vLanes, lane: vLane, markets: vMarkets, coverage: vCoverage }[S.screen]; $('#main').innerHTML = fn(); if (S.screen === 'captain' && S.capQ) capFilter(S.capQ); }
+function renderMain() { document.body.classList.toggle('r-dispatcher', S.role === 'dispatcher'); if (S.role !== 'captain' && !canSeeScreen(S.screen)) S.screen = 'board'; if (S.role === 'captain' && !CAP_SCREENS.includes(S.screen)) S.screen = 'captain'; if (S.role !== 'captain' && CAP_SCREENS.includes(S.screen)) S.screen = 'checkin'; const fn = { captain: vCaptain, hubqr: vHubQr, board: vBoard, upload: vUpload, route: vRoute, attention: vAttention, closeout: vCloseout, checkin: vCheckin, drivers: vDrivers, driver: vDriver, settings: vSettings, flow: vFlow, lanes: vLanes, lane: vLane, markets: vMarkets, coverage: vCoverage }[S.screen]; $('#main').innerHTML = fn(); if (S.screen === 'captain' && S.capQ) capFilter(S.capQ); }
 function laneLine(r) {
   const l = lane(r.laneId); if (!l) return r.laneMatch && !r.history ? `<div class="lane muted"><span class="ico" style="background:var(--surface-2);color:var(--muted)">?</span>No history for these stops</div>` : '';
   const pct = laneMatchPct(r), s = laneSuggestion(r), last = s && s.runs[0];
