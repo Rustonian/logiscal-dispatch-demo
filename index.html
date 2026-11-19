@@ -133,6 +133,45 @@ main{overflow:auto;padding-block:18px 40px;padding-left:max(16px,env(safe-area-i
 .card .cline.crit{color:var(--crit);font-weight:500}
 .card .onf-tick{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;padding:3px 8px;border:1px solid var(--line);border-radius:6px;user-select:none}
 .card .onf-tick:hover{border-color:var(--accent);color:var(--fg)}
+.board-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;min-height:30px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface);flex:none}
+.seg button{background:none;border:0;padding:5px 12px;font:inherit;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.kanban{display:grid;grid-template-columns:repeat(4,minmax(205px,1fr));gap:10px;overflow-x:auto;padding-bottom:6px;align-items:start}
+.kcol{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);padding:8px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.kcol-h{display:flex;align-items:center;justify-content:space-between;padding:2px 4px}
+.kcol-h .n{font-family:var(--mono);color:var(--muted);font-size:12px}
+.kcol-b{display:flex;flex-direction:column;gap:8px}
+.kcol .card{padding:10px 12px}
+.kcol .card .actions{flex-wrap:wrap}
+.kempty{color:var(--muted);font-size:12px;text-align:center;padding:14px 0;border:1px dashed var(--line);border-radius:var(--radius)}
+.bsec{margin-bottom:10px}
+.bsec-h{display:flex;align-items:center;gap:10px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 12px;cursor:pointer;font:inherit;color:var(--fg);text-align:left}
+.bsec-h:hover{border-color:var(--accent)}
+.bsec-h .chev{width:12px;color:var(--muted)}
+.bsec-h .n{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.bsec:not(.shut) .bsec-h{border-radius:var(--radius) var(--radius) 0 0;border-bottom:0}
+.tbl-wrap{border:1px solid var(--line);border-radius:0 0 var(--radius) var(--radius);overflow-x:auto;background:var(--surface)}
+.btable tr{cursor:pointer}
+.btable tbody tr:hover td{background:var(--surface-2)}
+.btable tr:last-child td{border-bottom:0}
+.btable tr.rescue td:first-child{box-shadow:inset 4px 0 0 var(--crit)}
+.btable tr.attention td:first-child{box-shadow:inset 4px 0 0 var(--warn)}
+.btable .rn{font-family:var(--display);font-weight:700;font-size:15px}
+.btable{table-layout:fixed;min-width:760px}
+.btable td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:top;padding-top:10px;padding-bottom:10px}
+.btable td.st,.btable td.wrap{white-space:normal}
+.btable td.act{overflow:visible}
+.btable .acts{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.btable .acts:empty{display:none}
+.bsec.empty .bsec-h{opacity:.7}
+.kcol .card .driver{flex-wrap:wrap;gap:6px}
+.btable td.num,.btable th.num{text-align:right}
+.btable td.st{font-size:12px}
+.btable td.st .cline{font-size:12px;color:var(--muted)}.btable td.st .cline.ok{color:var(--ok)}.btable td.st .cline.warn{color:var(--warn)}.btable td.st .cline.crit{color:var(--crit);font-weight:500}
+.btable .onf-tick.on{color:var(--ok);border-color:var(--ok)}
+.btable .onf-tick{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;padding:3px 8px;border:1px solid var(--line);border-radius:6px;white-space:nowrap}
 .card .onf-tick.on{color:var(--ok);border-color:var(--ok)}
 .card .onf-tick input{margin:0;cursor:pointer}
 .countdown{font-family:var(--mono);font-size:12px;color:var(--info)}
@@ -1769,48 +1808,77 @@ function guide() {
   <button class="btn sm ghost x" onclick="try{localStorage.setItem('ld-guide6','1')}catch(e){};render()">Hide</button></div>`;
 }
 
+const BOARD_COLS = ['Unassigned', 'Offered', 'Accepted', 'Completed'];
+// Needs attention routes still have their driver attached, so the board shows them in the Accepted column (amber edge, red confirm line, Decide).
+const boardCol = r => r.status === 'Needs attention' ? 'Accepted' : r.status;
+function boardView() { if (!S.boardView) { let v = null; try { v = localStorage.getItem('ld-boardview'); } catch (e) { } S.boardView = v === 'table' ? 'table' : 'kanban'; } return S.boardView; }
+function setBoardView(v) { S.boardView = v; try { localStorage.setItem('ld-boardview', v); } catch (e) { } render(); }
+function toggleBoardSection(k) { S.boardCollapsed = S.boardCollapsed || {}; S.boardCollapsed[k] = !S.boardCollapsed[k]; render(); }
+
 function vBoard() {
   const tabCount = i => S.routes.filter(r => !r.history && boardTabOf(r) === i).length;
   const dl = i => { const d = new Date(now.getTime() + i * DAY); return `${DOW[d.getDay()]} ${d.getDate()}`; };
   const tabs = [...(tabCount(-1) || S.boardTab === -1 ? [['Earlier', -1]] : []), ['Today', 0], ['Tomorrow', 1], [dl(2), 2], [dl(3), 3], ['Later', 4]];
   const inTab = r => boardTabOf(r) === S.boardTab;
   const all = S.routes.filter(r => inTab(r) && (S.areaFilter === 'all' || r.area === S.areaFilter));
-  const counts = {}; ['Needs attention', 'Unassigned', 'Offered', 'Accepted', 'Completed', 'Cancelled'].forEach(s => counts[s] = all.filter(r => r.status === s).length);
-  const rescue = all.filter(r => r.rescue && ['Unassigned', 'Offered', 'Needs attention'].includes(r.status));
+  const isRescue = r => r.rescue && ['Unassigned', 'Offered', 'Needs attention'].includes(r.status);
+  const rescue = all.filter(isRescue);
   const suggest = S.settings.laneAuto !== 'off';
-  const card = r => {
-    const d = driver(r.driverId), o = r.offerId && offer(r.offerId);
-    const s = suggest && r.status === 'Unassigned' && r.laneId ? laneSuggestion(r) : null;
-    return `<div class="card ${r.rescue && !['Accepted', 'Completed', 'Cancelled'].includes(r.status) ? 'rescue' : r.status === 'Needs attention' ? 'attention' : ''}" onclick="go('route',{id:'${r.id}'})">
-      <div class="title"><span class="rn">${r.name}</span>${statusPill(r)}</div>
-      <div class="meta"><span>${area(r.area).hub}</span><span><b>${[-1, 4].includes(S.boardTab) ? fmtDate(routeDate(r)) + ' ' : ''}${hhmm(r.start)}</b></span><span><b>${routeStops(r)}</b> stops${adjStops(r) ? ` <span class="muted">(${adjStops(r) > 0 ? '+' : ''}${adjStops(r)} adj)</span>` : ''}</span><span><b>${money(driverPay(r))}</b></span>${geoStats(r) ? (() => { const pr = price(r); return `<span>${Math.round(pr.miles)} mi · ${pr.hours.toFixed(1)} h</span>`; })() : `<span>${r.vehicle}</span>`}</div>
-      ${laneLine(r)}
-      ${r.rescue && !['Accepted', 'Completed', 'Cancelled'].includes(r.status) ? `<div class="pickup-in" data-pickup="${r.id}">Pickup in ${dur(routeStart(r) - now.getTime())}</div>` : ''}
-      ${r.attention && !/^Silent on/.test(r.attention) ? `<div class="small" style="color:var(--warn)">${r.attention}</div>` : ''}
-      ${r.noShow && !r.driverId ? `<div class="small" style="color:var(--crit)">${driver(r.noShow.driverId).name} no-show at ${fmtTime(r.noShow.at)}</div>` : ''}
-      <div class="driver">${driverLine(r)}${r.status === 'Offered' && o ? `<span class="countdown" data-countdown="${o.id}" style="margin-left:auto">${Math.ceil((o.expiresAt - now.getTime()) / 60000)} min left</span>` : ''}${ciTag(r) ? `<span style="margin-left:auto">${ciTag(r)}</span>` : ''}</div>
-      ${confirmLine(r)}
-      <div class="actions" onclick="event.stopPropagation()">
-        ${r.status === 'Unassigned' && r.onfleetDriverId && !eligibility(driver(r.onfleetDriverId), r).length ? `<button class="btn sm primary" title="Onfleet already has this driver on the route" onclick="confirmOnfleet(route('${r.id}'),driver('${r.onfleetDriverId}'),false)">Confirm with ${shortName(driver(r.onfleetDriverId))}</button><button class="btn sm" onclick="openPicker('${r.id}','sms')">Other driver</button>` : r.status === 'Unassigned' ? (s && s.pick ? `<button class="btn sm primary" title="${esc(s.pick.why)}" onclick="offerRoute(route('${r.id}'),driver('${s.pick.d.id}'),'sms')">Offer to ${shortName(s.pick.d)}</button><button class="btn sm" onclick="openPicker('${r.id}','sms')">Other driver</button>` : `<button class="btn sm primary" onclick="openPicker('${r.id}','sms')">Offer</button>`) : ''}
+  const view = boardView();
+  const showDate = [-1, 4].includes(S.boardTab);
+  // Within a column: rescue first, then routes waiting on a decision, then by start time.
+  const colRoutes = c => all.filter(r => boardCol(r) === c).sort((a, b) => (isRescue(b) - isRescue(a)) || ((b.status === 'Needs attention') - (a.status === 'Needs attention')) || (routeStart(a) - routeStart(b)));
+  const cancelled = all.filter(r => r.status === 'Cancelled');
+  const rescuePill = r => isRescue(r) ? '<span class="pill rescue">Rescue</span>' : '';
+  const actions = r => {
+    const d = driver(r.driverId), s = suggest && r.status === 'Unassigned' && r.laneId ? laneSuggestion(r) : null;
+    return `${r.status === 'Unassigned' && r.onfleetDriverId && !eligibility(driver(r.onfleetDriverId), r).length ? `<button class="btn sm primary" title="Onfleet already has this driver on the route" onclick="confirmOnfleet(route('${r.id}'),driver('${r.onfleetDriverId}'),false)">Confirm with ${shortName(driver(r.onfleetDriverId))}</button><button class="btn sm" onclick="openPicker('${r.id}','sms')">Other driver</button>` : r.status === 'Unassigned' ? (s && s.pick ? `<button class="btn sm primary" title="${esc(s.pick.why)}" onclick="offerRoute(route('${r.id}'),driver('${s.pick.d.id}'),'sms')">Offer to ${shortName(s.pick.d)}</button><button class="btn sm" onclick="openPicker('${r.id}','sms')">Other driver</button>` : `<button class="btn sm primary" onclick="openPicker('${r.id}','sms')">Offer</button>`) : ''}
         ${r.status === 'Offered' ? `<button class="btn sm" onclick="withdraw(route('${r.id}'))">Withdraw</button>` : ''}
-        ${r.status === 'Needs attention' ? `<button class="btn sm" onclick="go('route',{id:'${r.id}'})">Decide</button>` : ''}
-        ${r.status === 'Accepted' && d ? `<label class="onf-tick ${r.onfleet ? 'on' : ''}" title="Tick once you've assigned ${esc(d.name)} to this route in Onfleet"><input type="checkbox" ${r.onfleet ? 'checked' : ''} onchange="route('${r.id}').onfleet=this.checked;render()"> Assigned in Onfleet</label>` : ''}
-      </div></div>`;
+        ${r.status === 'Needs attention' ? `<button class="btn sm primary" onclick="go('route',{id:'${r.id}'})">Decide</button>` : ''}
+        ${r.status === 'Accepted' && d ? `<label class="onf-tick ${r.onfleet ? 'on' : ''}" title="Tick once you've assigned ${esc(d.name)} to this route in Onfleet"><input type="checkbox" ${r.onfleet ? 'checked' : ''} onchange="route('${r.id}').onfleet=this.checked;render()"> Assigned in Onfleet</label>` : ''}`;
   };
-  const group = (s, rs) => rs.length ? `<div class="group-title"><h3>${s}</h3><span class="n">${rs.length}</span></div><div class="cards">${rs.map(card).join('')}</div>` : '';
+  const notes = r => `${isRescue(r) ? `<div class="pickup-in" data-pickup="${r.id}">Pickup in ${dur(routeStart(r) - now.getTime())}</div>` : ''}
+      ${r.attention && !/^Silent on/.test(r.attention) ? `<div class="small" style="color:var(--warn)">${r.attention}</div>` : ''}
+      ${r.noShow && !r.driverId ? `<div class="small" style="color:var(--crit)">${driver(r.noShow.driverId).name} no-show at ${fmtTime(r.noShow.at)}</div>` : ''}`;
+  const edge = r => isRescue(r) ? 'rescue' : r.status === 'Needs attention' ? 'attention' : '';
+  const stopsHtml = r => `<b>${routeStops(r)}</b> stops${adjStops(r) ? ` <span class="muted">(${adjStops(r) > 0 ? '+' : ''}${adjStops(r)} adj)</span>` : ''}`;
+  const geo = r => geoStats(r) ? (() => { const pr = price(r); return `${Math.round(pr.miles)} mi · ${pr.hours.toFixed(1)} h`; })() : r.vehicle;
+  const countdown = r => { const o = r.status === 'Offered' && r.offerId && offer(r.offerId); return o ? `<span class="countdown" data-countdown="${o.id}">${Math.ceil((o.expiresAt - now.getTime()) / 60000)} min left</span>` : ''; };
+
+  const card = r => `<div class="card ${edge(r)}" onclick="go('route',{id:'${r.id}'})">
+      <div class="title"><span class="rn">${r.name}</span>${rescuePill(r)}</div>
+      <div class="meta"><span>${area(r.area).hub}</span><span><b>${showDate ? fmtDate(routeDate(r)) + ' ' : ''}${hhmm(r.start)}</b></span><span>${stopsHtml(r)}</span><span><b>${money(driverPay(r))}</b></span><span>${geo(r)}</span></div>
+      ${laneLine(r)}
+      ${notes(r)}
+      <div class="driver">${driver(r.driverId) ? `<span class="avatar">${initials(driver(r.driverId).name)}</span><span>${driver(r.driverId).name}</span>${lblHtml(driver(r.driverId))}` : '<span class="muted small">No driver</span>'}</div>
+      ${countdown(r) || ciTag(r) ? `<div class="row" style="gap:8px">${countdown(r)}${ciTag(r)}</div>` : ''}
+      ${confirmLine(r)}
+      <div class="actions" onclick="event.stopPropagation()">${actions(r)}</div></div>`;
+
+  const kanban = () => `<div class="kanban">${BOARD_COLS.map(c => { const rs = colRoutes(c); return `<div class="kcol k-${c.toLowerCase()}"><div class="kcol-h"><span class="pill ${c.toLowerCase()}">${c}</span><span class="n">${rs.length}</span></div><div class="kcol-b">${rs.length ? rs.map(card).join('') : '<div class="kempty">None</div>'}</div></div>`; }).join('')}</div>`;
+
+  const row = r => { const d = driver(r.driverId); return `<tr class="${edge(r)}" onclick="go('route',{id:'${r.id}'})">
+      <td><span class="rn">${r.name}</span>${isRescue(r) ? '<div>' + rescuePill(r) + '</div>' : ''}</td>
+      <td class="wrap">${area(r.area).hub}</td>
+      <td class="mono">${showDate ? fmtDate(routeDate(r)) + '<br>' : ''}${hhmm(r.start)}</td>
+      <td>${stopsHtml(r)}<div class="muted small">${geo(r)}</div></td>
+      <td class="num mono">${money(driverPay(r))}</td>
+      <td class="wrap">${d ? `<span class="row" style="gap:6px;flex-wrap:nowrap"><span class="avatar">${initials(d.name)}</span><span>${d.name}</span></span>` : '<span class="muted small">No driver</span>'}</td>
+      <td class="st">${countdown(r) || ciTag(r) ? `<div class="row" style="gap:6px">${countdown(r)}${ciTag(r)}</div>` : ''}${confirmLine(r)}${notes(r)}</td>
+      <td class="act" onclick="event.stopPropagation()"><div class="acts">${actions(r)}</div></td></tr>`; };
+  const coll = S.boardCollapsed || {};
+  const table = () => BOARD_COLS.map(c => { const rs = colRoutes(c), shut = !!coll[c]; return `<div class="bsec ${shut || !rs.length ? 'shut' : ''} ${rs.length ? '' : 'empty'}">
+      <button class="bsec-h" onclick="toggleBoardSection('${c}')" aria-expanded="${!shut}"><span class="chev">${shut || !rs.length ? '▸' : '▾'}</span><span class="pill ${c.toLowerCase()}">${c}</span><span class="n">${rs.length} route${rs.length === 1 ? '' : 's'}</span>${c === 'Unassigned' || c === 'Offered' ? (rs.filter(isRescue).length ? `<span class="pill rescue">${rs.filter(isRescue).length} rescue</span>` : '') : c === 'Accepted' && rs.some(r => r.status === 'Needs attention') ? `<span class="small" style="color:var(--warn)">${rs.filter(r => r.status === 'Needs attention').length} waiting on you</span>` : ''}</button>
+      ${shut || !rs.length ? '' : `<div class="tbl-wrap"><table class="btable"><colgroup><col style="width:92px"><col style="width:104px"><col style="width:90px"><col style="width:104px"><col style="width:76px"><col style="width:150px"><col><col style="width:150px"></colgroup><thead><tr><th>Route</th><th>Hub</th><th>Start</th><th>Stops</th><th class="num">Pay</th><th>Driver</th><th>Status</th><th></th></tr></thead><tbody>${rs.map(row).join('')}</tbody></table></div>`}</div>`; }).join('');
+
   const autoable = suggest ? all.filter(r => r.status === 'Unassigned' && r.laneId && laneSuggestion(r).pick) : [];
   return guide() + `<div class="page-head"><div><h1>Dispatch board</h1><p>${fmtDate(now)}. Routes are built in Onfleet and arrive with the CSV upload.</p></div>
     <div class="row"><select id="areaFilter" onchange="S.areaFilter=this.value;render()"><option value="all" ${S.areaFilter === 'all' ? 'selected' : ''}>All areas</option>${S.areas.map(a => `<option value="${a.id}" ${S.areaFilter === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}</select>${autoable.length ? `<button class="btn" title="Offer each recognized route to its last driver" onclick="runAutoOffer(${JSON.stringify(autoable.map(r => r.id)).replace(/"/g, "'")})">↻ Offer ${autoable.length} to last drivers</button>` : ''}${S.routes.some(r => r.example) ? `<button class="btn" title="Take EX-01 to EX-13 and their example drivers off the board" onclick="removeExamples()">Remove examples</button>` : `<button class="btn" title="Adds 13 routes, one per offer and confirm state, timed from now" onclick="loadExamples()">Load example routes</button>`}<button class="btn" onclick="go('upload')">Upload CSV</button></div></div>
     <div class="tabs">${tabs.map(([n, i]) => `<button class="${S.boardTab === i ? 'active' : ''}" onclick="S.boardTab=${i};render()">${n}<span class="n">${tabCount(i)}</span></button>`).join('')}</div>
-    <div class="chips">${Object.entries(counts).filter(([k, v]) => v || k !== 'Cancelled').map(([k, v]) => `<span class="chip">${k} <b>${v}</b></span>`).join('')}${rescue.length ? `<span class="chip" style="border-color:var(--crit);color:var(--crit)">Rescue <b>${rescue.length}</b></span>` : ''}</div>
-    ${rescue.length ? `<div class="group-title"><h3 style="color:var(--crit)">Rescue</h3><span class="n">pinned</span></div><div class="cards">${rescue.map(card).join('')}</div>` : ''}
-    ${group('Needs attention', all.filter(r => r.status === 'Needs attention' && !rescue.includes(r)))}
-    ${group('Unassigned', all.filter(r => r.status === 'Unassigned' && !rescue.includes(r)))}
-    ${group('Offered', all.filter(r => r.status === 'Offered' && !rescue.includes(r)))}
-    ${group('Accepted', all.filter(r => r.status === 'Accepted'))}
-    ${group('Completed', all.filter(r => r.status === 'Completed'))}
-    ${group('Cancelled', all.filter(r => r.status === 'Cancelled'))}
-    ${all.length ? '' : `<p class="muted">No routes for this day yet. Upload an Onfleet file to add them${S.routes.length ? '' : ', or <a href="#" onclick="loadExamples();return false">load example routes</a> to see every offer and confirm state'}.</p>`}`;
+    <div class="board-bar"><div class="row">${rescue.length ? `<span class="chip" style="border-color:var(--crit);color:var(--crit)">Rescue <b>${rescue.length}</b></span>` : ''}${view === 'table' && all.length ? `<button class="btn sm ghost" onclick="S.boardCollapsed=Object.fromEntries(BOARD_COLS.map(c=>[c,!BOARD_COLS.every(k=>(S.boardCollapsed||{})[k])]));render()">${BOARD_COLS.every(k => coll[k]) ? 'Expand all' : 'Collapse all'}</button>` : ''}</div>
+      <div class="seg" role="group" aria-label="Board view"><button class="${view === 'kanban' ? 'on' : ''}" onclick="setBoardView('kanban')">▥ Tiles</button><button class="${view === 'table' ? 'on' : ''}" onclick="setBoardView('table')">☰ Table</button></div></div>
+    ${all.length ? (view === 'table' ? table() : kanban()) : `<p class="muted">No routes for this day yet. Upload an Onfleet file to add them${S.routes.length ? '' : ', or <a href="#" onclick="loadExamples();return false">load example routes</a> to see every offer and confirm state'}.</p>`}
+    ${cancelled.length ? `<p class="small muted" style="margin-top:14px">Cancelled: ${cancelled.map(r => `<a href="#" onclick="go('route',{id:'${r.id}'});return false">${r.name}</a>`).join(', ')}</p>` : ''}`;
 }
 
 function vRoute() {
