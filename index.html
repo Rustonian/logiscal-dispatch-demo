@@ -109,6 +109,54 @@ main{overflow:auto;padding-block:18px 40px;padding-left:max(16px,env(safe-area-i
 .checkin-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
 .checkin-row:first-child{border-top:0}
 .checkin-btns{display:flex;gap:6px;flex-wrap:wrap}
+.ci .via{font-weight:500;opacity:.85}
+/* Site captain: a phone-sized, limited view of check-in */
+.cap{max-width:640px;margin:0 auto}
+.cap-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.cap-bar select{flex:1;min-width:200px;padding:9px 10px}
+.cap-search{width:100%;padding:10px 12px;font-size:15px;margin:4px 0 4px}
+.cap-sec{display:flex;align-items:center;gap:8px;margin:18px 0 8px}
+.cap-sec .n{font-family:var(--mono);color:var(--muted);font-size:12px}
+.cap-row{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px;margin-bottom:8px;box-shadow:var(--shadow)}
+.cap-row.overdue{border-left:4px solid var(--crit)}
+.cap-row.soon{border-left:4px solid var(--warn)}
+.cap-row.done{box-shadow:none;background:var(--surface-2)}
+.cap-who{display:flex;gap:10px;align-items:center}
+.cap-who .avatar{width:38px;height:38px;font-size:14px}
+.cap-who .nm{font-weight:600;font-size:15px}
+.cap-meta{font-size:12px;color:var(--muted)}
+.cap-meta a{color:var(--accent)}
+.cap-due{font-size:12px;font-weight:600;white-space:nowrap;color:var(--muted)}
+.cap-due.crit{color:var(--crit)}.cap-due.warn{color:var(--warn)}
+.cap-acts{display:grid;grid-template-columns:2fr 1.2fr 1fr;gap:8px}
+.cap-acts.two{grid-template-columns:2fr 1fr}
+.cap-acts .btn{padding:11px 8px;font-size:14px;text-align:center}
+.cap-flag{background:var(--warn-bg);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;flex-direction:column;gap:10px}
+.cap-tip{background:var(--info-bg);color:var(--fg);border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.cap-tip ol{margin:6px 0 0;padding-left:18px}
+.qr-card{background:#fff;color:#111;border-radius:12px;padding:22px;text-align:center;max-width:420px;margin:0 auto 14px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.qr-card h2{color:#111;font-size:24px}
+.qr-card .qr{width:min(260px,100%);height:auto;margin:12px auto;display:block}
+.qr-card .code{font-family:var(--mono);font-size:30px;letter-spacing:.2em;font-weight:500;margin:2px 0}
+.qr-card .sub{color:#56616c;font-size:13px}
+.qr-timer{height:4px;background:#e4e8ec;border-radius:2px;overflow:hidden;margin:12px auto 4px;max-width:260px}
+.qr-timer i{display:block;height:100%;background:#0d5c78;transition:width .9s linear}
+.res{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:4px}
+.res.ok{background:var(--ok-bg);color:var(--ok)}.res.wait{background:var(--warn-bg);color:var(--warn)}.res.bad{background:var(--crit-bg);color:var(--crit)}
+.scan{flex:1;overflow:auto;display:flex;flex-direction:column}
+.scan-cam{position:relative;background:#000;margin:10px 14px;border-radius:14px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
+.scan-cam .qr{width:52%;height:auto;border-radius:4px;opacity:.92}
+.scan-cam .frame{position:absolute;inset:16%;border:3px solid rgba(255,255,255,.85);border-radius:18px}
+.scan-opts{padding:0 14px 14px;display:flex;flex-direction:column;gap:6px}
+.scan-opts button{background:#1a2127;color:var(--phone-fg);border:1px solid #2d363e;border-radius:10px;padding:8px 11px;cursor:pointer;font-size:12px;text-align:left}
+.scan-opts button:hover{background:#242d35}
+.scan-opts button.go{background:#1d6f8a;border-color:transparent;text-align:center;font-weight:600}
+.scan-page{background:#fff;color:#18222c;margin:12px 14px;border-radius:12px;padding:14px 16px;font-size:13px;flex:none}
+.scan-page .url{font-family:var(--mono);font-size:10px;color:#6a7682;border-bottom:1px solid #e4e8ec;padding-bottom:6px;margin-bottom:10px}
+.scan-page .big{font-family:var(--display);font-size:21px;font-weight:700;margin:6px 0}
+.scan-page .ok{color:#1d7a4c}.scan-page .bad{color:#b4352b}.scan-page .wait{color:#a85f00}
+.scan-page .rl{border-top:1px solid #e4e8ec;padding-top:8px;margin-top:8px;font-size:12px;color:#44505c}
+.phone-reply .quick button.scanbtn{border-color:#1d6f8a}
 .health td.st{white-space:nowrap}
 
 .group-title{display:flex;align-items:center;gap:8px;margin:18px 0 8px}
@@ -306,6 +354,13 @@ td.r,th.r{text-align:right}
   .two{grid-template-columns:1fr}
   .steps{grid-template-columns:repeat(2,1fr)}
   .top .client,.top .clock .sync{display:none}
+  .app{grid-template-columns:minmax(0,1fr)}
+  .top{gap:8px;padding-left:10px;padding-right:10px}
+  .top .clock,.role>.muted{display:none}
+  .brand .name{font-size:16px;white-space:nowrap}
+  .role select{max-width:34vw;font-size:12px;padding:5px 4px}
+  .top .menu-btn{padding:3px 6px}
+  .cap-acts .btn{padding:11px 4px}
 }
 @media (prefers-reduced-motion:reduce){.phone-dock{transition:none}}
 </style>
@@ -320,6 +375,7 @@ td.r,th.r{text-align:right}
         <option value="dispatcher">Dana Ruiz · Dispatcher</option>
         <option value="admin">Mike Patel · Client admin</option>
         <option value="ops">Ruston · Gigee ops</option>
+        <option value="captain">Carla Gomez · Site captain</option>
       </select>
     </div>
     <button class="btn sm menu-btn" id="phoneToggle">Driver phone</button>
@@ -915,11 +971,12 @@ const T = (d, h, m) => new Date(2026, 9, d + SHIFT, h, m).getTime();
 const ymd = d => { const x = new Date(2026, 9, d + SHIFT); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
 
 const S = {
-  screen: 'board', params: {}, role: 'dispatcher', boardTab: 1, areaFilter: 'all', phoneDriver: 'd2',
+  screen: 'board', params: {}, role: 'dispatcher', boardTab: 1, areaFilter: 'all', phoneDriver: 'd2', capHub: 'A1', capQ: '', scans: [], ciFlags: [], scan: null, lastSlot: null,
   settings: {
     expiry: 15, reconfirmHours: 26, reconfirmWindow: 60, finalHours: 2, finalWindow: 30, quietStart: '9:00 PM', quietEnd: '7:00 AM',
     feeMin: 10, feePct: 5, support: '(512) 555-0100', stopRange: 4, benchPct: 20, noShowRescue: 'auto',
     laneThreshold: 60, laneWindow: 10, laneAuto: 'suggest', laneSkipWatch: true, laneKey: 'addr', preConfirm: 'click', preConfirmWindow: 120,
+    checkin: { qrMode: 'screen', rotateMin: 10, geofenceM: 300, graceMin: 10, offsite: 'captain' },
     weights: { completion: 50, acceptance: 20, confirm: 10, perRoute: 1, perRouteMax: 10, perRescue: 3, perRescueMax: 9, early: -5, late: -15, noshow: -25, tierA: 15, tierB: 5 },
     templates: {
       offer: 'Logiscal route offer: {date}, start {start_time} at {hub}. About {stop_range} stops{route_detail}, pays ${payout}. Reply YES to accept or NO to pass. Expires in {expiry} min.',
@@ -955,6 +1012,10 @@ const S = {
     { id: 'u3', key: 'admin', name: 'Mike Patel', email: 'mike@logiscal.com', role: 'Client admin', client: 'Logiscal', pricing: 'edit' },
     { id: 'u4', name: 'Terri Lang', email: 'terri@logiscal.com', role: 'Dispatcher', client: 'Logiscal', pricing: 'none' },
     { id: 'u5', key: 'ops', name: 'Ruston', email: 'ruston@gigee.com', role: 'Gigee ops', client: 'All clients', pricing: 'edit' },
+    { id: 'u6', key: 'captain', name: 'Carla Gomez', email: 'carla@logiscal.com', role: 'Site captain', client: 'Logiscal', pricing: 'none', hubs: ['A1'] },
+    { id: 'u7', name: 'Marco Reyes', email: 'marco@logiscal.com', role: 'Site captain', client: 'Logiscal', pricing: 'none', hubs: ['A2'] },
+    { id: 'u8', name: 'Tasha Byrd', email: 'tasha@logiscal.com', role: 'Site captain', client: 'Logiscal', pricing: 'none', hubs: ['A3'] },
+    { id: 'u9', name: 'Ken Ward', email: 'ken@logiscal.com', role: 'Site captain', client: 'Logiscal', pricing: 'none', hubs: ['A4'] },
   ],
   calc: { n: 35, apt: 4, b2b: 1, miles: 50, first: 15 }, sim: [],
   drivers: [
@@ -1202,16 +1263,35 @@ function clearAttention(r) { r.status = 'Accepted'; r.attention = null; render()
 function checkinRoutes() { return S.routes.filter(r => dayOffset(r) === 0 && r.status !== 'Cancelled' && !r.history && (r.driverId || r.checkin || r.noShow)).sort((a, b) => routeStart(a) - routeStart(b)); }
 function ciTag(r) {
   if (!r.driverId) return '';
-  const c = r.checkin; if (!c) return dayOffset(r) === 0 && ['Accepted', 'Needs attention'].includes(r.status) ? `<span class="ci Waiting">Not checked in</span>` : '';
-  return `<span class="ci ${c.status === 'No-show' ? 'Noshow' : c.status}">${c.status} ${fmtTime(c.at)}</span>`;
+  const c = r.checkin;
+  if (!c) { const f = openFlag(r); if (f) return `<span class="ci Late">Scan to confirm</span>`; return dayOffset(r) === 0 && ['Accepted', 'Needs attention'].includes(r.status) ? `<span class="ci Waiting">Not checked in</span>` : ''; }
+  const lateArr = c.status === 'Arrived' && c.lateMin;
+  const via = c.method === 'qr' ? '<span class="via"> · QR</span>' : c.method === 'text' ? '<span class="via"> · text</span>' : '';
+  return `<span class="ci ${c.status === 'No-show' ? 'Noshow' : lateArr ? 'Late' : c.status}">${c.status} ${fmtTime(c.at)}${lateArr ? `, ${c.lateMin} min late` : ''}${via}</span>`;
 }
-function checkIn(rid, status) {
+// Who checked the driver in, and how. Shown on the check-in pages.
+function ciWho(c) {
+  if (!c) return ''; const t = fmtTime(c.at);
+  if (c.method === 'qr') return `Scanned the hub QR ${t}${c.dist != null ? ` · ${fmtDist(c.dist)} from hub` : ''}${c.confirmedBy ? ` · confirmed by ${c.confirmedBy}` : ''}`;
+  if (c.method === 'text') return `Texted the hub code ${t}`;
+  return `Marked by ${c.by} ${t}`;
+}
+function fmtDist(m) { return m < 1000 ? `${Math.round(m)} m` : `${(m / 1609.34).toFixed(1)} mi`; }
+function openFlag(r) { return S.ciFlags.find(f => f.routeId === r.id && f.status === 'open' && f.driverId === r.driverId); }
+function checkIn(rid, status, opts = {}) {
   const r = route(rid), d = driver(r.driverId), o = offer(r.offerId); if (!d) return;
   if (status === 'No-show') { noShow(r); return; }
-  r.checkin = { status, at: now.getTime(), by: actorName() };
-  ev(o.id, status === 'Arrived' ? 'Checked in: arrived' : 'Checked in: running late', actorName(), 'Site check-in');
-  toast(`${r.name}: ${d.name} marked ${status === 'Arrived' ? 'arrived' : 'late'}. Dispatch sees it now.`); render();
+  const by = opts.by || actorName(), method = opts.method || (S.role === 'captain' ? 'captain' : 'dispatcher');
+  const after = Math.round((now.getTime() - routeStart(r)) / 60000);
+  r.checkin = { status, at: now.getTime(), by, method, lateMin: status === 'Arrived' && after > S.settings.checkin.graceMin ? after : 0, dist: opts.dist ?? null, confirmedBy: opts.confirmedBy || null };
+  if (status === 'Arrived' && r.status === 'Needs attention') { r.status = 'Accepted'; r.attention = null; if (o) o.pending = null; if (o) ev(o.id, 'On site, counts as confirmed', opts.confirmedBy || by, 'Site check-in'); }
+  const how = { qr: 'QR scan', text: 'hub code by text', captain: 'site captain', dispatcher: 'dispatcher' }[method];
+  if (o) ev(o.id, status === 'Arrived' ? 'Checked in: arrived' : 'Checked in: running late', opts.confirmedBy || by, `Site check-in, ${how}${r.checkin.dist != null ? `, ${fmtDist(r.checkin.dist)} from hub` : ''}${r.checkin.lateMin ? `, ${r.checkin.lateMin} min after pickup` : ''}`);
+  S.ciFlags.filter(f => f.routeId === r.id && f.status === 'open').forEach(f => { f.status = 'confirmed'; f.by = opts.confirmedBy || by; f.doneAt = now.getTime(); });
+  if (!opts.silent) toast(`${r.name}: ${d.name} marked ${status === 'Arrived' ? 'arrived' : 'running late'}. Dispatch sees it now.`);
+  render();
 }
+function undoCheckIn(rid) { const r = route(rid), o = offer(r.offerId), d = driver(r.driverId); if (!r.checkin) return; if (o) ev(o.id, 'Check-in undone', actorName(), ''); r.checkin = null; toast(`${d.name} moved back to Not here yet.`); render(); }
 function rescueCandidate(r) {
   const s = r.laneId ? laneSuggestion(r) : null; if (s && s.pick) return { d: s.pick.d, why: s.pick.why };
   const c = S.drivers.filter(d => !eligibility(d, r).length && !(S.settings.laneSkipWatch && stats(d).label === 'Watch')).sort((a, b) => stats(b).score - stats(a).score)[0];
@@ -1231,6 +1311,169 @@ function noShow(r) {
     else msg += ' No free driver to offer, so it is pinned under Rescue for you.';
   }
   toast(msg); render();
+}
+
+
+/* ---------------- Site captain and hub QR ---------------- */
+const CAP_SCREENS = ['captain', 'hubqr'];
+function capUser(aid = S.capHub) { return S.users.find(u => u.role === 'Site captain' && (u.hubs || []).includes(aid)) || { name: 'Site captain' }; }
+function qrSlot() { return S.settings.checkin.qrMode === 'poster' ? 0 : Math.floor(now.getTime() / (S.settings.checkin.rotateMin * 60000)); }
+function qrLeftMs() { const p = S.settings.checkin.rotateMin * 60000; return p - (now.getTime() % p); }
+function hubCode(aid, slot = qrSlot()) { let h = 7; for (const c of aid + ':' + slot) h = (h * 31 + c.charCodeAt(0)) % 9000; return String(1000 + h); }
+// Draws a QR-style code for the demo. It is not a scannable QR; the driver phone simulator does the scan.
+function qrSvg(seed) {
+  const N = 25; let h = 2166136261; for (const c of seed) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } h = h || 1;
+  const rnd = () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return (h >>> 0) / 4294967296; };
+  let p = '';
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    let on; const fin = (x < 8 && y < 8) || (x >= N - 8 && y < 8) || (x < 8 && y >= N - 8);
+    if (fin) { const fx = x < 8 ? x : x - (N - 7), fy = y < 8 ? y : y - (N - 7); on = fx >= 0 && fx <= 6 && fy >= 0 && fy <= 6 && (fx === 0 || fx === 6 || fy === 0 || fy === 6 || (fx >= 2 && fx <= 4 && fy >= 2 && fy <= 4)); }
+    else if (y === 6) on = x % 2 === 0; else if (x === 6) on = y % 2 === 0; else on = rnd() < 0.47;
+    if (on) p += `M${x} ${y}h1v1h-1z`;
+  }
+  return `<svg class="qr" viewBox="-2 -2 ${N + 4} ${N + 4}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" role="img" aria-label="Hub check-in code"><rect x="-2" y="-2" width="${N + 4}" height="${N + 4}" fill="#fff"/><path d="${p}" fill="#111"/></svg>`;
+}
+function todayRouteFor(d) { return S.routes.find(r => r.driverId === d.id && dayOffset(r) === 0 && ['Accepted', 'Needs attention'].includes(r.status)); }
+function hubRoutes(aid) { return checkinRoutes().filter(r => r.area === aid); }
+function dueInfo(r) {
+  const m = Math.round((routeStart(r) - now.getTime()) / 60000), g = S.settings.checkin.graceMin;
+  if (m > 60) return { txt: `Pickup ${hhmm(r.start)}`, cls: '' };
+  if (m > 15) return { txt: `Due in ${m} min`, cls: '' };
+  if (m > 0) return { txt: `Due in ${m} min`, cls: 'warn' };
+  if (m === 0) return { txt: 'Due now', cls: 'warn' };
+  return { txt: `${-m} min past pickup`, cls: -m > g ? 'crit' : 'warn' };
+}
+function switchRole(role, screen) {
+  S.role = role; $('#role').value = role;
+  if (role === 'captain') S.screen = screen || 'captain'; else if (screen) S.screen = screen; else if (CAP_SCREENS.includes(S.screen)) S.screen = 'checkin';
+  S.params = {}; render(); $('#main').scrollTop = 0; toast(`Now acting as ${actorName()}${role === 'captain' ? `, site captain at ${area(S.capHub).hub}` : ''}.`);
+}
+function capFilter(q) { S.capQ = q; const t = q.trim().toLowerCase(); document.querySelectorAll('.cap-row').forEach(el => { el.style.display = !t || (el.dataset.name || '').includes(t) ? '' : 'none'; }); }
+function capNoShow(rid) {
+  const r = route(rid), d = driver(r.driverId), mins = Math.round((routeStart(r) - now.getTime()) / 60000);
+  modal(`<div class="mh"><div><h2>Mark ${esc(d.name)} a no-show?</h2><p class="muted small" style="margin:4px 0 0">${r.name}, pickup ${hhmm(r.start)}${mins > 0 ? `, still ${mins} min away` : `, ${-mins} min ago`}.</p></div></div>
+    <p style="margin:0">${esc(d.name.split(' ')[0])} gets a text that the route went to another driver. Dispatch gets the route back as a Rescue${S.settings.noShowRescue === 'auto' ? ' and the app texts the next best driver right away' : ''}.</p>
+    ${mins > -S.settings.checkin.graceMin ? `<p class="small" style="margin:0;color:var(--warn)">It is not ${S.settings.checkin.graceMin} min past pickup yet. Call first if you can: <a href="tel:${d.phone}">${phoneFmt(d.phone)}</a>.</p>` : ''}
+    <div class="row" style="justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="closeModal();checkIn('${rid}','No-show')">Mark no-show</button></div>`);
+}
+function resolveFlag(fid, ok) {
+  const f = S.ciFlags.find(x => x.id === fid), r = route(f.routeId), d = driver(f.driverId), o = offer(r.offerId);
+  if (ok) { if (r.driverId === d.id) checkIn(r.id, 'Arrived', { method: 'qr', by: d.name, dist: f.dist, confirmedBy: actorName(), silent: true }); f.status = 'confirmed'; f.by = actorName(); f.doneAt = now.getTime(); toast(`${d.name} confirmed on site for ${r.name}.`); }
+  else { f.status = 'rejected'; f.by = actorName(); f.doneAt = now.getTime(); if (o) ev(o.id, 'Off-site scan not confirmed', actorName(), 'Site check-in'); sendSms(d, `Your check-in for ${r.name} was not confirmed. Scan the code at the dock when you get to ${area(r.area).hub}.`, r, o); toast(`${d.name} told to scan again at the dock.`); }
+  render();
+}
+// Driver phone: scan the hub QR. `how` is the demo scenario picked on the simulator.
+function driverScan(did, how) {
+  const d = driver(did), r = todayRouteFor(d), cs = S.settings.checkin, home = r ? area(r.area) : area(d.area);
+  const target = how === 'wrong' ? (S.areas.find(a => a.id !== home.id && a.market === home.market) || S.areas.find(a => a.id !== home.id)) : home;
+  const dist = how === 'away' ? 22530 : 30 + Math.floor(Math.random() * 60);
+  const o = r ? offer(r.offerId) : null;
+  const rl = r ? `<b>${r.name}</b> · pickup ${hhmm(r.start)} · ${esc(home.hub)}<br>${esc(home.instr)}` : '';
+  const log = (result, tone, detail) => S.scans.unshift({ id: 'SC' + (S.scans.length + 1), at: now.getTime(), hub: target.id, driverId: d.id, routeId: r ? r.id : null, result, tone, detail });
+  let res;
+  if (how === 'old') { log('Rejected', 'bad', 'Old code, likely a photo'); res = { tone: 'bad', title: 'This code has expired', body: `The code at the dock changes every ${cs.rotateMin} min. Scan the one on the screen now.`, route: rl }; toast(`${d.name} scanned an old ${target.hub} code. Rejected.`); }
+  else if (!r) { log('No route', 'bad', 'No route here today'); res = { tone: 'bad', title: 'No route for you today', body: `We don't have a route for you at ${esc(target.hub)} today. Ask the site captain, or contact ${S.settings.support}.` }; toast(`${d.name} scanned at ${target.hub} with no route today.`); }
+  else if (target.id !== r.area) { log('Rejected', 'bad', `Wrong hub. ${r.name} picks up at ${home.hub}`); res = { tone: 'bad', title: `This is the ${esc(target.hub)} code`, body: `${r.name} picks up at ${esc(home.hub)}, ${esc(home.address)}.`, route: rl }; toast(`${d.name} scanned the ${target.hub} code. Wrong hub, not checked in.`); }
+  else if (r.checkin && r.checkin.status === 'Arrived') { log('Already in', 'ok', `Checked in ${fmtTime(r.checkin.at)}`); res = { tone: 'ok', title: "You're already checked in", body: `Checked in at ${fmtTime(r.checkin.at)}.`, route: rl }; }
+  else if (dist > cs.geofenceM) {
+    if (cs.offsite === 'captain') {
+      S.ciFlags.push({ id: 'CF' + (S.ciFlags.length + 1), driverId: d.id, routeId: r.id, hub: r.area, at: now.getTime(), dist, status: 'open' });
+      if (o) ev(o.id, 'QR scan from off site', d.name, `${fmtDist(dist)} from hub, sent to the site captain`);
+      log('Sent to captain', 'wait', `${fmtDist(dist)} from hub`);
+      res = { tone: 'wait', title: 'Waiting on the site captain', body: `Your phone shows you ${fmtDist(dist)} from ${esc(home.hub)}. The site captain will confirm when they see you at the dock.`, route: rl };
+      toast(`${d.name} scanned from ${fmtDist(dist)} away. Sent to ${capUser(r.area).name} to confirm.`);
+    } else { log('Rejected', 'bad', `${fmtDist(dist)} from hub`); res = { tone: 'bad', title: 'You need to be at the hub', body: `Your phone shows you ${fmtDist(dist)} from ${esc(home.hub)}. Scan again when you reach the dock.`, route: rl }; toast(`${d.name} scanned from ${fmtDist(dist)} away. Rejected.`); }
+  } else {
+    checkIn(r.id, 'Arrived', { method: 'qr', by: d.name, dist, silent: true });
+    const c = r.checkin; log('Checked in', 'ok', `${fmtDist(dist)} from hub${c.lateMin ? `, ${c.lateMin} min late` : ''}`);
+    sendSms(d, `Checked in for ${r.name} at ${home.hub}, ${fmtTime(now)}. ${home.instr}`, r, o);
+    res = { tone: 'ok', title: "You're checked in", body: c.lateMin ? `Checked in ${fmtTime(c.at)}, ${c.lateMin} min after pickup time. Dispatch can see it.` : `Checked in ${fmtTime(c.at)}. Head to the dock.`, route: rl };
+    toast(`${d.name} checked in by QR on ${r.name}.`);
+  }
+  S.scan = { driverId: d.id, step: 'result', res, url: `${target.code}/${how === 'old' ? hubCode(target.id, qrSlot() - 3) : hubCode(target.id)}` };
+  render();
+}
+// Text fallback: CHECKIN 1234 (the code under the QR).
+function textCheckIn(d, m, code) {
+  const r = todayRouteFor(d);
+  if (!r) { sendSms(d, `No route for you today. Questions? Contact ${S.settings.support}.`, null, null); render(); return; }
+  const a = area(r.area), o = offer(r.offerId); m.routeId = r.id; m.offerId = r.offerId;
+  const log = (result, tone, detail) => S.scans.unshift({ id: 'SC' + (S.scans.length + 1), at: now.getTime(), hub: a.id, driverId: d.id, routeId: r.id, result, tone, detail });
+  if (r.checkin && r.checkin.status === 'Arrived') { sendSms(d, `You're already checked in for ${r.name} (${fmtTime(r.checkin.at)}).`, r, o); render(); return; }
+  if (!code) { sendSms(d, `To check in, reply CHECKIN and the 4-digit code under the QR at ${a.hub}.`, r, o); render(); return; }
+  if (code !== hubCode(a.id) && code !== hubCode(a.id, qrSlot() - 1)) { log('Rejected', 'bad', `Wrong or old code by text (${code})`); sendSms(d, `That code doesn't match ${a.hub}. Check the screen at the dock and try again.`, r, o); toast(`${d.name} texted a code that doesn't match ${a.hub}.`); render(); return; }
+  checkIn(r.id, 'Arrived', { method: 'text', by: d.name, silent: true }); log('Checked in', 'ok', 'Code by text');
+  sendSms(d, `Checked in for ${r.name} at ${a.hub}, ${fmtTime(now)}. ${a.instr}`, r, o); toast(`${d.name} checked in by text code on ${r.name}.`); render();
+}
+function tickCheckin() {
+  const slot = qrSlot();
+  if (slot !== S.lastSlot) { const first = S.lastSlot === null; S.lastSlot = slot; if (!first) { if (S.screen === 'hubqr') renderMain(); if (S.scan && S.scan.step === 'aim') renderPhone(); } }
+  const bar = document.querySelector('[data-qrbar]'); if (bar) { bar.style.width = (qrLeftMs() / (S.settings.checkin.rotateMin * 60000) * 100) + '%'; const l = document.querySelector('[data-qrleft]'); if (l) l.textContent = `New code in ${Math.ceil(qrLeftMs() / 60000)} min`; }
+  document.querySelectorAll('[data-due]').forEach(el => { const r = route(el.dataset.due); if (!r) return; const x = dueInfo(r); el.textContent = x.txt; el.className = 'cap-due ' + x.cls; const row = el.closest('.cap-row'); if (row) { row.classList.toggle('overdue', x.cls === 'crit'); row.classList.toggle('soon', x.cls === 'warn'); } });
+}
+function hubPicker() {
+  return `<div class="cap-bar"><select aria-label="Hub" onchange="S.capHub=this.value;S.capQ='';render()">${S.areas.map(a => `<option value="${a.id}" ${a.id === S.capHub ? 'selected' : ''}>${esc(a.hub)} · ${esc(capUser(a.id).name)}</option>`).join('')}</select>${S.screen === 'captain' ? `<button class="btn" onclick="go('hubqr')">Show QR for drivers</button>` : `<button class="btn" onclick="go('captain')">Back to check-in</button>`}</div>`;
+}
+function vCaptain() {
+  const a = area(S.capHub), rs = hubRoutes(a.id), cap = capUser(a.id);
+  const withD = rs.filter(r => r.driverId && ['Accepted', 'Needs attention'].includes(r.status));
+  const notYet = withD.filter(r => !r.checkin), late = withD.filter(r => r.checkin && r.checkin.status === 'Late'), here = withD.filter(r => r.checkin && r.checkin.status === 'Arrived').sort((x, y) => y.checkin.at - x.checkin.at), ns = rs.filter(r => r.noShow);
+  const flags = S.ciFlags.filter(f => f.hub === a.id && f.status === 'open');
+  const m = (k, v, c) => `<div class="cnt ${c || ''}"><div class="v num">${v}</div><div class="k">${k}</div></div>`;
+  const head = `<div class="page-head"><div><div class="eyebrow">Site captain · ${esc(a.hub)}</div><h1>Check-in</h1><p>${fmtDate(now)}. Tap a driver when they reach the dock, or have them scan the hub QR. Dispatch sees it right away.</p></div></div>`;
+  const row = (r, kind) => {
+    const d = driver(kind === 'ns' ? r.noShow.driverId : r.driverId), c = r.checkin, x = dueInfo(r), f = kind === 'ns' ? null : openFlag(r);
+    const meta = `<span class="mono">${r.name}</span> · pickup ${hhmm(r.start)} · ${activeStops(r)} stops · ${r.vehicle} · <a href="tel:${d.phone}" onclick="event.stopPropagation()">${phoneFmt(d.phone)}</a>`;
+    let body = '';
+    if (kind === 'wait') body = `${r.status === 'Needs attention' ? `<div class="small" style="color:var(--warn)">No reply to the day-of text. Marking arrived counts as confirmed.</div>` : ''}${f ? `<div class="small" style="color:var(--warn)">Scanned ${fmtTime(f.at)} from ${fmtDist(f.dist)} away. Confirm above when you see them.</div>` : ''}
+      <div class="cap-acts"><button class="btn primary" onclick="checkIn('${r.id}','Arrived')">Arrived</button><button class="btn" onclick="checkIn('${r.id}','Late')">Running late</button><button class="btn danger" onclick="capNoShow('${r.id}')">No-show</button></div>`;
+    if (kind === 'late') body = `<div class="small muted">Running late, marked by ${esc(c.by)} ${fmtTime(c.at)}</div><div class="cap-acts two"><button class="btn primary" onclick="checkIn('${r.id}','Arrived')">Arrived</button><button class="btn danger" onclick="capNoShow('${r.id}')">No-show</button></div>`;
+    if (kind === 'here') body = `<div class="row" style="justify-content:space-between">${ciTag(r)}<span class="small muted" style="flex:1">${ciWho(c)}</span><button class="btn sm ghost" onclick="undoCheckIn('${r.id}')">Undo</button></div>`;
+    if (kind === 'ns') { const nd = driver(r.driverId); body = `<div class="small" style="color:var(--crit)">No-show marked ${fmtTime(r.noShow.at)} by ${esc(r.noShow.by)}. ${r.status === 'Accepted' && nd ? `Covered by ${esc(nd.name)}, listed above.` : r.status === 'Offered' && nd ? `Rescue offer texted to ${esc(nd.name)}.` : 'Back with dispatch as a Rescue.'}</div>`; }
+    const cls = kind === 'wait' ? (x.cls === 'crit' ? 'overdue' : x.cls === 'warn' ? 'soon' : '') : kind === 'here' || kind === 'ns' ? 'done' : 'soon';
+    return `<div class="cap-row ${cls}" data-name="${esc((d.name + ' ' + r.name).toLowerCase())}"><div class="cap-who"><span class="avatar">${initials(d.name)}</span><div style="flex:1;min-width:0"><div class="nm">${esc(d.name)}</div><div class="cap-meta">${meta}</div></div>${kind === 'wait' || kind === 'late' ? `<span class="cap-due ${x.cls}" data-due="${r.id}">${x.txt}</span>` : ''}</div>${body}</div>`;
+  };
+  const sec = (t, list, kind, empty) => `<div class="cap-sec"><h3>${t}</h3><span class="n">${list.length}</span></div>${list.length ? list.map(r => row(r, kind)).join('') : `<p class="small muted" style="margin:0">${empty}</p>`}`;
+  const ex = S.routes.some(r => r.example && r.area === a.id && dayOffset(r) === 0);
+  const tip = ex && !S.capTipHidden ? `<div class="cap-tip"><div class="row" style="justify-content:space-between"><b>Try it</b><button class="btn sm ghost" onclick="S.capTipHidden=true;render()">Hide</button></div><ol>
+    <li>On the driver phone, pick <b>Nina Patel</b>, tap <b>Scan hub QR</b>, then <b>At the dock</b>. She moves to Here with a QR tag.</li>
+    <li>Pick <b>Carlos Mendez</b> and scan <b>From home, 14 mi away</b>. It lands under Needs a look for you to confirm or turn away.</li>
+    <li><b>Omar Haddad</b> is past pickup and not here. Tap <b>No-show</b>: dispatch gets EX-15 back as a Rescue.</li>
+    <li>Tap <b>Show QR for drivers</b> to see the dock screen and its scan log, then switch to Dana to see it all on <b>Site check-in</b> and the board.</li></ol></div>` : '';
+  if (!rs.length) return `<div class="cap">${head}${hubPicker()}<div class="panel"><p style="margin:0">No drivers expected at ${esc(a.hub)} today.</p>${S.routes.some(r => r.example) ? '' : `<p class="small muted" style="margin:8px 0 0">Demo: <a style="cursor:pointer" onclick="loadExamples()">load example routes</a> to fill Round Rock Hub.</p>`}</div></div>`;
+  return `<div class="cap">${head}${hubPicker()}${tip}
+    <div class="counts" style="margin-bottom:10px">${m('Expected', withD.length)}${m('Here', here.length, 'new')}${m('Not here yet', notYet.length, 'changed')}${m('Late', late.length, 'missing')}${m('No-shows', ns.length, 'rejected')}</div>
+    <input class="cap-search" type="search" placeholder="Find a driver or route" value="${esc(S.capQ)}" oninput="capFilter(this.value)">
+    ${flags.length ? `<div class="cap-sec"><h3>Needs a look</h3><span class="n">${flags.length}</span></div>${flags.map(f => { const d = driver(f.driverId), r = route(f.routeId); return `<div class="cap-flag"><div><b>${esc(d.name)}</b> scanned the QR ${fmtTime(f.at)} but the phone was ${fmtDist(f.dist)} from the hub.<div class="small muted">${r.name} · pickup ${hhmm(r.start)}</div></div><div class="cap-acts two"><button class="btn primary" onclick="resolveFlag('${f.id}',true)">They're here, check in</button><button class="btn" onclick="resolveFlag('${f.id}',false)">Not here</button></div></div>`; }).join('')}` : ''}
+    ${sec('Not here yet', notYet, 'wait', 'Everyone expected so far is accounted for.')}
+    ${late.length ? sec('Running late', late, 'late', '') : ''}
+    ${sec('Here', here, 'here', 'Nobody checked in yet.')}
+    ${ns.length ? sec('No-shows', ns, 'ns', '') : ''}
+    <p class="small muted" style="margin:16px 0 0">Signed in as ${esc(cap.name)}. Captains see today's drivers at their hub only, no pay or pricing.</p></div>`;
+}
+function vHubQr() {
+  const a = area(S.capHub), cs = S.settings.checkin, code = hubCode(a.id), screen = cs.qrMode === 'screen';
+  const scans = S.scans.filter(x => x.hub === a.id).slice(0, 10);
+  return `<div class="cap"><div class="page-head"><div><div class="eyebrow">Site captain · ${esc(a.hub)}</div><h1>Hub QR code</h1><p>${screen ? `Keep this screen at the dock. The code changes every ${cs.rotateMin} min, so a photo of it stops working.` : 'Printed poster mode. The code never changes, so the location check does the work.'}</p></div></div>
+    ${hubPicker()}
+    <div class="qr-card"><div class="sub">Logiscal driver check-in</div><h2>${esc(a.hub)}</h2>${qrSvg(a.id + ':' + code)}<div class="sub">Scan with your phone camera</div><div class="code">${code}</div><div class="sub">No camera? Text <b>CHECKIN ${code}</b> to ${S.settings.support}</div>${screen ? `<div class="qr-timer"><i data-qrbar style="width:${qrLeftMs() / (cs.rotateMin * 60000) * 100}%"></i></div><div class="sub" data-qrleft>New code in ${Math.ceil(qrLeftMs() / 60000)} min</div>` : ''}</div>
+    <div class="panel"><h3>Scans at this hub today</h3>${scans.length ? `<div class="tbl"><table><thead><tr><th>Time</th><th>Driver</th><th>Route</th><th>Result</th></tr></thead><tbody>${scans.map(x => `<tr><td class="mono small">${fmtTime(x.at)}</td><td>${esc(driver(x.driverId) ? driver(x.driverId).name : '')}</td><td class="mono small">${x.routeId || ''}</td><td><span class="res ${x.tone}">${x.result}</span><div class="small muted">${esc(x.detail)}</div></td></tr>`).join('')}</tbody></table></div>` : '<p class="small muted" style="margin:0">No scans yet. On the driver phone, tap Scan hub QR.</p>'}
+    <p class="small muted" style="margin:10px 0 0">A scan counts when the code is current and the phone is within ${cs.geofenceM} m of the hub. Location is read once at the scan, never tracked.</p></div></div>`;
+}
+function scanView(d) {
+  const sc = S.scan, r = todayRouteFor(d), home = r ? area(r.area) : area(d.area), cs = S.settings.checkin;
+  if (sc.step === 'aim') {
+    const other = S.areas.find(a => a.id !== home.id && a.market === home.market) || S.areas.find(a => a.id !== home.id);
+    return `<div class="scan"><div class="sys" style="padding:10px 14px 0;text-align:center;font-size:12px;color:#8d9aa7">Camera · point at the QR at the dock</div><div class="scan-cam">${qrSvg(home.id + ':' + hubCode(home.id))}<div class="frame"></div></div>
+      <div class="scan-opts"><span class="eyebrow" style="color:#8d9aa7">Demo: where is ${esc(d.name.split(' ')[0])} when scanning?</span>
+      <button class="go" onclick="driverScan('${d.id}','dock')">At the dock, ${esc(home.hub)}</button>
+      ${cs.qrMode === 'screen' ? `<button onclick="driverScan('${d.id}','old')">Scanning a photo of an old code</button>` : ''}
+      <button onclick="driverScan('${d.id}','away')">From home, 14 mi away</button>
+      ${other ? `<button onclick="driverScan('${d.id}','wrong')">At ${esc(other.hub)} instead</button>` : ''}
+      <button onclick="S.scan=null;renderPhone()">Cancel</button></div></div>`;
+  }
+  const x = sc.res;
+  return `<div class="scan"><div class="scan-page"><div class="url">logiscal.app/in/${esc(sc.url)}</div><div class="small" style="color:#6a7682">Matched to your phone ${phoneFmt(d.phone)}</div><div class="big ${x.tone}">${x.title}</div><p style="margin:0">${x.body}</p>${x.route ? `<div class="rl">${x.route}</div>` : ''}</div><div class="scan-opts"><button class="go" onclick="S.scan=null;renderPhone()">Done</button></div></div>`;
 }
 
 /* ---------------- Coverage ---------------- */
@@ -1261,7 +1504,7 @@ function vCoverage() {
   </tbody></table></div></div><p class="small muted" style="margin:8px 0 0">Bench % is set in Settings, Timing rules.</p>`;
 }
 
-function actorName() { return { dispatcher: 'Dana Ruiz', admin: 'Mike Patel', lead: 'Terri Lang', ops: 'Ruston' }[S.role]; }
+function actorName() { return S.role === 'captain' ? capUser().name : { dispatcher: 'Dana Ruiz', admin: 'Mike Patel', lead: 'Terri Lang', ops: 'Ruston' }[S.role]; }
 
 function inbound(d, text) {
   const t = text.trim(); const up = t.toUpperCase();
@@ -1269,6 +1512,7 @@ function inbound(d, text) {
   if (up === 'STOP') { d.optOut = true; m.kind = 'optout'; toast(`${d.name} opted out. Blocked from offers until START.`); render(); return; }
   if (up === 'START') { d.optOut = false; m.kind = 'optin'; sendSms(d, 'You are opted back in to Logiscal route texts.', null, null); toast(`${d.name} opted back in.`); render(); return; }
   if (up === 'HELP') { sendSms(d, fill(S.settings.templates.help, S.routes[0], d), null, null); render(); return; }
+  const ck = up.match(/^(?:CHECKIN|CHECK IN|HERE)\s*(\d{4})?$/); if (ck) { m.kind = 'checkin'; textCheckIn(d, m, ck[1]); return; }
   const yes = ['YES', 'Y', 'ACCEPT'].includes(up), no = ['NO', 'N', 'DECLINE'].includes(up);
   const open = S.offers.find(o => o.driverId === d.id && o.open);
   const pend = S.offers.find(o => o.driverId === d.id && o.pending && route(o.routeId).driverId === d.id);
@@ -1643,13 +1887,13 @@ function confirmOnfleet(r, d, silent) { offerRoute(r, d, 'sms', { silent, actor:
 /* ---------------- Blank slate: no sample routes, drivers, lanes or history. Markets, hubs, settings and users stay. ---------------- */
 const BLANK = true; // Sample data is off: the app starts empty and fills from uploaded Onfleet files.
 if (BLANK) {
-  Object.assign(S, { routes: [], offers: [], messages: [], events: [], imports: [], exports: [], adjustments: [], recruitRequests: [], sim: [], lanes: [], drivers: [], uploadsDone: {}, importPreview: null, phoneDriver: null, boardTab: 0 });
+  Object.assign(S, { routes: [], offers: [], messages: [], events: [], imports: [], exports: [], adjustments: [], recruitRequests: [], sim: [], lanes: [], drivers: [], uploadsDone: {}, importPreview: null, phoneDriver: null, boardTab: 0, scans: [], ciFlags: [], scan: null });
   S.markets.forEach(m => m.log = []);
   // The clock starts at the real time so a real export lands on the right day tabs. It still runs one minute per second.
   START_NOW = new Date(); START_NOW.setSeconds(0, 0); now = new Date(START_NOW);
 }
 /* ---------------- Example routes: one per offer and confirm state, timed from the current clock ---------------- */
-const EX_DRIVERS = [['Andre Wallace', 'A1'], ['Brianna Cole', 'A1'], ['Carlos Mendez', 'A1'], ['Danielle Price', 'A2'], ['Eli Turner', 'A1'], ['Fiona Grant', 'A2'], ['Gabe Ortiz', 'A1'], ['Hana Kim', 'A2'], ['Isaiah Ross', 'A1'], ['Jade Moreno', 'A2'], ['Kyle Bennett', 'A1'], ['Lena Fox', 'A2'], ['Miles Carter', 'A1']];
+const EX_DRIVERS = [['Andre Wallace', 'A1'], ['Brianna Cole', 'A1'], ['Carlos Mendez', 'A1'], ['Danielle Price', 'A2'], ['Eli Turner', 'A1'], ['Fiona Grant', 'A2'], ['Gabe Ortiz', 'A1'], ['Hana Kim', 'A2'], ['Isaiah Ross', 'A1'], ['Jade Moreno', 'A2'], ['Kyle Bennett', 'A1'], ['Lena Fox', 'A2'], ['Miles Carter', 'A1'], ['Nina Patel', 'A1'], ['Omar Haddad', 'A1']];
 function loadExamples() {
   if (S.routes.some(r => r.example)) { toast('Example routes are already on the board.'); return; }
   const real = now.getTime(), at = min => { now = new Date(real + min * 60000); };
@@ -1671,7 +1915,10 @@ function loadExamples() {
     r = mk('EX-03', 'A2', H(1.5), 11); take(r, drv[3], 2 * 1440); dayBeforeOk(r, 1440 - 30); at(-45); sendCheck(r, 'final'); at(-15); silentOnCheck(r);
     r = mk('EX-04', 'A1', H(2), 15); take(r, drv[2], 2 * 1440 + 60); dayBeforeOk(r, 1440); at(-8); sendCheck(r, 'final');
     r = mk('EX-05', 'A2', H(5), 10); take(r, drv[5], 2 * 1440 + 90); dayBeforeOk(r, 1440 - 120);
-    r = mk('EX-06', 'A1', H(1), 13); take(r, drv[4], 2 * 1440 + 30); dayBeforeOk(r, 1440 + 60); at(-50); sendCheck(r, 'final'); at(-46); inbound(drv[4], 'YES'); r.onfleet = true; at(-5); checkIn(r.id, 'Arrived');
+    r = mk('EX-06', 'A1', H(1), 13); take(r, drv[4], 2 * 1440 + 30); dayBeforeOk(r, 1440 + 60); at(-50); sendCheck(r, 'final'); at(-46); inbound(drv[4], 'YES'); r.onfleet = true; at(-5); checkIn(r.id, 'Arrived', { method: 'qr', by: drv[4].name, dist: 48, silent: true }); S.scans.unshift({ id: 'SC0', at: now.getTime(), hub: 'A1', driverId: drv[4].id, routeId: r.id, result: 'Checked in', tone: 'ok', detail: '48 m from hub' });
+    // Site check-in: Nina confirmed for today, due shortly; Omar confirmed but past pickup and not here
+    r = mk('EX-14', 'A1', H(0.75), 12); take(r, drv[13], 2 * 1440 + 20); dayBeforeOk(r, 1440 - 20); at(-70); sendCheck(r, 'final'); at(-66); inbound(drv[13], 'YES');
+    r = mk('EX-15', 'A1', H(-0.4), 11); take(r, drv[14], 2 * 1440 + 40); dayBeforeOk(r, 1440 + 30); at(-160); sendCheck(r, 'final'); at(-150); inbound(drv[14], 'YES');
     // Tomorrow
     r = mk('EX-07', 'A2', H(24.5), 12); take(r, drv[7], 1440); at(-90); sendCheck(r, 'reconfirm'); at(-30); silentOnCheck(r);
     r = mk('EX-08', 'A1', H(25.75), 16); take(r, drv[6], 1440 + 120); at(-15); sendCheck(r, 'reconfirm');
@@ -1683,12 +1930,13 @@ function loadExamples() {
     r = mk('EX-13', 'A1', H(47), 13); take(r, drv[12], 600); at(-60); sendHeadsUp(r);
   } finally { now = new Date(real); render = keepRender; S.quiet = false; }
   S.phoneDriver = drv[2].id; S.boardTab = 0; S.screen = 'board';
-  toast('13 example routes added on Today, Tomorrow and two days out, named EX-01 to EX-13.'); render();
+  if (S.role === 'captain') { S.screen = 'captain'; S.capHub = 'A1'; S.phoneDriver = drv[13].id; }
+  toast('15 example routes added on Today, Tomorrow and two days out, named EX-01 to EX-15.'); render();
 }
 function removeExamples() {
   const ids = new Set(S.routes.filter(r => r.example).map(r => r.id)), offs = new Set(S.offers.filter(o => ids.has(o.routeId)).map(o => o.id)), drs = new Set(S.drivers.filter(d => d.example).map(d => d.id));
   S.routes = S.routes.filter(r => !ids.has(r.id)); S.offers = S.offers.filter(o => !offs.has(o.id)); S.events = S.events.filter(e => !offs.has(e.offerId));
-  S.messages = S.messages.filter(m => !drs.has(m.driverId) && !ids.has(m.routeId)); S.drivers = S.drivers.filter(d => !drs.has(d.id)); S.sim = S.sim.filter(x => !drs.has(x.driverId));
+  S.messages = S.messages.filter(m => !drs.has(m.driverId) && !ids.has(m.routeId)); S.drivers = S.drivers.filter(d => !drs.has(d.id)); S.sim = S.sim.filter(x => !drs.has(x.driverId)); S.scans = S.scans.filter(x => !drs.has(x.driverId)); S.ciFlags = S.ciFlags.filter(x => !drs.has(x.driverId)); S.scan = null;
   if (drs.has(S.phoneDriver)) S.phoneDriver = S.drivers[0] ? S.drivers[0].id : null;
   toast('Example routes and drivers removed.'); render();
 }
@@ -1790,6 +2038,7 @@ setInterval(() => {
   $('#clock').textContent = `${fmtDate(now)} · ${fmtTime(now)}`;
   const mins = Math.round((now - START_NOW) / 60000) + 4; $('#synced').textContent = mins < 10 ? `${mins} min ago` : `${(mins % 10) + 1} min ago`;
   if (changed) render(); else { document.querySelectorAll('[data-countdown]').forEach(el => { const o = offer(el.dataset.countdown); if (!o) return; const m = Math.ceil((o.expiresAt - now.getTime()) / 60000); el.textContent = `${m} min left`; el.classList.toggle('low', m <= 3); }); document.querySelectorAll('[data-pickup]').forEach(el => { el.textContent = 'Pickup in ' + dur(routeStart(route(el.dataset.pickup)) - now.getTime()); }); }
+  tickCheckin();
 }, 1000);
 
 /* ---------------- Rendering ---------------- */
@@ -1798,14 +2047,19 @@ const NAV = [
   { id: 'markets', name: 'Markets and pricing', group: 'Reference' }, { id: 'coverage', name: 'Coverage', group: 'Reference' }, { id: 'lanes', name: 'Lanes', group: 'Reference' }, { id: 'drivers', name: 'Drivers', group: 'Reference' }, { id: 'settings', name: 'Settings', group: 'Reference' },
 ];
 function go(screen, params = {}) { S.screen = screen; S.params = params; render(); $('#main').scrollTop = 0; }
-function render() { const cm = $('#clientMarkets'); if (cm) cm.textContent = 'Client: Logiscal · ' + (S.markets.length > 4 ? S.markets.length + ' markets' : S.markets.map(m => m.name).join(', ')); renderNav(); renderMain(); renderPhone(); }
+function render() { const ro = $('#role'); if (ro && ro.options[3]) ro.options[3].textContent = `${capUser().name} · Site captain`; const cm = $('#clientMarkets'); if (cm) cm.textContent = 'Client: Logiscal · ' + (S.markets.length > 4 ? S.markets.length + ' markets' : S.markets.map(m => m.name).join(', ')); renderNav(); renderMain(); renderPhone(); }
 function renderNav() {
+  if (S.role === 'captain') {
+    const wait = hubRoutes(S.capHub).filter(r => r.driverId && ['Accepted', 'Needs attention'].includes(r.status) && !r.checkin).length, fl = S.ciFlags.filter(f => f.hub === S.capHub && f.status === 'open').length;
+    $('#nav').innerHTML = `<div class="group">Site</div><button class="${S.screen === 'captain' ? 'active' : ''}" onclick="go('captain')">Check-in${fl ? `<span class="count warn">${fl}</span>` : wait ? `<span class="count">${wait}</span>` : ''}</button><button class="${S.screen === 'hubqr' ? 'active' : ''}" onclick="go('hubqr')">Hub QR code</button>`;
+    return;
+  }
   const att = S.routes.filter(r => r.status === 'Needs attention' || (r.attention && r.status !== 'Cancelled')).length;
   const closeN = closeoutRoutes().filter(r => !r.approved).length;
   const ciN = checkinRoutes().filter(r => r.driverId && r.status !== 'Offered' && !r.checkin).length; const attN = att;
   let g = ''; $('#nav').innerHTML = NAV.filter(n => n.id !== 'markets' || canSeePricing()).map(n => { const gh = n.group !== g ? `<div class="group">${n.group}</div>` : ''; g = n.group; const c = n.id === 'attention' ? attN : n.id === 'closeout' ? closeN : n.id === 'checkin' ? ciN : 0; return gh + `<button class="${S.screen === n.id || (S.screen === 'route' && n.id === 'board') || (S.screen === 'driver' && n.id === 'drivers') || (S.screen === 'lane' && n.id === 'lanes') ? 'active' : ''}" onclick="go('${n.id}')">${n.name}${c ? `<span class="count ${n.id === 'attention' ? 'warn' : ''}">${c}</span>` : ''}</button>`; }).join('');
 }
-function renderMain() { const fn = { board: vBoard, upload: vUpload, route: vRoute, attention: vAttention, closeout: vCloseout, checkin: vCheckin, drivers: vDrivers, driver: vDriver, settings: vSettings, lanes: vLanes, lane: vLane, markets: vMarkets, coverage: vCoverage }[S.screen]; $('#main').innerHTML = fn(); }
+function renderMain() { if (S.role === 'captain' && !CAP_SCREENS.includes(S.screen)) S.screen = 'captain'; if (S.role !== 'captain' && CAP_SCREENS.includes(S.screen)) S.screen = 'checkin'; const fn = { captain: vCaptain, hubqr: vHubQr, board: vBoard, upload: vUpload, route: vRoute, attention: vAttention, closeout: vCloseout, checkin: vCheckin, drivers: vDrivers, driver: vDriver, settings: vSettings, lanes: vLanes, lane: vLane, markets: vMarkets, coverage: vCoverage }[S.screen]; $('#main').innerHTML = fn(); if (S.screen === 'captain' && S.capQ) capFilter(S.capQ); }
 function laneLine(r) {
   const l = lane(r.laneId); if (!l) return r.laneMatch && !r.history ? `<div class="lane muted"><span class="ico" style="background:var(--surface-2);color:var(--muted)">?</span>No history for these stops</div>` : '';
   const pct = laneMatchPct(r), s = laneSuggestion(r), last = s && s.runs[0];
@@ -1998,12 +2252,12 @@ function vCheckin() {
   const due = rs.filter(r => r.driverId && r.status !== 'Offered'), waiting = due.filter(r => !r.checkin).length, noshows = rs.filter(r => r.noShow).length;
   const m = (k, v, c) => `<div class="cnt ${c || ''}"><div class="v num">${v}</div><div class="k">${k}</div></div>`;
   const row = r => { const d = driver(r.driverId), c = r.checkin;
-    return `<div class="checkin-row"><div><div class="row"><b class="mono" style="cursor:pointer" onclick="go('route',{id:'${r.id}'})">${r.name}</b><span class="mono small">${hhmm(r.start)}</span>${d ? `<span>${d.name}</span>` : '<span class="muted">No driver yet</span>'}${ciTag(r)}${r.rescue && !['Accepted', 'Completed'].includes(r.status) ? ' <span class="pill rescue">Rescue</span>' : ''}${r.status === 'Offered' ? ' <span class="pill offered">Rescue offer out</span>' : ''}</div>
-      ${r.noShow ? `<div class="small" style="color:var(--crit);margin-top:2px">${driver(r.noShow.driverId).name} no-show at ${fmtTime(r.noShow.at)}${r.status === 'Accepted' ? `, covered by ${d.name}` : ''}</div>` : ''}${c ? `<div class="small muted">Marked by ${c.by}</div>` : ''}</div>
-      <div class="checkin-btns">${d && r.status === 'Accepted' && (!c || c.status === 'Late') ? `<button class="btn ${c ? '' : 'primary'}" onclick="checkIn('${r.id}','Arrived')">Arrived</button>${c ? '' : `<button class="btn" onclick="checkIn('${r.id}','Late')">Late</button>`}<button class="btn danger" onclick="checkIn('${r.id}','No-show')">No-show</button>` : ''}</div></div>`; };
-  return `<div class="page-head"><div><h1>Site check-in</h1><p>${fmtDate(now)}. Hub staff or the dispatcher mark each driver at pickup. It shows on the board right away, and a no-show starts a same-day rescue${S.settings.noShowRescue === 'auto' ? ' and texts the next best driver' : ''}.</p></div></div>
-  <div class="counts" style="margin-bottom:14px">${m('Expected', due.length)}${m('Arrived', n('Arrived'), 'new')}${m('Late', n('Late'), 'missing')}${m('Waiting', waiting, 'changed')}${m('No-shows', noshows, 'rejected')}</div>
-  ${S.areas.map(a => { const ar = rs.filter(r => r.area === a.id); return ar.length ? `<div class="panel" style="margin-bottom:12px"><h3>${a.hub} <span class="muted small">${a.address}</span></h3>${ar.map(row).join('')}</div>` : ''; }).join('') || '<p class="muted">No routes with drivers today.</p>'}`;
+    return `<div class="checkin-row"><div><div class="row"><b class="mono" style="cursor:pointer" onclick="go('route',{id:'${r.id}'})">${r.name}</b><span class="mono small">${hhmm(r.start)}</span>${d ? `<span>${d.name}</span>` : '<span class="muted">No driver yet</span>'}${ciTag(r)}${r.rescue && !['Accepted', 'Completed'].includes(r.status) ? ' <span class="pill rescue">Rescue</span>' : ''}${r.status === 'Offered' ? ` <span class="pill offered">${r.rescue ? 'Rescue offer' : 'Offer'} out</span>` : ''}</div>
+      ${r.noShow ? `<div class="small" style="color:var(--crit);margin-top:2px">${driver(r.noShow.driverId).name} no-show at ${fmtTime(r.noShow.at)}${r.status === 'Accepted' ? `, covered by ${d.name}` : ''}</div>` : ''}${c ? `<div class="small muted">${ciWho(c)}</div>` : ''}</div>
+      <div class="checkin-btns">${d && ['Accepted', 'Needs attention'].includes(r.status) && (!c || c.status === 'Late') ? `<button class="btn ${c ? '' : 'primary'}" onclick="checkIn('${r.id}','Arrived')">Arrived</button>${c ? '' : `<button class="btn" onclick="checkIn('${r.id}','Late')">Late</button>`}<button class="btn danger" onclick="checkIn('${r.id}','No-show')">No-show</button>` : ''}</div></div>`; };
+  return `<div class="page-head"><div><h1>Site check-in</h1><p>${fmtDate(now)}. Hub staff or the dispatcher mark each driver at pickup. It shows on the board right away, and a no-show starts a same-day rescue${S.settings.noShowRescue === 'auto' ? ' and texts the next best driver' : ''}. Drivers can also check themselves in by scanning the hub QR.</p></div><div class="row"><button class="btn" onclick="switchRole('captain')">Open site captain view</button></div></div>
+  <div class="counts" style="margin-bottom:14px">${m('Expected', due.length)}${m('Arrived', n('Arrived'), 'new')}${m('Late', n('Late'), 'missing')}${m('Waiting', waiting, 'changed')}${m('No-shows', noshows, 'rejected')}${m('Self check-in', rs.filter(r => r.checkin && ['qr', 'text'].includes(r.checkin.method)).length)}</div>
+  ${S.areas.map(a => { const ar = rs.filter(r => r.area === a.id), fl = S.ciFlags.filter(f => f.hub === a.id && f.status === 'open').length; return ar.length ? `<div class="panel" style="margin-bottom:12px"><div class="row" style="justify-content:space-between"><h3>${a.hub} <span class="muted small">${a.address}</span></h3><span class="small muted">Captain: ${esc(capUser(a.id).name)} · <a style="cursor:pointer" onclick="S.capHub='${a.id}';switchRole('captain','hubqr')">Hub QR</a></span></div>${fl ? `<p class="small" style="margin:4px 0 0;color:var(--warn)">${fl} QR scan${fl > 1 ? 's' : ''} from off site waiting on the captain.</p>` : ''}${ar.map(row).join('')}</div>` : ''; }).join('') || '<p class="muted">No routes with drivers today.</p>'}`;
 }
 function vAttention() {
   const rs = S.routes.filter(r => (r.status === 'Needs attention' || r.attention) && r.status !== 'Cancelled').sort((a, b) => routeStart(a) - routeStart(b));
@@ -2155,7 +2409,7 @@ const MERGE_TIPS = { date: 'Route date, e.g. Fri, Nov 20', start_time: 'Route st
 
 function vSettings() {
   const t = S.settings, w = t.weights; S.setTab = S.setTab || 'areas';
-  const tabs = [['areas', 'Areas and hubs'], ['lanes', 'Lanes'], ['templates', 'Message templates'], ['timing', 'Timing rules'], ['weights', 'Score weights'], ['mapping', 'Column mapping'], ['users', 'Users']];
+  const tabs = [['areas', 'Areas and hubs'], ['lanes', 'Lanes'], ['templates', 'Message templates'], ['timing', 'Timing rules'], ['weights', 'Score weights'], ['checkin', 'Site check-in'], ['mapping', 'Column mapping'], ['users', 'Users']];
   let body = '';
   if (S.setTab === 'lanes') body = `<div class="panel" style="margin-bottom:12px"><h3>Driver already set in Onfleet</h3><p class="small muted" style="margin:0 0 10px">When a route arrives with a driver on it in Onfleet, that driver is the preferred driver. The app still texts them to confirm.</p>
     <div class="radio" style="max-width:600px"><label><input type="radio" name="pre" ${t.preConfirm === 'click' ? 'checked' : ''} onchange="S.settings.preConfirm='click';render()"><span><b>One-click confirm (default)</b><br><span class="small muted">Nothing is texted on upload. The dispatcher sends each confirm from the board.</span></span></label><label><input type="radio" name="pre" ${t.preConfirm === 'auto' ? 'checked' : ''} onchange="S.settings.preConfirm='auto';render()"><span><b>Text them to confirm on import</b><br><span class="small muted">Confirm text with exact pay, stop range, cities, miles and hours. Never during quiet hours.</span></span></label></div>
@@ -2180,7 +2434,11 @@ function vSettings() {
   if (S.setTab === 'timing') body = `<div class="panel"><div class="form"><label>${lbl('Offer expiry (min)', 'Offer expiry', [['What', 'How long a driver has to reply YES or NO to a route offer.'], ['Then', 'No reply in time: the offer closes, the driver gets the Offer closed text, and the route goes back to Unassigned.']])}<input type="number" value="${t.expiry}" onchange="S.settings.expiry=Number(this.value);toast('Expiry saved.')"></label><label>${lbl('Reconfirm (hours before start)', 'Day-before confirm', [['What', 'When the day-before confirm text goes out, counted back from route start.'], ['Why', 'Early enough to find cover if the driver cannot make it.']])}<input type="number" value="${t.reconfirmHours}" onchange="S.settings.reconfirmHours=Number(this.value)"></label><label>${lbl('Reconfirm reply window (min)', 'Reconfirm reply window', [['What', 'How long the driver has to answer the day-before confirm.'], ['Then', 'Silence moves the route to Needs attention for a dispatcher to decide.'], ['Note', 'The template wording says 60 min. Update it in Message templates if you change this.']])}<input type="number" value="${t.reconfirmWindow}" onchange="S.settings.reconfirmWindow=Number(this.value)"></label><label>${lbl('Final confirm (hours before start)', 'Day-of confirm', [['What', 'When the day-of confirm goes out, counted back from route start.'], ['Note', 'Starts before 8:00 AM get it at 6:00 PM the evening before instead.']])}<input type="number" value="${t.finalHours}" onchange="S.settings.finalHours=Number(this.value)"></label><label>${lbl('Final reply window (min)', 'Day-of reply window', [['What', 'How long the driver has to answer the day-of confirm.'], ['Then', 'Silence moves the route to Needs attention and flags Rescue.']])}<input type="number" value="${t.finalWindow}" onchange="S.settings.finalWindow=Number(this.value)"></label><label>${lbl('Quiet hours', 'Quiet hours', [['What', 'No scheduled or automatic texts go out in this window.'], ['Then', 'Texts due during quiet hours wait for the end of the window.']])}<input value="${t.quietStart} to ${t.quietEnd}"></label><label>${lbl('Late bail threshold (hours)', 'Late bail', [['What', 'A driver who releases a route closer to start than this is a late bail.'], ['Then', 'Late bails flag the route Rescue and cost more on the reliability score than an early release.']])}<input type="number" value="24"></label><label>${lbl('Support contact', 'Support contact', [['What', 'Phone number drivers are told to call.'], ['Used in', 'Help and No-show texts, through {support_contact}.']])}<input value="${t.support}" onchange="S.settings.support=this.value"></label><label>${lbl('Staffing bench (% over routes)', 'Bench', [['What', 'Extra active drivers each area should have on top of its routes.'], ['Used in', 'Coverage: an area under routes plus this % shows Short.']])}<input type="number" value="${t.benchPct}" onchange="S.settings.benchPct=Number(this.value);render()"></label><label>${lbl('When a site marks a no-show', 'No-show rule', [['What', 'What the app does after Site check-in marks a driver No-show.'], ['Either way', 'The route is flagged Rescue and the driver gets the No-show text.'], ['Auto', 'Also texts an offer to the next best free driver (lane pick first, then highest score in the area).']])}<select onchange="S.settings.noShowRescue=this.value"><option value="auto" ${t.noShowRescue === 'auto' ? 'selected' : ''}>Flag Rescue and offer to the next best driver</option><option value="flag" ${t.noShowRescue === 'flag' ? 'selected' : ''}>Flag Rescue only, dispatcher offers</option></select></label></div><p class="small muted" style="margin:10px 0 0">Starts before 8:00 AM get their final confirm at 6:00 PM the evening before. All times in the hub's time zone (America/Chicago).</p></div>`;
   if (S.setTab === 'weights') body = `<div class="panel"><p class="small muted" style="margin:0 0 10px">Score = completion × ${w.completion} + acceptance × ${w.acceptance} + on-time confirm × ${w.confirm} + ${w.perRoute} per completed route (max ${w.perRouteMax}) + ${w.perRescue} per rescue (max ${w.perRescueMax}) ${w.early} per early release ${w.late} per late bail ${w.noshow} per no-show + tier bump (A +${w.tierA}, B +${w.tierB}). Changing a weight recomputes every driver.</p><div class="form">${Object.entries(w).map(([k, v]) => `<label>${lbl(k, k, [['What', WEIGHT_TIPS[k] || '']])}<input type="number" value="${v}" onchange="S.settings.weights['${k}']=Number(this.value);render();toast('Scores recomputed.')"></label>`).join('')}</div><p class="small muted" style="margin:10px 0 0">Labels: New under 5 offers · No routes yet · Watch (2+ no-shows, 3+ late bails, or completion under 85%) · Solid 85 to 94% · Reliable 95% and up.</p></div>`;
   if (S.setTab === 'mapping') body = `<div class="panel"><p class="small muted" style="margin:0 0 10px">Mapped from the Onfleet task export (Oct 15 CookUnity file). Mapped again only when the columns change.</p><div class="tbl"><table><thead><tr><th>App field</th><th>Onfleet column</th><th>Required</th></tr></thead><tbody>${[['Route (one per Onfleet driver slot)', 'Driver Number', 'Yes'], ['Order ID', 'orderId, else shortId', 'Yes'], ['Delivery address', 'destinationAddress', 'Yes'], ['Hub and market', 'facilityId, else workerName suffix (INDY_LOGISCAL)', 'Yes'], ['Service date', 'shippingDate, else completeAfterTime', 'Yes'], ['Driver already in Onfleet', 'workerName', 'No'], ['Stop order', 'Task Number', 'No'], ['Coordinates (miles and hours)', 'destinationLonLat', 'No'], ['Delivery window', 'completeAfterTime to completeBeforeTime', 'No'], ['Order type (B2B extra)', 'orderType', 'No'], ['Customer name', 'recipientsNames', 'No'], ['Package count', 'quantity', 'No'], ['Skipped', 'rows where taskType is not dropoff (hub start)', '']].map(r => `<tr><td>${r[0]}</td><td class="mono">${r[1]}</td><td class="small">${r[2]}</td></tr>`).join('')}</tbody></table></div></div>`;
-  if (S.setTab === 'users') body = `<div class="panel"><div class="tbl"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Client</th><th>Pricing</th></tr></thead><tbody>${S.users.map(u => `<tr><td>${u.name}</td><td class="mono small">${u.email}</td><td>${u.role}</td><td>${u.client}</td><td class="small">${['Client admin', 'Gigee ops'].includes(u.role) ? 'Sees pricing' : 'No'}</td></tr>`).join('')}</tbody></table></div><p class="small muted" style="margin:8px 0 0">Every query is scoped to the user's client. Gigee ops sees all clients.</p></div>`;
+  if (S.setTab === 'checkin') { const c = t.checkin; body = `<div class="panel"><h3>How drivers check in at the hub</h3><p class="small muted" style="margin:0 0 10px">The site captain can always mark drivers by hand. Drivers can also scan the hub QR, or text CHECKIN and the code under it if their camera fails.</p>
+    <div class="radio" style="max-width:600px"><label><input type="radio" name="qrm" ${c.qrMode === 'screen' ? 'checked' : ''} onchange="S.settings.checkin.qrMode='screen';render()"><span><b>Code on a screen at the dock (default)</b><br><span class="small muted">A tablet or laptop shows the code. It changes every few minutes, so a photo of it stops working.</span></span></label><label><input type="radio" name="qrm" ${c.qrMode === 'poster' ? 'checked' : ''} onchange="S.settings.checkin.qrMode='poster';render()"><span><b>Printed poster</b><br><span class="small muted">One code that never changes. The location check is the only guard.</span></span></label></div>
+    <div class="form" style="margin-top:12px"><label><span>Code changes every (min) ${tip('Code rotation', [['What', 'How often the code on the dock screen changes.'], ['Why', 'A photo or screenshot of the code stops working after this long, so a driver has to be at the dock to scan.'], ['Note', 'The code from the previous window still works, so a driver who scans as it changes is not turned away.']])}</span><input type="number" min="1" value="${c.rotateMin}" onchange="S.settings.checkin.rotateMin=Math.max(1,Number(this.value));render()"></label><label><span>Hub radius for a scan (m) ${tip('Hub radius', [['What', 'How close the phone has to be to the hub for a scan to count.'], ['Why', 'Stops a driver checking in from home with a code a friend sent them.'], ['If outside', 'Goes to the site captain to confirm, or is rejected, per the rule below.']])}</span><input type="number" min="50" value="${c.geofenceM}" onchange="S.settings.checkin.geofenceM=Number(this.value)"></label><label><span>Late after pickup (min) ${tip('Late grace', [['What', 'Minutes after pickup time before an arrival is tagged late.'], ['Where', 'Late arrivals show amber on the board, check-in pages and route page, with the minutes late.'], ['Captain', 'The No-show button warns until this many minutes past pickup.']])}</span><input type="number" min="0" value="${c.graceMin}" onchange="S.settings.checkin.graceMin=Number(this.value);render()"></label><label>Scan from outside the radius<select onchange="S.settings.checkin.offsite=this.value"><option value="captain" ${c.offsite === 'captain' ? 'selected' : ''}>Send to the site captain to confirm</option><option value="reject" ${c.offsite === 'reject' ? 'selected' : ''}>Reject, scan again at the hub</option></select></label></div>
+    <p class="small muted" style="margin:10px 0 0">The phone's location is read once at the scan and stored on the check-in. Nothing is tracked before or after.</p></div>`; }
+  if (S.setTab === 'users') body = `<div class="panel"><div class="tbl"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Client</th><th>Pricing</th></tr></thead><tbody>${S.users.map(u => `<tr><td>${u.name}</td><td class="mono small">${u.email}</td><td>${u.role}${u.hubs ? `<div class="small muted">${u.hubs.map(h => area(h) ? esc(area(h).hub) : h).join(', ')}</div>` : ''}</td><td>${u.client}</td><td class="small">${['Client admin', 'Gigee ops'].includes(u.role) ? 'Sees pricing' : 'No'}</td></tr>`).join('')}</tbody></table></div><p class="small muted" style="margin:8px 0 0">Every query is scoped to the user's client. Gigee ops sees all clients.</p></div>`;
   return `<div class="page-head"><div><h1>Settings</h1><p>Entered once, reused everywhere. Client admin and Gigee ops only.</p></div></div><div class="tabs">${tabs.map(([id, n]) => `<button class="${S.setTab === id ? 'active' : ''}" onclick="S.setTab='${id}';render()">${n}</button>`).join('')}</div>${body}`;
 }
 
@@ -2193,19 +2451,19 @@ function renderPhone() {
   const pend = S.offers.find(o => o.driverId === d.id && o.pending);
   const el = $('#phone');
   el.innerHTML = `<div class="phone-head"><div class="row" style="justify-content:space-between"><span class="eyebrow">Driver phone · simulator</span><button class="btn sm ghost menu-btn" style="color:var(--phone-fg)" onclick="document.getElementById('phone').classList.remove('open')">Close</button></div>
-    <select aria-label="Which driver's phone" onchange="S.phoneDriver=this.value;renderPhone()">${S.drivers.map(x => `<option value="${x.id}" ${x.id === d.id ? 'selected' : ''}>${x.name} · ${phoneFmt(x.phone)}</option>`).join('')}</select>
+    <select aria-label="Which driver's phone" onchange="S.phoneDriver=this.value;S.scan=null;renderPhone()">${S.drivers.map(x => `<option value="${x.id}" ${x.id === d.id ? 'selected' : ''}>${x.name} · ${phoneFmt(x.phone)}</option>`).join('')}</select>
     <div class="small" style="color:#8d9aa7">Texts from Logiscal (512) 555-0100${d.optOut ? ' · <span style="color:#f08a80">opted out</span>' : ''}${open ? ` · <span style="color:#8fb2f0">open offer, <span data-countdown="${open.id}">${Math.ceil((open.expiresAt - now.getTime()) / 60000)} min left</span></span>` : ''}</div></div>
-    <div class="phone-thread" id="thread">${ms.length ? ms.map(m => `<div class="bubble ${m.dir}">${esc(m.body)}<span class="mt">${new Date(m.time).toDateString() === now.toDateString() ? fmtTime(m.time) : fmtDT(m.time)}${m.status === 'failed' ? ' · not delivered' : ''}</span></div>`).join('') : '<div class="sys">No texts yet</div>'}</div>
+    ${S.scan && S.scan.driverId === d.id ? scanView(d) : `<div class="phone-thread" id="thread">${ms.length ? ms.map(m => `<div class="bubble ${m.dir}">${esc(m.body)}<span class="mt">${new Date(m.time).toDateString() === now.toDateString() ? fmtTime(m.time) : fmtDT(m.time)}${m.status === 'failed' ? ' · not delivered' : ''}</span></div>`).join('') : '<div class="sys">No texts yet</div>'}</div>
     <div class="phone-reply"><div class="quick">
-      <button class="yes" onclick="inbound(driver('${d.id}'),'YES')">YES</button><button onclick="inbound(driver('${d.id}'),'NO')">NO</button><button onclick="inbound(driver('${d.id}'),'what time is pickup?')">Something else</button><button onclick="inbound(driver('${d.id}'),'${d.optOut ? 'START' : 'STOP'}')">${d.optOut ? 'START' : 'STOP'}</button>
+      <button class="yes" onclick="inbound(driver('${d.id}'),'YES')">YES</button><button onclick="inbound(driver('${d.id}'),'NO')">NO</button><button onclick="inbound(driver('${d.id}'),'what time is pickup?')">Something else</button><button onclick="inbound(driver('${d.id}'),'${d.optOut ? 'START' : 'STOP'}')">${d.optOut ? 'START' : 'STOP'}</button><button class="scanbtn" onclick="S.scan={driverId:'${d.id}',step:'aim'};renderPhone()">Scan hub QR</button>
       ${open ? `<button onclick="expireOffer(offer('${open.id}'));render()">Stay silent ${Math.round((open.expiresAt - open.sentAt) / 60000)} min</button>` : ''}
       ${pend && !open ? `<button onclick="silentOnCheck(route('${pend.routeId}'))">Stay silent</button>` : ''}
     </div><form onsubmit="event.preventDefault();const i=this.querySelector('input');if(i.value.trim()){inbound(driver('${d.id}'),i.value);i.value=''}"><input id="phoneInput" placeholder="Type a reply"><button class="send" type="submit">Send</button></form>
-    <div class="hint">Replies go through the Twilio webhook, match the sender by phone, then land on this driver's open offer or confirmation.</div></div>`;
-  const th = $('#thread'); th.scrollTop = th.scrollHeight;
+    <div class="hint">Replies go through the Twilio webhook, match the sender by phone, then land on this driver's open offer or confirmation. CHECKIN and the hub code checks them in.</div></div>`}`;
+  const th = $('#thread'); if (th) th.scrollTop = th.scrollHeight;
 }
 
-$('#role').addEventListener('change', e => { S.role = e.target.value; render(); toast(`Now acting as ${actorName()}.`); });
+$('#role').addEventListener('change', e => switchRole(e.target.value));
 $('#phoneToggle').addEventListener('click', () => $('#phone').classList.toggle('open'));
 $('#clock').textContent = `${fmtDate(now)} · ${fmtTime(now)}`;
 render();
