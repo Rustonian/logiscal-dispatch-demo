@@ -2089,7 +2089,7 @@ function laneLine(r) {
   const pct = laneMatchPct(r), s = laneSuggestion(r), last = s && s.runs[0];
   return `<div class="lane"><span class="ico">↻</span><a onclick="event.stopPropagation();go('lane',{id:'${l.id}'})">${esc(l.name)}</a>${pct !== null ? `<span>${pct}% match</span>` : ''}${last ? `<span>· last run ${shortName(driver(last.driverId))}, ${fmtDate(routeDate(last))}</span>` : ''}</div>`;
 }
-function statusPill(r) { const cls = { 'Unassigned': 'unassigned', 'Offered': 'offered', 'Accepted': 'accepted', 'Needs attention': 'attention', 'Completed': 'completed', 'Cancelled': 'cancelled' }[r.status]; return `<span class="pill ${cls}">${r.status}</span>${r.rescue && !['Completed', 'Cancelled'].includes(r.status) ? ' <span class="pill rescue">Rescue</span>' : ''}`; }
+function statusPill(r) { const cls = { 'Unassigned': 'unassigned', 'Offered': 'offered', 'Accepted': 'accepted', 'Needs attention': 'attention', 'Completed': 'completed', 'Cancelled': 'cancelled' }[r.status]; return `<span class="pill ${cls}">${r.status}</span>`; }
 function driverLine(r) { const d = driver(r.driverId); if (!d) return `<span class="muted small">No driver</span>`; return `<span class="avatar">${initials(d.name)}</span><span>${d.name} <span class="muted small mono">${d.gid}</span></span>${lblHtml(d)}`; }
 
 function guide() {
@@ -2122,7 +2122,6 @@ function vBoard() {
   // Within a column: rescue first, then routes waiting on a decision, then by start time.
   const colRoutes = c => all.filter(r => boardCol(r) === c).sort((a, b) => (isRescue(b) - isRescue(a)) || ((b.status === 'Needs attention') - (a.status === 'Needs attention')) || (routeStart(a) - routeStart(b)));
   const cancelled = all.filter(r => r.status === 'Cancelled');
-  const rescuePill = r => isRescue(r) ? '<span class="pill rescue">Rescue</span>' : '';
   const actions = r => {
     const d = driver(r.driverId), s = suggest && r.status === 'Unassigned' && r.laneId ? laneSuggestion(r) : null;
     return `${r.status === 'Unassigned' && r.onfleetDriverId && !eligibility(driver(r.onfleetDriverId), r).length ? `<button class="btn sm primary" title="Onfleet already has this driver on the route" onclick="confirmOnfleet(route('${r.id}'),driver('${r.onfleetDriverId}'),false)">Confirm with ${shortName(driver(r.onfleetDriverId))}</button><button class="btn sm" onclick="openPicker('${r.id}','sms')">Other driver</button>` : r.status === 'Unassigned' ? (s && s.pick ? `<button class="btn sm primary" title="${esc(s.pick.why)}" onclick="offerRoute(route('${r.id}'),driver('${s.pick.d.id}'),'sms')">Offer to ${shortName(s.pick.d)}</button><button class="btn sm" onclick="openPicker('${r.id}','sms')">Other driver</button>` : `<button class="btn sm primary" onclick="openPicker('${r.id}','sms')">Offer</button>`) : ''}
@@ -2139,7 +2138,7 @@ function vBoard() {
   const countdown = r => { const o = r.status === 'Offered' && r.offerId && offer(r.offerId); return o ? `<span class="countdown" data-countdown="${o.id}">${Math.ceil((o.expiresAt - now.getTime()) / 60000)} min left</span>` : ''; };
 
   const card = r => `<div class="card ${edge(r)}" onclick="go('route',{id:'${r.id}'})">
-      <div class="title"><span class="rn">${r.name}</span>${rescuePill(r)}</div>
+      <div class="title"><span class="rn">${r.name}</span></div>
       <div class="meta"><span>${area(r.area).hub}</span><span><b>${showDate ? fmtDate(routeDate(r)) + ' ' : ''}${hhmm(r.start)}</b></span><span>${stopsHtml(r)}</span><span><b>${money(driverPay(r))}</b></span><span>${geo(r)}</span></div>
       ${laneLine(r)}
       ${notes(r)}
@@ -2151,7 +2150,7 @@ function vBoard() {
   const kanban = () => `<div class="kanban">${BOARD_COLS.map(c => { const rs = colRoutes(c); return `<div class="kcol k-${c.toLowerCase()}"><div class="kcol-h"><span class="pill ${c.toLowerCase()}">${c}</span><span class="n">${rs.length}</span></div><div class="kcol-b">${rs.length ? rs.map(card).join('') : '<div class="kempty">None</div>'}</div></div>`; }).join('')}</div>`;
 
   const row = r => { const d = driver(r.driverId); return `<tr class="${edge(r)}" onclick="go('route',{id:'${r.id}'})">
-      <td><span class="rn">${r.name}</span>${isRescue(r) ? '<div>' + rescuePill(r) + '</div>' : ''}</td>
+      <td><span class="rn">${r.name}</span></td>
       <td class="wrap">${area(r.area).hub}</td>
       <td class="mono">${showDate ? fmtDate(routeDate(r)) + '<br>' : ''}${hhmm(r.start)}</td>
       <td>${stopsHtml(r)}<div class="muted small">${geo(r)}</div></td>
@@ -2161,7 +2160,7 @@ function vBoard() {
       <td class="act" onclick="event.stopPropagation()"><div class="acts">${actions(r)}</div></td></tr>`; };
   const coll = S.boardCollapsed || {};
   const table = () => BOARD_COLS.map(c => { const rs = colRoutes(c), shut = !!coll[c]; return `<div class="bsec ${shut || !rs.length ? 'shut' : ''} ${rs.length ? '' : 'empty'}">
-      <button class="bsec-h" onclick="toggleBoardSection('${c}')" aria-expanded="${!shut}"><span class="chev">${shut || !rs.length ? '▸' : '▾'}</span><span class="pill ${c.toLowerCase()}">${c}</span><span class="n">${rs.length} route${rs.length === 1 ? '' : 's'}</span>${c === 'Unassigned' || c === 'Offered' ? (rs.filter(isRescue).length ? `<span class="pill rescue">${rs.filter(isRescue).length} rescue</span>` : '') : c === 'Accepted' && rs.some(r => r.status === 'Needs attention') ? `<span class="small" style="color:var(--warn)">${rs.filter(r => r.status === 'Needs attention').length} waiting on you</span>` : ''}</button>
+      <button class="bsec-h" onclick="toggleBoardSection('${c}')" aria-expanded="${!shut}"><span class="chev">${shut || !rs.length ? '▸' : '▾'}</span><span class="pill ${c.toLowerCase()}">${c}</span><span class="n">${rs.length} route${rs.length === 1 ? '' : 's'}</span>${c === 'Accepted' && rs.some(r => r.status === 'Needs attention') ? `<span class="small" style="color:var(--warn)">${rs.filter(r => r.status === 'Needs attention').length} waiting on you</span>` : ''}</button>
       ${shut || !rs.length ? '' : `<div class="tbl-wrap"><table class="btable"><colgroup><col style="width:92px"><col style="width:104px"><col style="width:90px"><col style="width:104px"><col style="width:76px"><col style="width:150px"><col><col style="width:150px"></colgroup><thead><tr><th>Route</th><th>Hub</th><th>Start</th><th>Stops</th><th class="num">Pay</th><th>Driver</th><th>Status</th><th></th></tr></thead><tbody>${rs.map(row).join('')}</tbody></table></div>`}</div>`; }).join('');
 
   const autoable = suggest ? all.filter(r => r.status === 'Unassigned' && r.laneId && laneSuggestion(r).pick) : [];
@@ -2276,7 +2275,7 @@ function vCheckin() {
   const due = rs.filter(r => r.driverId && r.status !== 'Offered'), waiting = due.filter(r => !r.checkin).length, noshows = rs.filter(r => r.noShow).length;
   const m = (k, v, c) => `<div class="cnt ${c || ''}"><div class="v num">${v}</div><div class="k">${k}</div></div>`;
   const row = r => { const d = driver(r.driverId), c = r.checkin;
-    return `<div class="checkin-row"><div><div class="row"><b class="mono" style="cursor:pointer" onclick="go('route',{id:'${r.id}'})">${r.name}</b><span class="mono small">${hhmm(r.start)}</span>${d ? `<span>${d.name}</span>` : '<span class="muted">No driver yet</span>'}${ciTag(r)}${r.rescue && !['Accepted', 'Completed'].includes(r.status) ? ' <span class="pill rescue">Rescue</span>' : ''}${r.status === 'Offered' ? ` <span class="pill offered">${r.rescue ? 'Rescue offer' : 'Offer'} out</span>` : ''}</div>
+    return `<div class="checkin-row"><div><div class="row"><b class="mono" style="cursor:pointer" onclick="go('route',{id:'${r.id}'})">${r.name}</b><span class="mono small">${hhmm(r.start)}</span>${d ? `<span>${d.name}</span>` : '<span class="muted">No driver yet</span>'}${ciTag(r)}${r.status === 'Offered' ? ` <span class="pill offered">${r.rescue ? 'Rescue offer' : 'Offer'} out</span>` : ''}</div>
       ${r.noShow ? `<div class="small" style="color:var(--crit);margin-top:2px">${driver(r.noShow.driverId).name} no-show at ${fmtTime(r.noShow.at)}${r.status === 'Accepted' ? `, covered by ${d.name}` : ''}</div>` : ''}${c ? `<div class="small muted">${ciWho(c)}</div>` : ''}</div>
       <div class="checkin-btns">${d && ['Accepted', 'Needs attention'].includes(r.status) && (!c || c.status === 'Late') ? `<button class="btn ${c ? '' : 'primary'}" onclick="checkIn('${r.id}','Arrived')">Arrived</button>${c ? '' : `<button class="btn" onclick="checkIn('${r.id}','Late')">Late</button>`}<button class="btn danger" onclick="checkIn('${r.id}','No-show')">No-show</button>` : ''}</div></div>`; };
   return `<div class="page-head"><div><h1>Site check-in</h1><p>${fmtDate(now)}. Hub staff or the dispatcher mark each driver at pickup. It shows on the board right away, and a no-show starts a same-day rescue${S.settings.noShowRescue === 'auto' ? ' and texts the next best driver' : ''}. Drivers can also check themselves in by scanning the hub QR.</p></div><div class="row"><button class="btn" onclick="switchRole('captain')">Open site captain view</button></div></div>
